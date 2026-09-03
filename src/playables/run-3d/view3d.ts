@@ -771,17 +771,20 @@ export class View3D implements RunView {
 
     // Kazanınca kalabalık duvarın ötesine koşmaya devam ediyor: "yıktık ve
     // geçtik" hissi, olduğun yerde sevinmekten çok daha güçlü.
-    const running = s.status === 'playing' || s.status === 'won';
+    // Geri sayımda kalabalık duruyor: sallanma da ayak sesi de yok, yoksa
+    // yerinde koşuyormuş gibi oluyor ve başlangıç anı okunmuyor.
+    const pre = s.pre > 0;
+    const running = !pre && (s.status === 'playing' || s.status === 'won');
     this.bobAmount += ((running ? 0.06 : 0) - this.bobAmount) * Math.min(1, dt * 3);
     if (s.status === 'won') this.after = Math.min(this.after + dt * RUN.speed * 0.75, 9);
     const cz = s.z + this.after;
     this.lastX = s.x;
     this.lastZ = cz;
 
-    this.crowd.update(s.x, cz, s.count, s.status === 'playing' || s.status === 'won' ? dt : dt * 0.35);
+    this.crowd.update(s.x, cz, s.count, running ? dt : dt * 0.3);
 
     // Ayak sesi koşu temposuna kilitli.
-    if (s.status === 'playing') {
+    if (running) {
       this.stepAcc += dt;
       if (this.stepAcc > 0.27) {
         this.stepAcc = 0;

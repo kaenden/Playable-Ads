@@ -150,7 +150,7 @@ p{margin:0}
   background:rgba(8,11,20,.82);backdrop-filter:blur(6px);
 }
 .frame{
-  position:relative;height:min(78vh,760px);aspect-ratio:9/18.5;width:auto;max-width:92vw;
+  position:relative;height:min(86vh,820px);aspect-ratio:9/18.5;width:auto;max-width:94vw;
   border-radius:26px;border:1px solid rgba(255,255,255,.16);background:#0F1230;
   box-shadow:0 40px 90px -30px rgba(0,0,0,.9);overflow:hidden;
 }
@@ -268,8 +268,28 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   .works{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
   .pairs{grid-template-columns:1fr}
   .contact .row{align-items:flex-start}
-  .frame{height:min(72vh,620px)}
   .stage{padding:26px 0 32px}
+
+  /* TELEFONDA TAM EKRAN.
+     Masaustunde telefon cercevesi bir sey anlatiyor: "bu bir mobil
+     kreatif". Telefonda anlatacak bir sey yok, cunku zaten telefondasin —
+     orada cerceve sadece oyunu kucultuyor. Birim ekrani kapliyor, kontrol
+     seridi altta ince bir cizgi olarak kaliyor.
+     dvh: iOS'ta adres cubugu acilip kapandikca 100vh yaniliyor. */
+  .modal{padding:0;gap:0;justify-content:flex-start;backdrop-filter:none}
+  .frame{
+    width:100%;height:calc(100vh - 44px);height:calc(100dvh - 44px);
+    max-width:none;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none;
+  }
+  .modal-bar{
+    width:100%;height:44px;flex:none;padding:0 10px;gap:8px;
+    background:#0F1230;border-top:1px solid rgba(255,255,255,.1);
+  }
+  .modal-bar .who{font-size:13px;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  /* Teknik satir ve tam ekran linki telefonda yer yok: birim ZATEN tam ekran. */
+  .modal-bar .what,.modal-bar #modal-open{display:none}
+  .chip{padding:7px 12px;font-size:11.5px}
 }
 </style>
 

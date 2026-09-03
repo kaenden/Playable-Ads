@@ -96,6 +96,16 @@ export const RUN = {
   spread: 0.48,
   /** Kaç farklı koşu fazı var — animasyon bu kadar kez hesaplanıyor, kopyalanarak dağıtılıyor. */
   phases: 3,
+  /**
+   * Açılış geri sayımı. Sayı başına 0.4 saniye, üçü 1.2 saniye.
+   *
+   * Kısa tutuldu: reklamın ilk saniyeleri en pahalı saniyeleri ve üç tam
+   * saniyelik bir geri sayım kancanın yarısını yer. Amaç dramatik bir
+   * başlangıç değil — izleyicinin parmağını yerleştirebileceği bir an, ve
+   * "bu bir video değil, birazdan ben oynayacağım" bilgisi. Yön verme
+   * geri sayım boyunca çalışıyor, ilerleme çalışmıyor.
+   */
+  countIn: 1.2,
   /** Kapının etkisi bu kadar sürede sayaca yansıyor (sayı akarken görünsün). */
   countFor: 0.45,
   idleHintAfter: 1.6,

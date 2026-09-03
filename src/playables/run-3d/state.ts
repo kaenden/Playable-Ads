@@ -21,8 +21,10 @@ export interface State {
   steer: number;
   count: number;
   status: 'playing' | 'won' | 'lost';
-  /** İlk dokunuş oldu mu — tutorial ve otomatik oynatma buna bakıyor. */
+  /** İlk dokunuş oldu mu — tutorial buna bakıyor. */
   started: boolean;
+  /** Açılış geri sayımı; sıfıra inene kadar parkur ilerlemiyor. */
+  pre: number;
   t: number;
   /** Sıradaki parkur olayının indeksi. */
   next: number;
@@ -56,6 +58,7 @@ export function createState(): State {
     count: RUN.start,
     status: 'playing',
     started: false,
+    pre: RUN.countIn,
     t: 0,
     next: 0,
     endT: 0,
@@ -71,6 +74,7 @@ export function reset(s: State): void {
   s.count = f.count;
   s.status = f.status;
   s.started = f.started;
+  s.pre = f.pre;
   s.t = f.t;
   s.next = f.next;
   s.endT = f.endT;
@@ -125,12 +129,22 @@ export function tick(s: State, dt: number): void {
     s.endT += dt;
     return;
   }
-  s.t += dt;
-
   // Yatay: parmak hedefi veriyor, merkez ona yumuşayarak gidiyor. Doğrudan
   // atamak kalabalığı ışınlıyordu; kalabalığın ağırlığı olmalı.
+  //
+  // GERİ SAYIMDA DA ÇALIŞIYOR: oyuncu başlamadan önce parmağını
+  // yerleştirebilmeli, yoksa geri sayım oynanabilir zamandan çalıyor.
   const k = 1 - Math.exp(-RUN.steerLerp * dt);
   s.x += (s.steer - s.x) * k;
+
+  if (s.pre > 0) {
+    s.pre -= dt;
+    // s.t BİLEREK artmıyor: hız rampası geri sayım bitince sıfırdan
+    // başlasın, kalabalık dururken rampayı harcamasın.
+    return;
+  }
+
+  s.t += dt;
 
   // Hız rampası: reklam açıldığı an kamera fırlamasın.
   s.z += RUN.speed * Math.min(1, s.t / RUN.rampFor) * dt;

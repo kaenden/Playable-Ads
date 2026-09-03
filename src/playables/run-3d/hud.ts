@@ -63,6 +63,7 @@ export class Hud {
 
     this.header(s);
     this.drawPops(dt);
+    if (s.pre > 0) this.countdown(s.pre);
     if (ui.hint && s.status === 'playing') this.swipeHint();
     if (s.status === 'playing') this.ctaButton(this.L.cta, 1 + Math.sin(this.t * 3) * 0.02);
     else if (s.endT > RUN.endAfter) this.endcard(s);
@@ -195,6 +196,33 @@ export class Hud {
       outlinedText(g, p.text, p.x, p.y - k * this.L.h * 0.11, size, '#ffffff', p.color, 'rgba(20,26,34,.85)');
       g.restore();
     }
+  }
+
+  /**
+   * Açılış geri sayımı: 3, 2, 1.
+   *
+   * Her sayı büyük gelip yerine oturuyor ve son çeyreğinde soluyor —
+   * ekranda üç ayrı sayı değil, tek bir ritim okunuyor.
+   *
+   * YERİ BOŞ YOL. İlk denemede %36 yükseklikteydi ve tam ilk kapının
+   * panellerine oturuyordu: geri sayım biterken oyuncunun okuması gereken
+   * "+8 / −2" üç saniye boyunca kapalı kalıyordu. Kapı ile karakter
+   * arasındaki boş asfalt, bu ekranda hiçbir şeyi örtmeyen tek yer.
+   */
+  private countdown(pre: number): void {
+    const g = this.g;
+    const L = this.L;
+    const step = RUN.countIn / 3;
+    const n = Math.min(3, Math.max(1, Math.ceil(pre / step)));
+    const age = 1 - ((pre / step) % 1);
+    const size = Math.min(L.w * 0.26, 132) * (1.35 - 0.35 * (1 - Math.pow(1 - Math.min(1, age * 3), 2)));
+    g.save();
+    g.globalAlpha = age < 0.72 ? 1 : Math.max(0, 1 - (age - 0.72) / 0.28);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = '900 ' + Math.round(size) + 'px ' + FONT;
+    outlinedText(g, String(n), L.w / 2, L.h * 0.53, size, '#ffffff', '#FFC24D', 'rgba(20,26,34,.85)');
+    g.restore();
   }
 
   /** Tutorial: sağa sola giden el + iki ok. */

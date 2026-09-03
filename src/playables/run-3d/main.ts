@@ -1,6 +1,5 @@
-import { RUN, Gate } from './config';
 import { ad } from '../../core/ad';
-import { createState, tick, drainEvents, steerBy, nextGate, nextRow, gapCenter } from './state';
+import { createState, tick, drainEvents } from './state';
 import { UiState } from './layout';
 import { bindInput } from './input';
 import { audio } from '../../core/audio';
@@ -30,10 +29,7 @@ const ui: UiState = { hint: true, dragging: false };
 
 let view: RunView;
 let last = 0;
-let idle = 0;
 let paused = false;
-/** Otomatik oynatma bir kez çalışıyor — sonrası oyuncunun. */
-let autoPlayed = false;
 
 function start(): void {
   const mode = webglOk() ? 'webgl' : 'WEBGL_FALLBACK';
@@ -46,7 +42,6 @@ function start(): void {
 
   bindInput(view.cv, view.L, state, ui, {
     onInteract() {
-      idle = 0;
       state.started = true;
       audio.unlock();
     },
@@ -54,8 +49,6 @@ function start(): void {
       ad.install();
     },
     onReset() {
-      idle = 0;
-      autoPlayed = false;
       ui.hint = true;
       view.reset();
     },
@@ -73,44 +66,23 @@ function start(): void {
   requestAnimationFrame(loop);
 }
 
-/**
- * Hareketsizlikte sahneyi kendin ilerlet (TikTok'un açık önerisi).
+/*
+ * OTOMATİK OYNATMA KALDIRILDI.
  *
- * Runner'da bunun ayrı bir zorunluluğu var: parkur oyuncuyu BEKLEMİYOR.
- * Dokunulmazsa kalabalık ilk kapıya gelir ve rastgele bir tarafı seçer;
- * izleyici oyunun ne istediğini hiç anlamadan reklam biter. O yüzden
- * hareketsizken oyun kendi kendine doğru kapıya yöneliyor — izleyici en
- * azından mekaniği bir kez GÖRÜYOR.
+ * Önceden, dokunulmazsa oyun kendi kendine doğru kapıya yöneliyordu —
+ * gerekçesi "izleyici mekaniği hiç olmazsa bir kez görsün"dü. Yanlış
+ * gerekçeydi: kendi kendini kusursuz oynayan bir reklam VİDEO gibi
+ * okunuyor. İzleyici bir şey yapması gerektiğini anlamıyor, parmağını
+ * hiç kaldırmıyor ve playable'ın videodan tek farkı ortadan kalkıyor.
+ *
+ * Dokunulmadığında kalabalık şeridin ortasından düz gidiyor. Parkur bunu
+ * hesaba katarak kuruldu: ortadan giden bir koşu kapıların SAĞ tarafını
+ * alıyor ve o taraf sırayla kötü / iyi / kötü / iyi — yani izleyici hem
+ * bir yeşil hem bir kırmızı sonuç görüyor, sonra 16 kişiyle duvara varıp
+ * 24'ü tutturamıyor. Kaybeden bir açılış kasıtlı: TRY AGAIN ve "you
+ * needed 24" kartı, mekaniği kusursuz bir gösteriden daha net anlatıyor.
+ * 2026 kreatif metası da bu — az kalsın kaybediyordun.
  */
-function autoSteer(dt: number): void {
-  const gate = nextGate(state);
-  const row = nextRow(state);
-  let want: number | null = null;
-
-  // Hangisi daha yakınsa ona göre yönel.
-  const gz = gate ? gate.z : Infinity;
-  const rz = row ? row.z : Infinity;
-  if (gz < rz && gate) want = goodSide(gate);
-  else if (row) want = gapCenter(row);
-
-  if (want === null) return;
-  const d = want - state.steer;
-  // 3.6 birim/sn: parkur sıklaşınca 2.4 yetişmiyordu ve demo kapıyı
-  // ortadan geçiyordu. Gösteri oynanışı beceriksiz görünmemeli.
-  steerBy(state, Math.max(-3.6 * dt, Math.min(3.6 * dt, d)));
-}
-
-function goodSide(g: Gate): number {
-  const leftBetter = valueOf(g.left) >= valueOf(g.right);
-  return leftBetter ? -RUN.steerLimit * 0.6 : RUN.steerLimit * 0.6;
-}
-
-function valueOf(o: { kind: string; v: number }): number {
-  if (o.kind === 'add') return o.v;
-  if (o.kind === 'mul') return o.v * 8;
-  if (o.kind === 'sub') return -o.v;
-  return -o.v * 8;
-}
 
 function loop(now: number): void {
   requestAnimationFrame(loop);
@@ -119,12 +91,6 @@ function loop(now: number): void {
   if (!last) last = now;
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-
-  idle += dt;
-  if (!state.started && state.status === 'playing') {
-    if (idle > RUN.idleHintAfter) autoPlayed = true;
-    if (autoPlayed) autoSteer(dt);
-  }
 
   tick(state, dt);
 
