@@ -48,6 +48,10 @@ import { State, bossZ } from './state';
 import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { Fx } from '../../core/fx';
+import { outlinedText } from '../../core/draw';
+
+/** Arayüzle aynı yazı yığını — can sayıları HUD'un parçası gibi okunmalı. */
+const FONT = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
 import { Squad, blobTexture } from './squad';
 import { propClone, propSize } from './models';
 import { RunView } from './view';
@@ -743,6 +747,46 @@ export class View3D implements RunView {
     this.player.setClip('sprint');
   }
 
+  /**
+   * DÜŞMANIN CANI, ÜSTÜNDE YAZIYOR.
+   *
+   * Referans kreatifin (Hell Escape) bütün okunabilirliği buradan geliyor.
+   * Kareleri tek tek çıkarıp sayıları okuduğumda dizi şu çıktı:
+   * 100, 88, 76, 64, 52, 40, 28, 16, 4 — hepsi ON İKİŞER, ve sağdaki
+   * "EQUIPPED" kartında yazan sayı tam olarak 12.
+   *
+   * Yani reklam oyuncuya hiçbir şey anlatmıyor; oyuncu ARİTMETİĞİ KENDİ
+   * yapıyor ve mekaniği üç saniyede kavrıyor. Silah gücü ile hedefin canı
+   * aynı ekranda, aynı birimde. Bende bu yoktu: düşmanlar sessizce
+   * kayboluyordu, güç sayısının ne işe yaradığı hiçbir yerde görünmüyordu.
+   *
+   * Yakındaki sayı büyük, uzaktaki küçük — mesafe bilgisi yazının kendi
+   * boyutundan geliyor, ayrıca perspektif hesabı gerekmiyor.
+   */
+  private drawFoeHp(g: CanvasRenderingContext2D, s: State, cz: number): void {
+    const near = 2;
+    const far = 34;
+    let drawn = 0;
+    for (let i = 0; i < s.foes.length && drawn < 26; i++) {
+      const f = s.foes[i];
+      if (f.hp <= 0) continue;
+      const d = f.z - cz;
+      if (d < near || d > far) continue;
+      const [x, y] = this.worldScreen(LANE * f.x, f.z, CHAR_H * 1.62);
+      if (x < -60 || x > this.L.w + 60) continue;
+      const k = 1 - (d - near) / (far - near);
+      const size = Math.round(Math.min(this.L.w * 0.052, 26) * (0.55 + k * 0.75));
+      g.save();
+      g.globalAlpha = 0.35 + k * 0.65;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.font = '900 ' + size + 'px ' + FONT;
+      outlinedText(g, String(Math.ceil(f.hp)), x, y, size, '#ffffff', '#ffffff', 'rgba(18,24,30,.9)');
+      g.restore();
+      drawn++;
+    }
+  }
+
   /** Havadaki silahlar — konum + dönüş, hepsi tek InstancedMesh. */
   private updateShots(s: State): void {
     const im = this.shotMesh;
@@ -851,6 +895,8 @@ export class View3D implements RunView {
     g2.clearRect(0, 0, this.L.w, this.L.h);
     this.grade.draw(g2, dt);
     this.fx.draw(g2, dt);
+    // Can sayıları arayüzün ALTINDA: sayaç çipi ve CTA onların üstünde kalmalı.
+    this.drawFoeHp(g2, s, cz);
     this.hud.draw(s, ui, dt);
   }
 }

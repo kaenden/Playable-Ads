@@ -354,7 +354,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="info">
           <h3>Blade Rush</h3>
           <p class="genre">3D action runner &middot; Three.js</p>
-          <p class="num">802.8 KB</p>
+          <p class="num">803.4 KB</p>
         </div>
       </article>
       <article class="work">
@@ -558,7 +558,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     <details>
       <summary>
         <span class="sig"></span>
-        <span class="t">Two games, 1.8 KB apart</span>
+        <span class="t">Two games, 2.4 KB apart</span>
         <span class="s">Crowd Rush &middot; Blade Rush</span>
       </summary>
       <div class="body">
@@ -567,10 +567,10 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           asset pack and a build. What differs is the mechanic: one grows a crowd
           through gates and pays for mistakes in runners, the other upgrades a thrown
           weapon and pays for them in firepower. Finished packages: 801.0 KB and
-          802.8 KB.
+          803.4 KB.
         </p>
         <div class="ledger">
-          <div><div class="n good">1.8 KB</div><div class="c">The whole size difference between two different games</div></div>
+          <div><div class="n good">2.4 KB</div><div class="c">The whole size difference between two different games</div></div>
           <div><div class="n">0</div><div class="c">New models. The enemies are the player's own character, tinted; the weapons are geometry drawn in code</div></div>
           <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
         </div>
@@ -599,6 +599,19 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             a wrong gate costs damage, so the counter is weapon power &mdash; and a
             group you fail to clear takes a point of it per survivor. One number still
             says both what you can do and what you just lost.</p>
+          </article>
+          <article>
+            <p class="t">Readability</p><h3>The number belongs on the target</h3>
+            <p>The first build had none: enemies took damage silently and vanished,
+            and nothing on screen explained what the power counter was for. I pulled
+            frames out of a live creative in this genre and read the numbers off them
+            &mdash; 100, 88, 76, 64, 52, 40, 28, 16, 4 &mdash; all steps of twelve,
+            and the weapon card in the corner said 12. The ad explains nothing; the
+            viewer does the arithmetic and has the mechanic in three seconds. Health
+            is now printed over every enemy, sized by distance, and it comes down by
+            exactly the number in the counter. The enemies also had to stop being a
+            scattered cluster and stand in staggered ranks, because a number is only
+            readable if the figure carrying it is not behind another one.</p>
           </article>
           <article>
             <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>
@@ -1079,7 +1092,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Blade Rush</td><td class="num">802.8 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">803.4 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1109,7 +1122,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-03 17:24 UTC</p>
+    <p class="stamp mono">build 2026-09-03 20:42 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1142,7 +1155,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
-    'str': ['Blade Rush',       '3D action runner · Three.js · 802.8 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 803.4 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],

@@ -73,7 +73,7 @@ export const STRIKE = {
   start: 1,
 
   /** Silah fırlatma aralığı (saniye). */
-  fireEvery: 0.16,
+  fireEvery: 0.13,
   /** Bu mesafeye giren gruba ateş açılıyor; boşluğa silah atılmıyor. */
   range: 24,
   /** Silahın ileri hızı (dünya birimi/sn) — koşu hızının üstüne biniyor. */
@@ -81,8 +81,10 @@ export const STRIKE = {
   /** Aynı anda havada olabilecek en fazla silah. */
   shotCap: 24,
 
-  /** Düşman dizilimi: i. düşmanın merkeze uzaklığı = foeSpread * sqrt(i). */
-  foeSpread: 0.62,
+  /** Saf başına en fazla düşman — fazlası arkaya yeni saf oluyor. */
+  foeCols: 5,
+  /** Saflar arası mesafe (z). */
+  foeRowGap: 3.6,
   /** Ekranda aynı anda çizilen en fazla düşman (instancing: çizim çağrısına etkisi yok). */
   foeCap: 40,
 
@@ -118,13 +120,13 @@ export const STRIKE = {
  */
 export const TRACK: Event[] = [
   { type: 'gate', z: 20, left: { kind: 'add', v: 4 }, right: { kind: 'sub', v: 2 } },
-  { type: 'wave', z: 40, count: 7, hp: 5 },
+  { type: 'wave', z: 40, count: 5, hp: 10 },
   { type: 'gate', z: 60, left: { kind: 'sub', v: 3 }, right: { kind: 'mul', v: 3 } },
-  { type: 'wave', z: 80, count: 16, hp: 12 },
+  { type: 'wave', z: 80, count: 8, hp: 30 },
   { type: 'gate', z: 100, left: { kind: 'mul', v: 2 }, right: { kind: 'div', v: 2 } },
-  { type: 'wave', z: 120, count: 20, hp: 26 },
+  { type: 'wave', z: 120, count: 10, hp: 90 },
   { type: 'gate', z: 140, left: { kind: 'div', v: 3 }, right: { kind: 'add', v: 14 } },
-  { type: 'boss', z: 166, hp: 660 },
+  { type: 'boss', z: 166, hp: 800 },
 ];
 
 export const TRACK_LEN = 184;

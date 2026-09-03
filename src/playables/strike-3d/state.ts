@@ -60,31 +60,41 @@ export interface State {
   events: EvOut[];
 }
 
-const GA = 2.39996323;
-
 /**
- * Düşman dizilimi — Crowd Rush'taki ayçiçeği spiralinin aynısı, sadece
- * daha geniş. Izgara denendi ve kötüydü: sayı değiştikçe sıra sayısı
- * zıplıyor, grup "yeniden diziliyor" gibi görünüyordu. Spiralde her yeni
- * düşman dışarıya bir halka ekliyor.
+ * DÜŞMAN DİZİLİMİ — SAF SAF, DAĞINIK DEĞİL.
+ *
+ * İlk sürümde Crowd Rush'ın ayçiçeği spiralini kullanıyordum: kalabalık
+ * için doğru, hedef için yanlış. Referans kreatifte (Hell Escape) hedefler
+ * koridoru kapatan SAFLAR hâlinde duruyor ve her birinin canı üstünde
+ * yazıyor. Spiralde figürler birbirinin önüne binince o sayılar üst üste
+ * düşüyor ve okunmaz oluyor — dizilimin asıl işi artık yer açmak.
+ *
+ * Saf başına en fazla `foeCols` düşman, koridora eşit aralıklı; artanlar
+ * arkaya yeni saf oluyor. Böylece hem hepsi görünüyor hem sayılar ayrık.
  */
-export function foeX(i: number): number {
-  return Math.cos(i * GA) * STRIKE.foeSpread * Math.sqrt(i);
-}
-
-export function foeZ(i: number): number {
-  return Math.sin(i * GA) * STRIKE.foeSpread * Math.sqrt(i);
-}
-
 function buildFoes(): Foe[] {
   const out: Foe[] = [];
   for (let e = 0; e < TRACK.length; e++) {
     const ev = TRACK[e];
     if (ev.type !== 'wave') continue;
+    const cols = Math.min(STRIKE.foeCols, ev.count);
+    const span = (STRIKE.halfW - 0.5) * 2;
+    const rows = Math.ceil(ev.count / cols);
     for (let i = 0; i < ev.count; i++) {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const rowN = Math.min(cols, ev.count - r * cols);
+      // Her saf KENDİ içinde ortalanıyor; yarım kalan son saf sola yaslanmıyor.
+      const step = span / Math.max(1, rowN);
+      // ARKA SAF YARIM ADIM KAYIK. Hizalı olduğunda arkadaki tam öndekinin
+      // ardına düşüyor ve iki can sayısı üst üste biniyordu.
+      const shift = r % 2 ? step * 0.5 : 0;
       out.push({
-        x: Math.max(-STRIKE.halfW + 0.4, Math.min(STRIKE.halfW - 0.4, foeX(i))),
-        z: ev.z + foeZ(i),
+        x: Math.max(-span / 2, Math.min(span / 2, -span / 2 + step * (c + 0.5) + shift)),
+        // EN ARKA SAF TAM `ev.z` ÜSTÜNDE. Saflar oyuncuya doğru uzuyor,
+        // çünkü ceza `ev.z` geçilince işliyor: saflar ileri uzasaydı ceza,
+        // oyuncunun daha varmadığı bir safı da ölmüş sayardı.
+        z: ev.z - (rows - 1 - r) * STRIKE.foeRowGap,
         hp: ev.hp,
         wave: e,
       });
