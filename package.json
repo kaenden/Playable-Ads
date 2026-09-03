@@ -17,6 +17,7 @@
     "probe:3d": "node build/glb-probe.mjs && node build/draco-probe.mjs",
     "showcase": "node build/build.mjs && node build/showcase.mjs",
     "site": "node build/site.mjs",
+    "deploy": "node build/build.mjs --art atlas && node build/site.mjs --base https://kaenden.github.io/Playable-Ads && node build/publish.mjs",
     "serve": "node build/serve.mjs",
     "assets:2d": "node build/assets-2d.mjs",
     "assets:td": "node build/extract-kenney.mjs && node build/assets-2d.mjs --in in-2d-td --out out-2d-td --max 1024",

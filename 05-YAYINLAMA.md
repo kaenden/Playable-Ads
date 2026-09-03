@@ -3,8 +3,8 @@
 > **Yayında:** https://kaenden.github.io/Playable-Ads/
 > Depo: https://github.com/kaenden/Playable-Ads · kaynak `main` dalı `/docs`
 >
-> Güncelleme: `npm run build:assets && npm run site --  --base https://kaenden.github.io/Playable-Ads`
-> sonra `dist/site/` içeriğini `docs/`'a kopyalayıp push et. Bir dakika içinde canlıya geçiyor.
+> Güncellemek için: `npm run deploy` (derle, siteyi üret, `docs/`'a kopyala),
+> sonra `git add -A && git commit && git push`. Bir dakika içinde canlıya geçiyor.
 
 ## Kısa cevap
 
