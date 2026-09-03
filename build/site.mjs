@@ -103,9 +103,11 @@ for (const u of UNITS) {
         gravity: 'center',
       },
     ])
-    .png()
+    // JPEG: önizleme kartı fotoğrafik bir bileşim, PNG'de 250 KB tutuyordu.
+    // Bunu sadece link tarayıcıları indiriyor ama depoda da duruyor.
+    .jpeg({ quality: 84 })
     .toBuffer();
-  writeFileSync(join(OUT, 'og', u.slug + '.png'), og);
+  writeFileSync(join(OUT, 'og', u.slug + '.jpg'), og);
 
   // Oyun sayfası: paketin KENDİSİ, sadece başlığına önizleme etiketleri
   // ekleniyor. Ağ paketleri bu etiketleri ALMIYOR — orada fazladan tek bir
@@ -117,7 +119,7 @@ for (const u of UNITS) {
     '<meta property="og:type" content="website">',
     '<meta property="og:title" content="' + esc(u.name + ' — playable ad unit') + '">',
     '<meta property="og:description" content="' + esc(u.genre + ' · ' + u.engine + ' · one HTML file, no network requests.') + '">',
-    '<meta property="og:image" content="' + (BASE ? BASE : '..') + '/og/' + u.slug + '.png">',
+    '<meta property="og:image" content="' + (BASE ? BASE : '..') + '/og/' + u.slug + '.jpg">',
     url ? '<meta property="og:url" content="' + url + '">' : '',
     '<meta name="twitter:card" content="summary_large_image">',
   ].filter(Boolean).join('\n');
@@ -150,9 +152,9 @@ const strip = await sharp({ create: { width: 1200, height: 630, channels: 3, bac
       }))
     )
   )
-  .png()
+  .jpeg({ quality: 84 })
   .toBuffer();
-writeFileSync(join(OUT, 'og', 'site.png'), strip);
+writeFileSync(join(OUT, 'og', 'site.jpg'), strip);
 
 // ---------------------------------------------------------------- indirmeler
 const rows = UNITS.map((u) => {
@@ -199,7 +201,7 @@ if (left) {
   process.exit(1);
 }
 
-const ogUrl = (BASE ? BASE : '.') + '/og/site.png';
+const ogUrl = (BASE ? BASE : '.') + '/og/site.jpg';
 const html =
   '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
