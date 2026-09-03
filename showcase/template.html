@@ -299,10 +299,11 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   <div class="wrap">
     <div class="intro">
       <p class="eyebrow">Playable ad units · work samples</p>
-      <h1>Seven units, one pipeline</h1>
-      <p>Five mechanics, eight ad networks. Every unit is built from supplied art and
+      <h1>Eight units, one pipeline</h1>
+      <p>Six mechanics, eight ad networks. Every unit is built from supplied art and
         inlined into one HTML file that makes no network requests. Tap any cover to
-        play it here — each one is the real package, not a video.</p>
+        play it here — each one is the real package, not a video. The first two share a
+        corridor, a character and an asset pack; only the mechanic differs.</p>
     </div>
 
     <div class="works">
@@ -315,6 +316,17 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           <h3>Crowd Rush</h3>
           <p class="genre">3D runner &middot; Three.js</p>
           <p class="num">%%SIZE_RUN%%</p>
+        </div>
+      </article>
+      <article class="work">
+        <a class="tile" href="%%HREF_STR%%" data-play="str" aria-label="Play Blade Rush">
+          <img src="%%POSTER_STR%%" alt="Blade Rush playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+        </a>
+        <div class="info">
+          <h3>Blade Rush</h3>
+          <p class="genre">3D action runner &middot; Three.js</p>
+          <p class="num">%%SIZE_STR%%</p>
         </div>
       </article>
       <article class="work">
@@ -411,7 +423,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </main>
 
 <div class="stats">
-  <div><div class="n">7</div><div class="c">units, five mechanics</div></div>
+  <div><div class="n">8</div><div class="c">units, six mechanics</div></div>
   <div><div class="n">100</div><div class="c">packages, 0 rejection risks</div></div>
   <div><div class="n">0</div><div class="c">external requests, in any unit</div></div>
   <div><div class="n">19%</div><div class="c">of the 5 MB cap, at the heaviest</div></div>
@@ -512,6 +524,64 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           plays makes the file <em>bigger</em>, because the clips share their keyframe
           buffers. They all ship.
         </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Two games, %%DELTA_RS%% apart</span>
+        <span class="s">Crowd Rush &middot; Blade Rush</span>
+      </summary>
+      <div class="body">
+        <p>
+          The two runners share a corridor, a camera, a light rig, a character, an
+          asset pack and a build. What differs is the mechanic: one grows a crowd
+          through gates and pays for mistakes in runners, the other upgrades a thrown
+          weapon and pays for them in firepower. Finished packages: %%SIZE_RUN%% and
+          %%SIZE_STR%%.
+        </p>
+        <div class="ledger">
+          <div><div class="n good">%%DELTA_RS%%</div><div class="c">The whole size difference between two different games</div></div>
+          <div><div class="n">0</div><div class="c">New models. The enemies are the player's own character, tinted; the weapons are geometry drawn in code</div></div>
+          <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
+        </div>
+        <p>
+          This is the second controlled comparison on this page. The match-3 and merge
+          pairs hold the art constant and change the renderer; this pair holds the
+          renderer <em>and</em> the art constant and changes the game. That is the
+          shape of the actual job: a studio has one art pack and wants six creatives
+          out of it, and the question is never "can you build a game" but "how much of
+          the last one survives into the next one".
+        </p>
+        <div class="notes">
+          <article>
+            <p class="t">Reuse</p><h3>What survived, and what did not</h3>
+            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor, the
+            scenery merge and the instanced character rig all carried over untouched.
+            Rewritten: the track definition, the game logic, the enemy and projectile
+            systems, and the parts of the view that draw them. The split fell almost
+            exactly where the file boundaries already were, which is the only real
+            argument for having drawn them there.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>The counter moved, the rule did not</h3>
+            <p>Every unit here puts its one number where the mistake lives. In the
+            crowd runner a wrong gate costs runners, so the counter is the crowd. Here
+            a wrong gate costs damage, so the counter is weapon power &mdash; and a
+            group you fail to clear takes a point of it per survivor. One number still
+            says both what you can do and what you just lost.</p>
+          </article>
+          <article>
+            <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>
+            <p>A wave has a size and a per-enemy health, and at first I tuned them
+            together. The result fell off a cliff: raising health from 20 to 22 turned
+            a group cleared without loss into one that cost eleven power. They are
+            different tests &mdash; health sets the power needed to drop an enemy in a
+            single throw, size sets how many throws the window allows. Once separated,
+            both became tunable, and the window turned out to be seventeen throws.</p>
+          </article>
+        </div>
       </div>
     </details>
 
@@ -996,6 +1066,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </div>
 
 <script id="prun" type="text/plain">%%B64_RUN%%</script>
+<script id="pstr" type="text/plain">%%B64_STR%%</script>
 <script id="p2d" type="text/plain">%%B64_2D%%</script>
 <script id="p3d" type="text/plain">%%B64_3D%%</script>
 <script id="pesc" type="text/plain">%%B64_ESC%%</script>
@@ -1006,6 +1077,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · %%SIZE_RUN%%'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · %%SIZE_STR%%'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · %%SIZE_ESC%%'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · %%SIZE_TD%%'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · %%SIZE_M3%%'],
@@ -1015,7 +1087,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   };
 
   var HREFS = {
-    'run': '%%HREF_RUN%%', 'esc': '%%HREF_ESC%%', 'td': '%%HREF_TD%%',
+    'run': '%%HREF_RUN%%', 'str': '%%HREF_STR%%', 'esc': '%%HREF_ESC%%', 'td': '%%HREF_TD%%',
     'm3': '%%HREF_M3%%', 'm2': '%%HREF_M2%%', '3d': '%%HREF_3D%%', '2d': '%%HREF_2D%%'
   };
 

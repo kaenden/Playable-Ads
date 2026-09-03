@@ -55,6 +55,7 @@ const pctStr = (n) => {
  */
 const UNITS = [
   { key: 'run', slug: 'crowd-rush', dist: 'run-3d', poster: 'run-3d', name: 'Crowd Rush', genre: '3D runner', engine: 'Three.js' },
+  { key: 'str', slug: 'blade-rush', dist: 'strike-3d', poster: 'strike-3d', name: 'Blade Rush', genre: '3D action runner', engine: 'Three.js' },
   { key: 'esc', slug: 'traffic-escape', dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Traffic Escape', genre: 'Block puzzle', engine: 'Three.js' },
   { key: 'td', slug: 'tower-rush', dist: 'defense-2d', poster: 'defense-2d', name: 'Tower Rush', genre: 'Tower defense', engine: 'Canvas 2D' },
   { key: 'm3', slug: 'sweet-match-3d', dist: 'match-3d', poster: 'match-3d', name: 'Sweet Match 3D', genre: 'Match-3', engine: 'Three.js' },
@@ -191,6 +192,9 @@ const posterMeta = {
 const shared = {
   ...posterMeta,
   ...IDENT,
+  '%%DELTA_RS%%': kb(Math.abs(
+    statSync(join(DIST, 'strike-3d', 'showcase', 'index.html')).size -
+    statSync(join(DIST, 'run-3d', 'showcase', 'index.html')).size)),
   '%%RATIO_M%%': (statSync(join(DIST, 'match-3d', 'showcase', 'index.html')).size /
     statSync(join(DIST, 'match-2d', 'showcase', 'index.html')).size).toFixed(1) + '×',
   '%%RATIO_3D%%': (statSync(join(DIST, 'merge-3d-atlas', 'showcase', 'index.html')).size /
@@ -213,11 +217,11 @@ const ogUrl = (BASE ? BASE : '.') + '/og/site.jpg';
 const html =
   '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
-  '<title>Playable Ads Lab — seven units, one pipeline</title>\n' +
-  '<meta name="description" content="Seven playable ad units built from supplied art: 3D runner, block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">\n' +
+  '<title>Playable Ads Lab — eight units, one pipeline</title>\n' +
+  '<meta name="description" content="Eight playable ad units built from supplied art: two 3D runners, a block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">\n' +
   '<meta property="og:type" content="website">\n' +
-  '<meta property="og:title" content="Playable Ads Lab — seven units, one pipeline">\n' +
-  '<meta property="og:description" content="Five mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">\n' +
+  '<meta property="og:title" content="Playable Ads Lab — eight units, one pipeline">\n' +
+  '<meta property="og:description" content="Six mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">\n' +
   '<meta property="og:image" content="' + ogUrl + '">\n' +
   (BASE ? '<meta property="og:url" content="' + BASE + '/">\n' : '') +
   '<meta name="twitter:card" content="summary_large_image">\n' +

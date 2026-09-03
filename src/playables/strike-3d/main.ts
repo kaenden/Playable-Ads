@@ -99,9 +99,12 @@ function loop(now: number): void {
       view.gate(ev.good, ev.label);
       if (ev.good) sfx.gain();
       else sfx.loss();
-    } else if (ev.type === 'crush') {
-      view.crush(ev.n);
+    } else if (ev.type === 'hurt') {
+      view.hurt(ev.n);
       sfx.crush();
+    } else if (ev.type === 'kill') {
+      view.kill(ev.x, ev.z);
+      sfx.step();
     } else {
       view.finish(ev.won);
       if (ev.won) sfx.smash();

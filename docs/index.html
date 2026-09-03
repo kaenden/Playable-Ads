@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Playable Ads Lab — seven units, one pipeline</title>
-<meta name="description" content="Seven playable ad units built from supplied art: 3D runner, block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">
+<title>Playable Ads Lab — eight units, one pipeline</title>
+<meta name="description" content="Eight playable ad units built from supplied art: two 3D runners, a block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Playable Ads Lab — seven units, one pipeline">
-<meta property="og:description" content="Five mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">
+<meta property="og:title" content="Playable Ads Lab — eight units, one pipeline">
+<meta property="og:description" content="Six mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">
 <meta property="og:image" content="https://kaenden.github.io/Playable-Ads/og/site.jpg">
 <meta property="og:url" content="https://kaenden.github.io/Playable-Ads/">
 <meta name="twitter:card" content="summary_large_image">
@@ -327,10 +327,11 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   <div class="wrap">
     <div class="intro">
       <p class="eyebrow">Playable ad units · work samples</p>
-      <h1>Seven units, one pipeline</h1>
-      <p>Five mechanics, eight ad networks. Every unit is built from supplied art and
+      <h1>Eight units, one pipeline</h1>
+      <p>Six mechanics, eight ad networks. Every unit is built from supplied art and
         inlined into one HTML file that makes no network requests. Tap any cover to
-        play it here — each one is the real package, not a video.</p>
+        play it here — each one is the real package, not a video. The first two share a
+        corridor, a character and an asset pack; only the mechanic differs.</p>
     </div>
 
     <div class="works">
@@ -343,6 +344,17 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           <h3>Crowd Rush</h3>
           <p class="genre">3D runner &middot; Three.js</p>
           <p class="num">801.0 KB</p>
+        </div>
+      </article>
+      <article class="work">
+        <a class="tile" href="u/blade-rush/" data-play="str" aria-label="Play Blade Rush">
+          <img src="covers/blade-rush.webp" alt="Blade Rush playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+        </a>
+        <div class="info">
+          <h3>Blade Rush</h3>
+          <p class="genre">3D action runner &middot; Three.js</p>
+          <p class="num">802.8 KB</p>
         </div>
       </article>
       <article class="work">
@@ -439,7 +451,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </main>
 
 <div class="stats">
-  <div><div class="n">7</div><div class="c">units, five mechanics</div></div>
+  <div><div class="n">8</div><div class="c">units, six mechanics</div></div>
   <div><div class="n">100</div><div class="c">packages, 0 rejection risks</div></div>
   <div><div class="n">0</div><div class="c">external requests, in any unit</div></div>
   <div><div class="n">19%</div><div class="c">of the 5 MB cap, at the heaviest</div></div>
@@ -540,6 +552,64 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           plays makes the file <em>bigger</em>, because the clips share their keyframe
           buffers. They all ship.
         </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Two games, 1.8 KB apart</span>
+        <span class="s">Crowd Rush &middot; Blade Rush</span>
+      </summary>
+      <div class="body">
+        <p>
+          The two runners share a corridor, a camera, a light rig, a character, an
+          asset pack and a build. What differs is the mechanic: one grows a crowd
+          through gates and pays for mistakes in runners, the other upgrades a thrown
+          weapon and pays for them in firepower. Finished packages: 801.0 KB and
+          802.8 KB.
+        </p>
+        <div class="ledger">
+          <div><div class="n good">1.8 KB</div><div class="c">The whole size difference between two different games</div></div>
+          <div><div class="n">0</div><div class="c">New models. The enemies are the player's own character, tinted; the weapons are geometry drawn in code</div></div>
+          <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
+        </div>
+        <p>
+          This is the second controlled comparison on this page. The match-3 and merge
+          pairs hold the art constant and change the renderer; this pair holds the
+          renderer <em>and</em> the art constant and changes the game. That is the
+          shape of the actual job: a studio has one art pack and wants six creatives
+          out of it, and the question is never "can you build a game" but "how much of
+          the last one survives into the next one".
+        </p>
+        <div class="notes">
+          <article>
+            <p class="t">Reuse</p><h3>What survived, and what did not</h3>
+            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor, the
+            scenery merge and the instanced character rig all carried over untouched.
+            Rewritten: the track definition, the game logic, the enemy and projectile
+            systems, and the parts of the view that draw them. The split fell almost
+            exactly where the file boundaries already were, which is the only real
+            argument for having drawn them there.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>The counter moved, the rule did not</h3>
+            <p>Every unit here puts its one number where the mistake lives. In the
+            crowd runner a wrong gate costs runners, so the counter is the crowd. Here
+            a wrong gate costs damage, so the counter is weapon power &mdash; and a
+            group you fail to clear takes a point of it per survivor. One number still
+            says both what you can do and what you just lost.</p>
+          </article>
+          <article>
+            <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>
+            <p>A wave has a size and a per-enemy health, and at first I tuned them
+            together. The result fell off a cliff: raising health from 20 to 22 turned
+            a group cleared without loss into one that cost eleven power. They are
+            different tests &mdash; health sets the power needed to drop an enemy in a
+            single throw, size sets how many throws the window allows. Once separated,
+            both became tunable, and the window turned out to be seventeen throws.</p>
+          </article>
+        </div>
       </div>
     </details>
 
@@ -1009,6 +1079,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">802.8 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1038,7 +1109,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-03 16:42 UTC</p>
+    <p class="stamp mono">build 2026-09-03 17:24 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1060,6 +1131,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </div>
 
 <script id="prun" type="text/plain"></script>
+<script id="pstr" type="text/plain"></script>
 <script id="p2d" type="text/plain"></script>
 <script id="p3d" type="text/plain"></script>
 <script id="pesc" type="text/plain"></script>
@@ -1070,6 +1142,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 802.8 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],
@@ -1079,7 +1152,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   };
 
   var HREFS = {
-    'run': 'u/crowd-rush/', 'esc': 'u/traffic-escape/', 'td': 'u/tower-rush/',
+    'run': 'u/crowd-rush/', 'str': 'u/blade-rush/', 'esc': 'u/traffic-escape/', 'td': 'u/tower-rush/',
     'm3': 'u/sweet-match-3d/', 'm2': 'u/sweet-match/', '3d': 'u/merge-dragons-3d/', '2d': 'u/merge-dragons/'
   };
 

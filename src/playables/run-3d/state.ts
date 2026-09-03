@@ -5,10 +5,14 @@
  * görünüm de 2D yedek görünüm de AYNI durumu okuyor, o yüzden ikisi hiçbir
  * zaman farklı bir oyun oynamıyor.
  */
-import { RUN, TRACK, Gate, Row, applyOp, opGood } from './config';
+import { RUN, TRACK, Gate, Row, applyOp, opGood, opLabel } from './config';
 
 export type EvOut =
-  | { type: 'gate'; good: boolean; before: number; after: number }
+  /**
+   * `label` kapının KENDİ etiketi, farkın değil. Kalabalık 1'in altına
+   * inemediği için kırpılan bir kapı ekranda "+0" gösteriyordu.
+   */
+  | { type: 'gate'; good: boolean; before: number; after: number; label: string }
   | { type: 'crush'; n: number }
   | { type: 'finish'; won: boolean };
 
@@ -156,7 +160,7 @@ export function tick(s: State, dt: number): void {
       const op = s.x < 0 ? ev.left : ev.right;
       const before = s.count;
       s.count = Math.max(1, applyOp(s.count, op));
-      s.events.push({ type: 'gate', good: opGood(op), before, after: s.count });
+      s.events.push({ type: 'gate', good: opGood(op), before, after: s.count, label: opLabel(op) });
     } else if (ev.type === 'row') {
       // Kapalı aralıkta duran HER adam eziliyor.
       let hit = 0;
