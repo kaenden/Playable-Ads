@@ -13,9 +13,14 @@
  * ne süre var ne hamle: ekrandaki tek sayı kalabalık ve oyuncu kendi
  * hatasını doğrudan o sayının üstünde görüyor.
  *
- * TEMPO. Koşu hızı 6.6 birim/sn, bitiş 136. birimde -> ödül anı ~21 saniye.
- * Ağ önerisi 25-30 saniyeyi aşmamak; runner'da daha da erken bitmesi iyi,
- * çünkü tekrar oynanış (TRY AGAIN) ikinci bir izlenim şansı veriyor.
+ * TEMPO. Koşu hızı 9.0 birim/sn, bitiş 176. birimde -> ödül anı ~20 saniye.
+ * İlk sürüm 6.6 birim/sn idi ve olaylar arası 3.3 saniye sürüyordu: kapıyı
+ * gördükten sonra beklemek kalıyordu, karar değil. Şimdi olay aralığı 2.2
+ * saniye — parmak boşta kalmıyor.
+ *
+ * TEK KİŞİYLE BAŞLIYOR. Beş kişiyle başlamak türün vaadini ilk karede
+ * harcıyordu: kalabalık zaten vardı, büyümesi fark edilmiyordu. Bir kişiden
+ * otuza çıkmak bu formatın kancası; ilk kapı da bu yüzden 2.9. saniyede.
  */
 
 /** Kapı işlemi. Ekranda operatörle birlikte gösteriliyor. */
@@ -50,6 +55,13 @@ export interface Row {
   blocks: Array<[number, number]>;
   /** Görsel: her aralığa hangi model konacak. */
   prop: string;
+  /**
+   * Engelin boyu. Tek bir sabit boy (1.95) her modele uymuyordu: kütük o
+   * ölçekte kütüğe değil çuvala benziyordu, çünkü karakterin 1.7 katıydı.
+   * Boy artık modelin kendi karakterine göre veriliyor — ve son sıra
+   * bilerek alçak, arkasındaki NEED tabelası görünsün diye.
+   */
+  h?: number;
 }
 
 export interface Finish {
@@ -66,27 +78,27 @@ export const RUN = {
   halfW: 3.1,
   /** Kalabalığın merkezinin gidebileceği en uç nokta. */
   steerLimit: 2.5,
-  speed: 6.6,
+  speed: 9.0,
   /** Hız sıfırdan tam hıza bu sürede çıkıyor: ilk kare kamera hareketiyle açılmasın. */
   rampFor: 0.9,
   /** Yatay yumuşatma — parmak bırakınca kalabalık kaymaya devam etmesin. */
   steerLerp: 11,
-  start: 5,
+  start: 1,
   /**
    * Ekranda aynı anda çizilen en fazla karakter.
    *
    * Kalabalık InstancedMesh ile çizildiği için bu sayının çizim çağrısına
    * etkisi YOK; sadece matris hesabı ve ekrandaki kalabalığın genişliği.
-   * Kusursuz oynanış 29 kişi getiriyor, sınır onun üstünde duruyor.
+   * Kusursuz oynanış son kapıda 33 kişiye çıkıyor, sınır onun üstünde duruyor.
    */
-  renderCap: 32,
+  renderCap: 36,
   /** Kalabalık dizilimi: i. adamın merkeze uzaklığı = spread * sqrt(i). */
   spread: 0.48,
   /** Kaç farklı koşu fazı var — animasyon bu kadar kez hesaplanıyor, kopyalanarak dağıtılıyor. */
   phases: 3,
   /** Kapının etkisi bu kadar sürede sayaca yansıyor (sayı akarken görünsün). */
   countFor: 0.45,
-  idleHintAfter: 2.2,
+  idleHintAfter: 1.6,
   celebrateFor: 1.5,
   /** Bitişten sonra kapanış kartı bu kadar bekliyor. */
   endAfter: 1.4,
@@ -95,10 +107,24 @@ export const RUN = {
 /**
  * PARKUR. z'ye göre sıralı; oyun sıradaki olayı geçtikçe ilerliyor.
  *
- * Denge (5 kişiyle başlayıp): kusursuz oynanış 5 -> 10 -> 20 -> 29,
- * baştan sona yanlış seçim 5 -> 3 -> 1 -> 1. Duvar 14 istiyor; yani
- * iki doğru seçim yetiyor, üç yanlış seçim kaybettiriyor. Ortadaki geniş
- * bant kasten böyle: playable'ın işi oyuncuyu elemek değil, kazandırmak.
+ * DÖRT KAPI, DÖRT ENGEL. İlk sürümde üç kapı iki engel vardı ve oyuncunun
+ * eli 20 saniyenin çoğunda boştaydı.
+ *
+ * DENGE — simüle edilerek ayarlandı, tahminle değil. Ezilme sayısı
+ * kalabalığın gerçek genişliğinden çıkıyor (phyllotaxis'te x = cos(i*GA) *
+ * spread * sqrt(i)), o yüzden boşluklar kalabalık büyüdükçe genişliyor:
+ * 0.95 -> 1.25 -> 1.75 -> 2.05.
+ *
+ *   kusursuz         1 -> 9 -> 8 -> 16 -> 12 -> 24 -> 21 -> 33 -> 28
+ *   1. kapı kaçarsa  25    2. kapı kaçarsa  21
+ *   3. kapı kaçarsa  18    4. kapı kaçarsa  13
+ *
+ * Duvar 24 istiyor. Yani ERKEN bir hata affediliyor, GEÇ bir hata
+ * affedilmiyor — riziko parkur boyunca artıyor.
+ *
+ * VE SON ENGELDEN SONRAKİ AN KASTEN GERGİN: oyuncu üçüncü engeli 21 kişiyle
+ * çıkıyor, duvarda "NEED 24" yazıyor, yani GERİDE. Son kapı kurtarıyor.
+ * 2026 kreatif metası güç fantezisi değil, az kalsın kaybediyordun.
  *
  * İYİ TARAF SIRAYLA DEĞİŞİYOR: sol, sağ, sol. İlk denemede iyi taraf iki kez
  * arka arkaya aynı yerdeydi ve oyuncunun parmağını bir daha oynatmasına
@@ -109,28 +135,31 @@ export const RUN = {
  * panel vardı ve seçim diye bir şey yoktu.
  */
 export const TRACK: Event[] = [
-  { type: 'gate', z: 26, left: { kind: 'add', v: 5 }, right: { kind: 'sub', v: 2 } },
+  { type: 'gate', z: 22, left: { kind: 'add', v: 8 }, right: { kind: 'sub', v: 2 } },
+  { type: 'row', z: 42, blocks: [[-3.1, -0.95], [0.95, 3.1]], prop: 'rock_tallB', h: 1.9 },
+  { type: 'gate', z: 62, left: { kind: 'sub', v: 3 }, right: { kind: 'add', v: 8 } },
   {
     type: 'row',
-    z: 48,
-    blocks: [[-3.1, -1.9], [1.8, 3.1]],
-    prop: 'rock_tallB',
-  },
-  { type: 'gate', z: 70, left: { kind: 'sub', v: 3 }, right: { kind: 'mul', v: 2 } },
-  {
-    type: 'row',
-    z: 92,
-    blocks: [[-3.1, -1.6], [1.7, 3.1]],
+    z: 82,
+    blocks: [[-3.1, -1.25], [1.25, 3.1]],
     // Kütük denendi ve olmadı: aralığa sığdırmak için enine sıkıştırılınca
     // yatan bir kütükten çok dikilmiş bir boruya benzedi. Ağaç kütüğü
     // (stump) sıkışınca da kütük gibi duruyor.
     prop: 'stump_round',
+    h: 1.2,
   },
-  { type: 'gate', z: 112, left: { kind: 'add', v: 9 }, right: { kind: 'div', v: 2 } },
-  { type: 'finish', z: 136, need: 14 },
+  { type: 'gate', z: 102, left: { kind: 'mul', v: 2 }, right: { kind: 'div', v: 2 } },
+  { type: 'row', z: 122, blocks: [[-3.1, -1.75], [1.75, 3.1]], prop: 'rock_largeA', h: 1.55 },
+  { type: 'gate', z: 142, left: { kind: 'sub', v: 8 }, right: { kind: 'add', v: 12 } },
+  // Son engel alçak kalmalı: duvarın NEED tabelası bunun ardından görünüyor.
+  { type: 'row', z: 160, blocks: [[-3.1, -2.05], [2.05, 3.1]], prop: 'rock_smallA', h: 1.1 },
+  { type: 'finish', z: 176, need: 24 },
 ];
 
-export const TRACK_LEN = 152;
+export const TRACK_LEN = 192;
+
+/** Duvarın istediği sayı — HUD ve kapanış kartı buradan okuyor, elle yazılmıyor. */
+export const NEED = (TRACK[TRACK.length - 1] as Finish).need;
 
 /** Kapının rengi doğrudan "iyi mi kötü mü" diyor; yazıyı okumaya gerek kalmıyor. */
 export const GATE_COLOR = {
@@ -164,7 +193,7 @@ export const COPY = {
   win: 'WALL SMASHED!',
   winSub: 'runners made it',
   lose: 'NOT ENOUGH!',
-  loseSub: 'you needed 14',
+  loseSub: 'you needed ' + NEED,
   again: 'TRY AGAIN',
   brand: 'CROWD RUSH',
   tagline: 'Grow your army. Break the wall.',

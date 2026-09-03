@@ -63,8 +63,14 @@ const SKY = '#FFF0DA';
 // Malzemenin kendi rengini istediğin sonuca göre değil, IŞIKTAN SONRA
 // istediğin sonuca göre seçmek gerekiyor — ilk denemede zemin ekranda
 // bembeyaz çıktı.
-const GROUND = '#1B9678';
-const GRASS_DARK = '#0F7962';
+// ÇİMEN AĞAÇTAN AYRILMALI. İlk sürümde çimen #1B9678 idi; palet dokusunu
+// örnekleyince ağaçların yeşilinin #309870 / #188058 olduğu çıktı — ton
+// açısı 157, çimeninki 156. Neredeyse aynı renk, o yüzden ağaçlar zeminden
+// ayrışmıyordu. Çimen sarıya doğru çekildi (ton açısı 93), parlaklığı
+// bilerek sabit tutuldu: zemin yatay olduğu için ana ışığın neredeyse
+// tamamını alıyor ve açan her değer beyaza patlıyor.
+const GROUND = '#5E9A2E';
+const GRASS_DARK = '#4A7826';
 const SAND = '#F3D9A2';
 const CHAR_H = 1.15;
 
@@ -113,7 +119,7 @@ function grassTexture(): CanvasTexture {
     const grd = g.createRadialGradient(x, y, 0, x, y, r);
     // SADECE KOYULTAN leke. Açık leke eklemek yeşili griye çekiyordu:
     // beyaza doğru her katkı doygunluğu düşürür, koyuya doğru katkı düşürmez.
-    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(8,96,74,.22)' : 'rgba(6,74,62,.14)');
+    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(46,78,20,.22)' : 'rgba(34,58,14,.14)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grd;
     g.beginPath();
@@ -528,7 +534,7 @@ export class View3D implements RunView {
   private buildRow(ev: Row): void {
     const g = new Group();
     const size = propSize(ev.prop);
-    const H = 1.95;
+    const H = ev.h ?? 1.95;
     for (const b of ev.blocks) {
       const span = b[1] - b[0];
       // Kaç parça sığdığını MODELİN KENDİ ENİ söylüyor.

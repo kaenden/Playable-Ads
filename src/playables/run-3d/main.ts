@@ -95,7 +95,9 @@ function autoSteer(dt: number): void {
 
   if (want === null) return;
   const d = want - state.steer;
-  steerBy(state, Math.max(-2.4 * dt, Math.min(2.4 * dt, d)));
+  // 3.6 birim/sn: parkur sıklaşınca 2.4 yetişmiyordu ve demo kapıyı
+  // ortadan geçiyordu. Gösteri oynanışı beceriksiz görünmemeli.
+  steerBy(state, Math.max(-3.6 * dt, Math.min(3.6 * dt, d)));
 }
 
 function goodSide(g: Gate): number {
