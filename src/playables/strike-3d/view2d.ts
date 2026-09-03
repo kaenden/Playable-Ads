@@ -15,6 +15,7 @@ import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { Fx } from '../../core/fx';
 import { RunView } from './view';
+import { weaponTier } from './weapons';
 import {  } from '../../core/draw';
 
 const FONT = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
@@ -171,12 +172,15 @@ export class View2D implements RunView {
       }
     }
 
-    // Havadaki silahlar.
+    // Havadaki silahlar. Bu görünüm şematik — figürler nokta, silahlar çizgi.
+    // Kademe yine de okunuyor: güçlü silah uzun çizgi, tıpkı 3D'de daha büyük
+    // model olması gibi.
     g.fillStyle = '#E9EEF5';
     for (const sh of s.shots) {
       const x = this.sx(sh.x, camX);
       const y = this.sy(sh.z, s.z);
-      g.fillRect(x - 5, y - 2, 10, 4);
+      const len = 9 + weaponTier(sh.dmg) * 3;
+      g.fillRect(x - len / 2, y - 2, len, 4);
     }
 
     // Oyuncu kalabalığı.

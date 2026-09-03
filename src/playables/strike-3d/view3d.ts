@@ -46,7 +46,8 @@ import {
 import { STRIKE, TRACK, TRACK_LEN, GATE_COLOR, Gate, Target, opLabel, opGood } from './config';
 import { State, offsetX, offsetZ, targetSlot, standing } from './state';
 import { Layout, UiState } from './layout';
-import { Hud, bladeIcon } from './hud';
+import { Hud } from './hud';
+import { weaponGeometry, weaponIcon, weaponName, weaponTier, WEAPONS } from './weapons';
 import { Fx } from '../../core/fx';
 import { outlinedText } from '../../core/draw';
 
@@ -226,10 +227,12 @@ export class View3D implements RunView {
   private foeSquad: Squad;
   /** Patron: aynı karakterin devi. Yeni model üretilmedi, sadece ölçek. */
   private boss: Squad;
-  /** Havadaki silahlar — hepsi tek InstancedMesh. */
-  private shotMesh: InstancedMesh | null = null;
+  /** Havadaki silahlar — kademe başına tek InstancedMesh. */
+  private shotMeshes: InstancedMesh[] = [];
+  private shotN: number[] = [];
   private shotM = new Matrix4();
-  private hideM = new Matrix4().makeScale(0, 0, 0);
+  private tumble = new Matrix4();
+  private tilt = new Matrix4();
   /** Yerleşim dizileri: her karede yeniden ayrılmasın diye alanda duruyor. */
   private fx0 = new Float32Array(STRIKE.foeCap);
   private fz0 = new Float32Array(STRIKE.foeCap);
@@ -541,22 +544,33 @@ export class View3D implements RunView {
   }
 
   /**
-   * Silahlar tek InstancedMesh.
+   * Silahlar — kademe başına tek InstancedMesh.
    *
-   * Model yok: fırlatılan şey ince, uzun bir kutu ve dönüyor. Bu ölçekte
-   * bir balta modelinden ayırt edilmiyor, ama pakete tek bayt eklemiyor —
-   * ve havada aynı anda yirmi tanesi olduğunda hepsi TEK çizim çağrısı.
+   * İlk sürümde fırlatılan şey tek bir sarı kutuydu ve silah olarak
+   * okunmuyordu: ekranda uçan bir çizgi vardı, o kadar. Oysa bu oyunun iki
+   * sayacından biri SİLAH GÜCÜ — silahın kendisi görünmüyorsa yükseltme de
+   * sadece bir sayının değişmesi oluyor.
+   *
+   * Şimdi dört kademe var (bıçak, balta, kılıç, çift ağızlı balta) ve her
+   * biri `weapons.ts`'teki tarifden üretiliyor. Kademe başına tek mesh, tek
+   * malzeme: köşe rengi sayesinde çelik, ahşap ve altın aynı çizim çağrısında.
+   * Aynı anda havada sadece bir ya da iki kademe olabildiği için (yükseltme
+   * anında eski silahlar hâlâ uçuyor) pratikte bu bir-iki çizim çağrısı.
    */
   private buildShots(): void {
-    const geo = new BoxGeometry(0.72, 0.14, 0.22);
-    const im = new InstancedMesh(
-      geo,
-      new MeshLambertMaterial({ color: new Color('#FFD45F'), emissive: 0x8a6a20 }),
-      STRIKE.shotCap
-    );
-    im.frustumCulled = false;
-    this.shotMesh = im;
-    this.scene.add(im);
+    // Kendi rengini taşıyan malzeme: `vertexColors` olmadan tek renkli olurdu.
+    // Hafif ışıma, silahların koyu zeminde ve uzakta sisin içinde de
+    // okunmasını sağlıyor.
+    const mat = new MeshLambertMaterial({ vertexColors: true, emissive: 0x2a2a30 });
+    for (let t = 0; t < WEAPONS.length; t++) {
+      const im = new InstancedMesh(weaponGeometry(t), mat, STRIKE.shotCap);
+      im.frustumCulled = false;
+      im.count = 0;
+      im.visible = false;
+      this.shotMeshes.push(im);
+      this.shotN.push(0);
+      this.scene.add(im);
+    }
   }
 
   private mergeStatic(): void {
@@ -726,7 +740,9 @@ export class View3D implements RunView {
   broke(wz: number, upgraded: number): void {
     const [x, y] = this.worldScreen(0, wz, CHAR_H * 1.1);
     if (upgraded) {
-      this.hud.pop(x, y, 'BLADE ' + upgraded, '#FFD45F');
+      // Sayı değil İSİM: yeni sayıyı zaten kart gösteriyor, burada okunması
+      // gereken şey elindekinin değiştiği.
+      this.hud.pop(x, y, weaponName(upgraded), '#FFD45F');
       this.fx.burst(x, y, this.L.w * 0.1, 7, '#FFD45F');
       this.grade.pulse('#FFE6A8');
     } else {
@@ -793,30 +809,65 @@ export class View3D implements RunView {
       // YÜKSELTME VEREN HEDEF İKONUNU TAŞIYOR. Referansta da böyle: kırınca
       // ne kazanacağını hedefin üstünde görüyorsun, kırdıktan sonra değil.
       if (ev.gives) {
-        bladeIcon(g, x, y - size * 0.92, size * 0.5);
-        g.font = '900 ' + Math.round(size * 0.42) + 'px ' + FONT;
-        outlinedText(g, '+' + ev.gives, x + size * 0.62, y - size * 0.86,
-          Math.round(size * 0.42), '#FFD45F', '#FF9F45', 'rgba(16,12,20,.9)');
+        // İkon KAZANILACAK SİLAHIN kendisi: hedefin üstünde duran şekil ile
+        // kırdıktan sonra havada uçan şekil aynı. Genel bir "yükseltme"
+        // rozeti bunu söyleyemezdi.
+        //
+        // YERİ SAYININ ALTI, ÜSTÜ DEĞİL. Üstte denendi ve çalışmadı: hedefler
+        // ile kapılar 19 birim arayla dizili, yani ekranda hedefin üstü çoğu
+        // zaman bir sonraki kapının paneline denk geliyor ve ikon panelin
+        // içinde kayboluyordu. Altında ise düşman figürlerinin üstünde
+        // duruyor — hem koyu bir zemin buluyor hem de referanstaki gibi
+        // "silah düşmanın üzerinde" okunuyor.
+        const iy = y + size * 0.88;
+        const ir = size * 0.5;
+        weaponIcon(g, x - size * 0.2, iy, ir, weaponTier(ev.gives));
+        const fs = Math.round(size * 0.46);
+        g.font = '900 ' + fs + 'px ' + FONT;
+        outlinedText(g, '+' + ev.gives, x + size * 0.42, iy, fs,
+          '#FFD45F', '#FF9F45', 'rgba(16,12,20,.9)');
       }
       g.restore();
     }
   }
 
-  /** Havadaki silahlar — konum + dönüş, hepsi tek InstancedMesh. */
+  /**
+   * Havadaki silahlar.
+   *
+   * Her atış FIRLATILDIĞI ANDAKİ gücü taşıyor, o yüzden kademesi de ondan
+   * çıkıyor: yükseltme anında havadaki eski silahlar eski hâlleriyle uçmaya
+   * devam ediyor, sonradan kılıca dönüşmüyorlar.
+   *
+   * DÖNÜŞ EKSENİ Z. İlk sürüm Y ekseninde döndürüyordu — pervane gibi, ve
+   * kamera arkadan baktığı için silah yarı zaman kenardan görünüp
+   * kayboluyordu. Z ekseni ekrana dik: silah saat yelkovanı gibi dönüyor ve
+   * silüeti her karede tam okunuyor. Küçük bir X yatması, tamamen düz bir
+   * kâğıt gibi durmasını engelliyor.
+   */
   private updateShots(s: State): void {
-    const im = this.shotMesh;
-    if (!im) return;
-    for (let i = 0; i < STRIKE.shotCap; i++) {
-      if (i >= s.shots.length) {
-        im.setMatrixAt(i, this.hideM);
-        continue;
-      }
-      const sh = s.shots[i];
-      this.shotM.makeRotationY(sh.spin);
-      this.shotM.setPosition(LANE * sh.x, CHAR_H * 0.72, sh.z);
+    for (let t = 0; t < this.shotN.length; t++) this.shotN[t] = 0;
+    for (const sh of s.shots) {
+      const t = weaponTier(sh.dmg);
+      const im = this.shotMeshes[t];
+      if (!im) continue;
+      const i = this.shotN[t];
+      if (i >= STRIKE.shotCap) continue;
+      this.tumble.makeRotationZ(sh.spin);
+      this.tilt.makeRotationX(0.34);
+      this.shotM.multiplyMatrices(this.tilt, this.tumble);
+      this.shotM.setPosition(LANE * sh.x, CHAR_H * 0.78, sh.z);
       im.setMatrixAt(i, this.shotM);
+      this.shotN[t] = i + 1;
     }
-    im.instanceMatrix.needsUpdate = true;
+    for (let t = 0; t < this.shotMeshes.length; t++) {
+      const im = this.shotMeshes[t];
+      const n = this.shotN[t];
+      // Boş kademe hiç çizilmiyor: gizleme matrisi yerine `count`, çünkü
+      // sıfır örnekli bir çizim çağrısı da bir çizim çağrısıdır.
+      im.count = n;
+      im.visible = n > 0;
+      if (n > 0) im.instanceMatrix.needsUpdate = true;
+    }
   }
 
   // ------------------------------------------------------------------ döngü

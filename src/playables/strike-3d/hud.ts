@@ -13,6 +13,7 @@ import { STRIKE, TRACK, TRACK_LEN, COPY, BOSS_HP } from './config';
 import { State } from './state';
 import { Layout, Rect, UiState } from './layout';
 import { roundRect, outlinedText, fitFont } from '../../core/draw';
+import { weaponIcon, weaponName, weaponTier } from './weapons';
 import { audio } from '../../core/audio';
 import { perf } from '../../core/perf';
 
@@ -24,25 +25,6 @@ interface Pop {
   text: string;
   color: string;
   life: number;
-}
-
-/** Bıçak ikonu — kartta ve yükseltme hedefinin üstünde aynısı çiziliyor. */
-export function bladeIcon(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-  g.save();
-  g.translate(cx, cy);
-  g.rotate(-0.5);
-  g.fillStyle = '#E9EEF5';
-  g.beginPath();
-  g.moveTo(-r * 0.12, r * 0.55);
-  g.lineTo(-r * 0.12, -r * 0.15);
-  g.lineTo(0, -r * 0.62);
-  g.lineTo(r * 0.12, -r * 0.15);
-  g.lineTo(r * 0.12, r * 0.55);
-  g.closePath();
-  g.fill();
-  g.fillStyle = '#8A6A3A';
-  g.fillRect(-r * 0.22, r * 0.5, r * 0.44, r * 0.18);
-  g.restore();
 }
 
 export class Hud {
@@ -333,13 +315,22 @@ export class Hud {
     roundRect(g, 1, 1, w - 2, h - 2, w * 0.17);
     g.stroke();
 
+    // Kartın başlığı silahın ADI: sadece sayı değişseydi yükseltme "5 oldu"
+    // olurdu, adı da değişince "kılıç aldım" oluyor. İsimler farklı uzunlukta
+    // olduğu için karta sığdırılıyor.
     g.fillStyle = 'rgba(255,255,255,.62)';
-    g.font = '800 ' + Math.round(w * 0.17) + 'px ' + FONT;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText('BLADE', w / 2, h * 0.17);
+    fitFont(g, weaponName(s.weapon), w * 0.86, '800', w * 0.17, FONT);
+    g.fillText(weaponName(s.weapon), w / 2, h * 0.17);
 
-    bladeIcon(g, w / 2, h * 0.45, w * 0.42);
+    // İkonun altına açık bir kuyu. Kart koyu, silahların gövdesi ahşap:
+    // koyu üstüne koyu koyunca çift ağızlı baltadan geriye sadece iki çelik
+    // parça kalıyordu. Kuyu her kademeyi aynı zeminde gösteriyor.
+    g.fillStyle = 'rgba(255,255,255,.1)';
+    roundRect(g, w * 0.16, h * 0.26, w * 0.68, h * 0.4, w * 0.1);
+    g.fill();
+    weaponIcon(g, w / 2, h * 0.46, w * 0.34, weaponTier(s.weapon));
 
     const num = String(s.weapon);
     const size = Math.round(w * 0.34);
