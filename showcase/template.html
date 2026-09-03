@@ -404,6 +404,14 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <p style="font-size:14px;color:var(--muted);max-width:60ch">
         For anyone who wants the engineering rather than the units.
       </p>
+      <p style="font-size:14px;color:var(--ink-2);max-width:66ch">
+        None of these have run a campaign, so there is no performance data on this page
+        and I am not going to imply any. What each write-up carries instead is the metric
+        the decision was made against &mdash; because in this format nearly every design
+        choice is a bet on one of three numbers: how many people understand the ad fast
+        enough to engage, how many reach the call to action at all, and how many
+        impressions get paid for and return nothing.
+      </p>
     </div>
 
     <details open>
@@ -467,7 +475,10 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <p>No timer, no move budget. Every mistake in this unit — a wrong gate, a
             rock taken head-on — is paid for in runners, so the only number on screen is
             the size of your crowd, and the wall at the end asks for a number in the
-            same unit. The player never has to translate.</p>
+            same unit. The player never has to translate. That is a comprehension-speed
+            decision: an ad has about three seconds to be understood, and every unit of
+            translation it asks for is spent out of that budget — which is the budget
+            IPM is really measuring.</p>
           </article>
         </div>
         <div class="ledger">
@@ -677,7 +688,9 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <p>Merge counts moves, because a wrong drop there is a decision. This unit
             counts seconds. Tapping a blocked car is not an error — it is how the player
             reads which car locks which. A move budget would have charged them for
-            learning the puzzle, so the pressure comes from the clock.</p>
+            learning the puzzle, so the pressure comes from the clock. Charging a player for
+            exploring is how a creative loses them in the first ten seconds, and a viewer
+            who leaves early never sees the call to action at all.</p>
           </article>
         </div>
         <div class="ledger">
@@ -803,7 +816,9 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           </table>
         </div>
         <p>
-          At runtime the 3D unit is effectively free; its cost is entirely in loading. The
+          At runtime the 3D unit is effectively free; its cost is entirely in loading — which
+          is the half that matters, because a viewer who leaves during the load was never
+          reached by the hook, and the impression is paid for either way. The
           overlay that produced these figures lives only in the development build — the units
           embedded above, and every package that ships to a network, are compiled without it.
         </p>
@@ -840,7 +855,10 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <p>
           Fixing that second one exposed a real gap. Some ad containers still run with
           WebGL unavailable, where a 3D creative goes blank and the impression burns with
-          the call to action never shown. The 3D unit now detects that and falls back to
+          the call to action never shown. That impression was still bought: it costs the
+          same as one that converts and returns nothing, which is the most expensive kind
+          of bug this format has — it does not surface as a crash, it surfaces as a worse
+          cost per install. The 3D unit now detects that and falls back to
           the 2D renderer: the game stays playable, the CTA stays live. It costs 4.4 KB.
         </p>
       </div>
@@ -914,12 +932,17 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <p class="t">Research</p><h3>Reference ads decide the format</h3>
             <p>Teardowns of three live campaign creatives changed the design: a move budget
             replaced the countdown, and the celebration was split from the call to action —
-            none of the references crushed the reward moment and the CTA into one frame.</p>
+            none of the references crushed the reward moment and the CTA into one frame.
+            The two beats do different jobs: the reward is what makes the player want the
+            game, the CTA is what turns wanting it into a tap. Put them in one frame and
+            the reward is still landing while the button is already asking.</p>
           </article>
           <article>
             <p class="t">Design</p><h3>Randomness is the enemy</h3>
             <p>The opening board is fixed so every viewer gets the same four-merge arc. If the run
-            differs per impression, the click-through rate measures nothing.</p>
+            differs per impression, the click-through rate measures nothing — you are no longer
+            comparing two creatives, you are comparing two different games, and the A/B test
+            that is supposed to pick a winner has nothing to pick between.</p>
           </article>
         </div>
       </div>
