@@ -1,23 +1,33 @@
 /**
- * Blade Rush — koridorda silah fırlatan tek karakter.
+ * Blade Rush — koridorda silah fırlatan kalabalık.
  *
  * CROWD RUSH'IN KARDEŞİ. Koridor, karakter, asset paketi, kamera, ışık ve
- * derleme hattı birebir aynı; değişen tek şey MEKANİK. Vitrindeki ikinci
- * kontrollü karşılaştırma bu: ilki "aynı oyun, iki renderer", bu "aynı
- * renderer ve aynı asset, iki oyun". Tek bir yeni model üretilmedi —
- * düşmanlar oyuncunun kendi karakteri, silahlar kodda çiziliyor.
+ * derleme hattı birebir aynı; değişen tek şey MEKANİK. Tek bir yeni model
+ * üretilmedi — düşmanlar oyuncunun kendi karakteri, silahlar kodda çiziliyor.
  *
- * SAYAÇ = SİLAH GÜCÜ.
+ * İKİ SAYAÇ, İKİ AYRI KAYNAK.
  *
- * Projedeki kural yine geçerli: sayaç HATANIN YAŞADIĞI yeri ölçmeli.
- * Crowd Rush'ta hata adam kaybettiriyordu çünkü sayaç kalabalıktı. Burada
- * hata "yanlış kapı" ve bedeli "grubu temizleyememek"; temizlenemeyen her
- * düşman gücünden bir puan götürüyor. Yani tek sayı hem neyi yapabildiğini
- * hem neyi kaybettiğini aynı birimde söylüyor.
+ * Referans kreatiften (Hell Escape) kare kare çıkarılan yapı bu. İlk
+ * denememde ikisini tek sayıya indirmiştim ve yanlıştı: oyunun bütün
+ * gerilimi ikisinin AYRI kazanılmasından geliyor.
  *
- * NİŞAN ALMA YOK. Silahlar en yakın canlı düşmanı kendiliğinden buluyor.
- * Parmağın tek işi kapı seçmek — iki eksenli bir reklam öğrenilmiyor, ve
- * referans kreatiflerin hiçbirinde de nişan alma yok.
+ *   ADAM SAYISI  kapılardan geliyor (×2, −8, +5, ÷2). Ne kadar HIZLI
+ *                vurduğunu belirliyor: her adam ayrı silah fırlatıyor.
+ *   SİLAH GÜCÜ   tuzaklardan geliyor. Tek vuruşun KAÇ hasar verdiğini
+ *                belirliyor — ve hedefin canı tam olarak o kadar iniyor.
+ *
+ * Yani kapılar tempoyu, tuzaklar vuruşu büyütüyor. İkisi de olmadan son
+ * patron kırılmıyor: kalabalık tek başına yeterince hızlı vuramıyor, güçlü
+ * silah tek başına yeterince sık vuramıyor.
+ *
+ * TUZAK BİR FIRSAT, CEZA DEĞİL. Üstünde silah ikonu taşıyan hedefi
+ * kırabilirsen silahın bir kademe yükseliyor; kıramazsan sadece yükselmiyor.
+ * Ceza yalnızca yol kesen tuzaklarda: ayakta kalan her figür bir adam
+ * götürüyor.
+ *
+ * NİŞAN ALMA YOK. Silahlar en yakın canlı hedefi kendiliğinden buluyor;
+ * parmağın tek işi kapı seçmek. Referans kreatiflerin hiçbirinde de nişan
+ * alma yok — iki eksenli bir reklam öğrenilmiyor.
  */
 
 export interface Op {
@@ -25,6 +35,7 @@ export interface Op {
   v: number;
 }
 
+/** Adam sayısını değiştiren kapı. */
 export interface Gate {
   type: 'gate';
   z: number;
@@ -33,62 +44,67 @@ export interface Gate {
 }
 
 /**
- * Düşman grubu. Konumları sabit: parkur her açılışta aynı, çünkü gösterim
- * başına değişen bir koşu hiçbir şey ölçmüyor (merge biriminden kalan ders).
+ * Kırılacak hedef. Tuzak, silah yükseltmesi ve patron AYNI ŞEY — sadece
+ * alanları farklı doluyor. Tek tip olması hem kodu hem parkuru sadeleştirdi:
+ * üçünün de canı var, üçü de aynı şekilde eriyor, üçü de aynı sayıyı
+ * gösteriyor.
  */
-export interface Wave {
-  type: 'wave';
+export interface Target {
+  type: 'target';
   z: number;
-  /** Kaç düşman. */
+  /** Kaç figür duruyor. Can düştükçe orantılı olarak azalıyorlar. */
   count: number;
-  /** Düşman başına can. */
   hp: number;
+  /** Kırılınca silah bu değere çıkıyor. Yoksa hedef sadece yol kesiyor. */
+  gives?: number;
+  /** Son hedef: kırılamazsa oyun kaybediliyor. */
+  boss?: boolean;
+  /** Figür boyu çarpanı — patron dev. */
+  scale?: number;
 }
 
-/** Kapanış: dev düşman. Canı bitmeden ona varırsan kaybediyorsun. */
-export interface Boss {
-  type: 'boss';
-  z: number;
-  hp: number;
-}
-
-export type Event = Gate | Wave | Boss;
+export type Event = Gate | Target;
 
 export const STRIKE = {
   halfW: 3.1,
   steerLimit: 2.5,
-  /**
-   * Crowd Rush 9.0 koşuyor, bu 8.2.
-   *
-   * Sebep mekanik: orada bakılacak tek şey kapının rengi, burada bir de
-   * silahların düşmana ulaşıp ulaşmadığı var. Aynı hızda ikisi birden
-   * okunmuyordu.
-   */
-  speed: 8.2,
+  speed: 9.0,
   rampFor: 0.9,
   steerLerp: 11,
   countIn: 1.2,
 
-  /** Başlangıç silah gücü. Tek karakter, tek puan — büyüme buradan okunuyor. */
-  start: 1,
+  /** Başlangıç: tek adam, iki hasarlık silah. İkisi de en düşük değerinde. */
+  startCrowd: 1,
+  startWeapon: 2,
 
-  /** Silah fırlatma aralığı (saniye). */
-  fireEvery: 0.13,
-  /** Bu mesafeye giren gruba ateş açılıyor; boşluğa silah atılmıyor. */
-  range: 24,
-  /** Silahın ileri hızı (dünya birimi/sn) — koşu hızının üstüne biniyor. */
-  shotSpeed: 34,
-  /** Aynı anda havada olabilecek en fazla silah. */
-  shotCap: 24,
+  /**
+   * Atış aralığı = baseFire / atıcı sayısı.
+   *
+   * Kalabalık büyüdükçe akış SIKLAŞIYOR, vuruş büyümüyor. Hedefin canı her
+   * vuruşta silah gücü kadar iniyor ve bu ekranda okunuyor; kalabalık bunu
+   * ne kadar hızlı yaptığını belirliyor. İkisini karıştırmak — kalabalığı
+   * da hasara çevirmek — ekrandaki sayıyı okunmaz yapardı.
+   */
+  baseFire: 0.5,
+  /** Bundan fazlası akışı sıklaştırmıyor; ekranda okunmaz bir duvar olurdu. */
+  throwCap: 14,
+  minFire: 0.035,
 
-  /** Saf başına en fazla düşman — fazlası arkaya yeni saf oluyor. */
+  /** Bu mesafeye giren hedefe ateş açılıyor; boşluğa silah atılmıyor. */
+  range: 19,
+  shotSpeed: 40,
+  shotCap: 26,
+
+  /** Kalabalık dizilimi: i. adamın merkeze uzaklığı = spread * sqrt(i). */
+  spread: 0.46,
+  /** Ekranda çizilen en fazla adam (instancing: çizim çağrısına etkisi yok). */
+  crowdCap: 30,
+
+  /** Hedef safı: saf başına en fazla figür, ve saflar arası mesafe. */
   foeCols: 5,
-  /** Saflar arası mesafe (z). */
-  foeRowGap: 3.6,
-  /** Ekranda aynı anda çizilen en fazla düşman (instancing: çizim çağrısına etkisi yok). */
-  foeCap: 40,
+  foeRowGap: 3.4,
+  foeCap: 24,
 
-  /** Kaç farklı animasyon fazı hesaplanıyor. */
   phases: 3,
   countFor: 0.4,
   idleHintAfter: 1.6,
@@ -97,42 +113,41 @@ export const STRIKE = {
 };
 
 /**
- * PARKUR. Crowd Rush ile aynı ritim: dört kapı, aralarında dört olay.
+ * PARKUR — dört kapı, üç silah yükseltmesi, bir yol kesen tuzak, bir patron.
  *
- * DENGE — tarayıcıda ölçülerek ayarlandı, tahminle değil. Ölçerken çıkan
- * şey tasarımı da netleştirdi: grubun İKİ AYRI DÜĞMESİ var ve ikisi farklı
- * şeyi sınıyor.
+ * DENGE. Bir hedefe menzil içindeyken atılabilen vuruş sayısı hesaplanabilir:
+ * menzil / hız / (baseFire / atıcı). Yani "bu hedef kırılır mı" sorusunun
+ * cevabı baştan belli, ve parkur ona göre kuruldu:
  *
- *   hp    = tek atışta düşürmek için gereken GÜÇ EŞİĞİ. Gücün candan
- *           küçükse her düşman iki atış yiyor ve bütçen ikiye katlanıyor.
- *   count = pencerede yetiştirmen gereken ATIŞ SAYISI. Bir gruba ateş
- *           edilen süre sabit (menzil / hız), atış aralığı da sabit —
- *           yani kaç atış yapabileceğin baştan belli.
+ *   kapı 1  ×3 → 3 adam,  silah 2  →  22 canlık yükseltme → silah 3
+ *   kapı 2  ×2 → 6 adam,  silah 3  →  70 canlık tuzak, sonra 72 canlık
+ *                                     yükseltme          → silah 5
+ *   kapı 3  ×2 → 12 adam, silah 5  → 240 canlık yükseltme → silah 9
+ *   kapı 4  ×2 → 24 adam (14 ile sınırlı), silah 9 → 430 canlık patron
  *
- * İlk kurulumda ikisini birlikte oynatıyordum ve denge uçurumdan
- * düşüyordu: canı 20'den 22'ye çıkarmak kayıpsız geçilen bir grubu
- * 11 puan kaybettiren bir gruba çeviriyordu. Ayrıldıklarında ikisi de
- * ayarlanabilir hâle geldi.
+ * Her adım BİLEREK dar: doğru kapıyı seçen oyuncu hedefi son saniyede
+ * kırıyor. Bir kapıyı kaçırmak zinciri koparıyor, çünkü kırılamayan
+ * yükseltme sonraki hedefi de erişilmez yapıyor — ceza tek seferlik değil,
+ * birikimli. Referans kreatifin yaptığı da bu.
  *
- * İyi taraf sırayla değişiyor (sol, sağ, sol, sağ) — arka arkaya aynı taraf
- * olduğunda oyuncunun parmağını bir daha oynatmasına gerek kalmıyor ve
- * "seçim yapılan oyun" hissi kayboluyor.
+ * İyi taraf sırayla değişiyor (sol, sağ, sol, sağ): arka arkaya aynı taraf
+ * olduğunda oyuncunun parmağını bir daha oynatmasına gerek kalmıyor.
  */
 export const TRACK: Event[] = [
-  { type: 'gate', z: 20, left: { kind: 'add', v: 4 }, right: { kind: 'sub', v: 2 } },
-  { type: 'wave', z: 40, count: 5, hp: 10 },
-  { type: 'gate', z: 60, left: { kind: 'sub', v: 3 }, right: { kind: 'mul', v: 3 } },
-  { type: 'wave', z: 80, count: 8, hp: 30 },
-  { type: 'gate', z: 100, left: { kind: 'mul', v: 2 }, right: { kind: 'div', v: 2 } },
-  { type: 'wave', z: 120, count: 10, hp: 90 },
-  { type: 'gate', z: 140, left: { kind: 'div', v: 3 }, right: { kind: 'add', v: 14 } },
-  { type: 'boss', z: 166, hp: 800 },
+  { type: 'gate', z: 19, left: { kind: 'mul', v: 3 }, right: { kind: 'sub', v: 1 } },
+  { type: 'target', z: 38, count: 4, hp: 22, gives: 3 },
+  { type: 'gate', z: 57, left: { kind: 'div', v: 2 }, right: { kind: 'mul', v: 2 } },
+  { type: 'target', z: 76, count: 6, hp: 70 },
+  { type: 'target', z: 95, count: 6, hp: 72, gives: 5 },
+  { type: 'gate', z: 114, left: { kind: 'mul', v: 2 }, right: { kind: 'sub', v: 4 } },
+  { type: 'target', z: 133, count: 8, hp: 240, gives: 9 },
+  { type: 'gate', z: 152, left: { kind: 'div', v: 3 }, right: { kind: 'mul', v: 2 } },
+  { type: 'target', z: 176, count: 1, hp: 430, boss: true, scale: 2.9 },
 ];
 
-export const TRACK_LEN = 184;
+export const TRACK_LEN = 194;
 
-/** Kapanış kartı ve HUD bunu dosyadan okuyor, elle yazılmıyor. */
-export const BOSS_HP = (TRACK[TRACK.length - 1] as Boss).hp;
+export const BOSS_HP = (TRACK[TRACK.length - 1] as Target).hp;
 
 export const GATE_COLOR = {
   good: '#2FBF71',
@@ -161,13 +176,13 @@ export const COPY = {
   cta: 'PLAY NOW',
   tutorial: 'SWIPE TO STEER',
   pick: 'PICK THE GREEN GATE',
-  crowd: 'POWER',
+  crowd: 'CREW',
   win: 'BOSS DOWN!',
-  winSub: 'power at the end',
+  winSub: 'crew still standing',
   lose: 'TOO WEAK!',
   loseSub: 'the boss survived',
   again: 'TRY AGAIN',
   brand: 'BLADE RUSH',
-  tagline: 'Upgrade your blade. Cut them down.',
+  tagline: 'Grow the crew. Upgrade the blade.',
   need: 'BOSS',
 };

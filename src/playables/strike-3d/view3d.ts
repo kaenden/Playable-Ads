@@ -43,10 +43,10 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { STRIKE, TRACK, TRACK_LEN, GATE_COLOR, Gate, Boss, opLabel, opGood } from './config';
-import { State, bossZ } from './state';
+import { STRIKE, TRACK, TRACK_LEN, GATE_COLOR, Gate, Target, opLabel, opGood } from './config';
+import { State, offsetX, offsetZ, targetSlot, standing } from './state';
 import { Layout, UiState } from './layout';
-import { Hud } from './hud';
+import { Hud, bladeIcon } from './hud';
 import { Fx } from '../../core/fx';
 import { outlinedText } from '../../core/draw';
 
@@ -233,8 +233,8 @@ export class View3D implements RunView {
   /** Yerleşim dizileri: her karede yeniden ayrılmasın diye alanda duruyor. */
   private fx0 = new Float32Array(STRIKE.foeCap);
   private fz0 = new Float32Array(STRIKE.foeCap);
-  private px0 = new Float32Array(1);
-  private pz0 = new Float32Array(1);
+  private px0 = new Float32Array(STRIKE.crowdCap);
+  private pz0 = new Float32Array(STRIKE.crowdCap);
   private bx0 = new Float32Array(1);
   private bz0 = new Float32Array(1);
   private bossDown = false;
@@ -310,7 +310,7 @@ export class View3D implements RunView {
     this.mergeStatic();
     this.buildSceneryShadows();
 
-    this.player = new Squad({ h: CHAR_H, clip: 'sprint', cap: 1, dust: true });
+    this.player = new Squad({ h: CHAR_H, clip: 'sprint', cap: STRIKE.crowdCap, dust: true });
     this.scene.add(this.player.root);
 
     // DÜŞMANLAR OYUNCUNUN KENDİ KARAKTERİ. Konsept bu, ve bedeli sıfır:
@@ -495,7 +495,7 @@ export class View3D implements RunView {
       // Düşman grupları STATİK DEĞİL: konumları durumda, çizimleri instanced
       // takımda. Burada sadece kapılar ve patronun arkasındaki barikat var.
       if (ev.type === 'gate') this.buildGate(ev);
-      else if (ev.type === 'boss') this.buildFinish(ev);
+      else if (ev.boss) this.buildFinish(ev);
     }
   }
 
@@ -603,7 +603,7 @@ export class View3D implements RunView {
     this.statics.clear();
   }
 
-  private buildFinish(ev: Boss): void {
+  private buildFinish(ev: Target): void {
     const cols = 7;
     const rows = 3;
     const bw = (STRIKE.halfW * 2) / cols;
@@ -719,10 +719,19 @@ export class View3D implements RunView {
     this.grade.pulse('#FF7A7A');
   }
 
-  /** Düşman düştü. Efekt ÖLENİN yerinde patlıyor, oyuncunun değil. */
-  kill(wx: number, wz: number): void {
-    const [x, y] = this.worldScreen(LANE * wx, wz, CHAR_H * 0.9);
-    this.fx.burst(x, y, this.L.w * 0.045, 3, '#FFD07A');
+  /**
+   * Hedef kırıldı. Efekt KIRILANIN yerinde patlıyor, oyuncunun değil — ve
+   * yükseltme veren hedef daha büyük patlıyor, çünkü kazanılan şey farklı.
+   */
+  broke(wz: number, upgraded: number): void {
+    const [x, y] = this.worldScreen(0, wz, CHAR_H * 1.1);
+    if (upgraded) {
+      this.hud.pop(x, y, 'BLADE ' + upgraded, '#FFD45F');
+      this.fx.burst(x, y, this.L.w * 0.1, 7, '#FFD45F');
+      this.grade.pulse('#FFE6A8');
+    } else {
+      this.fx.burst(x, y, this.L.w * 0.07, 4, '#FFD07A');
+    }
   }
 
   finish(won: boolean): void {
@@ -763,27 +772,33 @@ export class View3D implements RunView {
    * Yakındaki sayı büyük, uzaktaki küçük — mesafe bilgisi yazının kendi
    * boyutundan geliyor, ayrıca perspektif hesabı gerekmiyor.
    */
-  private drawFoeHp(g: CanvasRenderingContext2D, s: State, cz: number): void {
-    const near = 2;
-    const far = 34;
-    let drawn = 0;
-    for (let i = 0; i < s.foes.length && drawn < 26; i++) {
-      const f = s.foes[i];
-      if (f.hp <= 0) continue;
-      const d = f.z - cz;
-      if (d < near || d > far) continue;
-      const [x, y] = this.worldScreen(LANE * f.x, f.z, CHAR_H * 1.62);
-      if (x < -60 || x > this.L.w + 60) continue;
-      const k = 1 - (d - near) / (far - near);
-      const size = Math.round(Math.min(this.L.w * 0.052, 26) * (0.55 + k * 0.75));
+  private drawTargetHp(g: CanvasRenderingContext2D, s: State, cz: number): void {
+    for (let e = 0; e < TRACK.length; e++) {
+      const ev = TRACK[e];
+      if (ev.type !== 'target') continue;
+      const ts = s.targets[e];
+      if (ts.broken) continue;
+      const d = ev.z - cz;
+      if (d < -1 || d > STRIKE.range + 12) continue;
+      const top = CHAR_H * (ev.scale ? ev.scale * 1.18 : 1.72);
+      const [x, y] = this.worldScreen(0, ev.z, top);
+      const k = 1 - Math.max(0, d) / (STRIKE.range + 12);
+      const size = Math.round(Math.min(this.L.w * 0.115, 56) * (0.5 + k * 0.85));
       g.save();
-      g.globalAlpha = 0.35 + k * 0.65;
+      g.globalAlpha = 0.4 + k * 0.6;
       g.textAlign = 'center';
       g.textBaseline = 'middle';
       g.font = '900 ' + size + 'px ' + FONT;
-      outlinedText(g, String(Math.ceil(f.hp)), x, y, size, '#ffffff', '#ffffff', 'rgba(18,24,30,.9)');
+      outlinedText(g, String(Math.ceil(ts.hp)), x, y, size, '#ffffff', '#ffffff', 'rgba(18,24,30,.9)');
+      // YÜKSELTME VEREN HEDEF İKONUNU TAŞIYOR. Referansta da böyle: kırınca
+      // ne kazanacağını hedefin üstünde görüyorsun, kırdıktan sonra değil.
+      if (ev.gives) {
+        bladeIcon(g, x, y - size * 0.92, size * 0.5);
+        g.font = '900 ' + Math.round(size * 0.42) + 'px ' + FONT;
+        outlinedText(g, '+' + ev.gives, x + size * 0.62, y - size * 0.86,
+          Math.round(size * 0.42), '#FFD45F', '#FF9F45', 'rgba(16,12,20,.9)');
+      }
       g.restore();
-      drawn++;
     }
   }
 
@@ -823,33 +838,45 @@ export class View3D implements RunView {
 
     // ŞERİT -> DÜNYA X. Kamera +Z'ye baktığı için dünya +X ekranda SOLA
     // düşüyor; durum ekran anlamını kullanıyor, çeviri burada yapılıyor.
-    this.px0[0] = LANE * s.x;
-    this.pz0[0] = cz;
-    this.player.updateAt(this.px0, this.pz0, 1, running ? dt : dt * 0.3);
+    // ŞERİT -> DÜNYA X. Kamera +Z'ye baktığı için dünya +X ekranda SOLA
+    // düşüyor; durum ekran anlamını kullanıyor, çeviri burada yapılıyor.
+    const crew = Math.min(s.crowd, STRIKE.crowdCap);
+    for (let i = 0; i < crew; i++) {
+      this.px0[i] = LANE * (s.x + offsetX(i));
+      this.pz0[i] = cz + offsetZ(i);
+    }
+    this.player.updateAt(this.px0, this.pz0, crew, running ? dt : dt * 0.3);
 
-    // Düşmanlar: sadece CANLI olanlar ve sadece görüş menzilindekiler
-    // yerleştiriliyor. Ölen figür diziden çıkmıyor, sadece yerleşime
-    // girmiyor — böylece her karede yeniden tahsis yok.
+    // HEDEF FİGÜRLERİ. Kırılmamış ve görüş alanındaki hedeflerin AYAKTA
+    // KALAN figürleri yerleştiriliyor: can düştükçe saf eriyor.
     let n = 0;
-    for (let i = 0; i < s.foes.length && n < STRIKE.foeCap; i++) {
-      const f = s.foes[i];
-      if (f.hp <= 0) continue;
-      if (f.z < cz - 4 || f.z > cz + 62) continue;
-      this.fx0[n] = LANE * f.x;
-      this.fz0[n] = f.z;
-      n++;
+    for (let e = 0; e < TRACK.length && n < STRIKE.foeCap; e++) {
+      const ev = TRACK[e];
+      if (ev.type !== 'target' || ev.boss) continue;
+      const ts = s.targets[e];
+      if (ts.broken) continue;
+      if (ev.z < cz - 6 || ev.z > cz + 60) continue;
+      const live = standing(ev, ts);
+      for (let i = 0; i < live && n < STRIKE.foeCap; i++) {
+        const slot = targetSlot(ev, i);
+        this.fx0[n] = LANE * slot.x;
+        this.fz0[n] = slot.z;
+        n++;
+      }
     }
     this.foeSquad.updateAt(this.fx0, this.fz0, n, dt);
 
     // Patron: canı bitene kadar duruyor, bitince sahneden çıkıyor.
-    if (s.bossHp > 0) {
+    const bi = TRACK.length - 1;
+    const bev = TRACK[bi] as Target;
+    if (!s.targets[bi].broken) {
       this.bx0[0] = 0;
-      this.bz0[0] = bossZ();
+      this.bz0[0] = bev.z;
       this.boss.updateAt(this.bx0, this.bz0, 1, dt);
     } else {
       if (!this.bossDown) {
         this.bossDown = true;
-        const [bx, by] = this.worldScreen(0, bossZ(), CHAR_H * 2);
+        const [bx, by] = this.worldScreen(0, bev.z, CHAR_H * 2);
         this.fx.burst(bx, by, this.L.w * 0.13, 8, '#FFD07A');
         this.fx.shake = this.L.w * 0.06;
         this.grade.pulse('#FFE6A8');
@@ -896,7 +923,7 @@ export class View3D implements RunView {
     this.grade.draw(g2, dt);
     this.fx.draw(g2, dt);
     // Can sayıları arayüzün ALTINDA: sayaç çipi ve CTA onların üstünde kalmalı.
-    this.drawFoeHp(g2, s, cz);
+    this.drawTargetHp(g2, s, cz);
     this.hud.draw(s, ui, dt);
   }
 }

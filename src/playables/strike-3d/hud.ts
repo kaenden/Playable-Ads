@@ -10,7 +10,7 @@
  * duvarın istediğiyle yan yana koyuyor.
  */
 import { STRIKE, TRACK, TRACK_LEN, COPY, BOSS_HP } from './config';
-import { State, bossZ } from './state';
+import { State } from './state';
 import { Layout, Rect, UiState } from './layout';
 import { roundRect, outlinedText, fitFont } from '../../core/draw';
 import { audio } from '../../core/audio';
@@ -26,14 +26,36 @@ interface Pop {
   life: number;
 }
 
+/** Bıçak ikonu — kartta ve yükseltme hedefinin üstünde aynısı çiziliyor. */
+export function bladeIcon(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+  g.save();
+  g.translate(cx, cy);
+  g.rotate(-0.5);
+  g.fillStyle = '#E9EEF5';
+  g.beginPath();
+  g.moveTo(-r * 0.12, r * 0.55);
+  g.lineTo(-r * 0.12, -r * 0.15);
+  g.lineTo(0, -r * 0.62);
+  g.lineTo(r * 0.12, -r * 0.15);
+  g.lineTo(r * 0.12, r * 0.55);
+  g.closePath();
+  g.fill();
+  g.fillStyle = '#8A6A3A';
+  g.fillRect(-r * 0.22, r * 0.5, r * 0.44, r * 0.18);
+  g.restore();
+}
+
 export class Hud {
   t = 0;
   /** Sayaç hedefe akarak gidiyor — anlık zıplayan sayı okunmuyor. */
-  private shown = STRIKE.start;
+  private shown = STRIKE.startCrowd;
   /** Sayı değişince kısa bir büyüme: gözün kaçırmaması için. */
   private punch = 0;
+  /** Silah kartının yükselme vurgusu — 0'da tam vurgu, 1'de sönmüş. */
+  private wepPop = 1;
+  private lastWeapon = STRIKE.startWeapon;
   private punchUp = true;
-  private lastCount = STRIKE.start;
+  private lastCount = STRIKE.startCrowd;
   private pops: Pop[] = [];
 
   constructor(private g: CanvasRenderingContext2D, private L: Layout) {}
@@ -44,24 +66,30 @@ export class Hud {
   }
 
   reset(): void {
-    this.shown = STRIKE.start;
-    this.lastCount = STRIKE.start;
+    this.shown = STRIKE.startCrowd;
+    this.lastCount = STRIKE.startCrowd;
     this.punch = 0;
     this.pops.length = 0;
   }
 
   draw(s: State, ui: UiState, dt: number): void {
     this.t += dt;
-    if (s.power !== this.lastCount) {
-      this.punchUp = s.power > this.lastCount;
-      this.lastCount = s.power;
+    if (s.crowd !== this.lastCount) {
+      this.punchUp = s.crowd > this.lastCount;
+      this.lastCount = s.crowd;
       this.punch = 1;
     }
     this.punch = Math.max(0, this.punch - dt * 2.6);
-    this.shown += (s.power - this.shown) * (1 - Math.exp(-9 * dt));
-    if (Math.abs(s.power - this.shown) < 0.02) this.shown = s.power;
+    if (s.weapon !== this.lastWeapon) {
+      this.lastWeapon = s.weapon;
+      this.wepPop = 0;
+    }
+    this.wepPop = Math.min(1, this.wepPop + dt * 1.8);
+    this.shown += (s.crowd - this.shown) * (1 - Math.exp(-9 * dt));
+    if (Math.abs(s.crowd - this.shown) < 0.02) this.shown = s.crowd;
 
     this.header(s);
+    this.weaponCard(s);
     this.bossBar(s);
     this.drawPops(dt);
     if (s.pre > 0) this.countdown(s.pre);
@@ -145,10 +173,10 @@ export class Hud {
     for (const ev of TRACK) {
       const x = m + w * (ev.z / TRACK_LEN);
       const done = s.z >= ev.z;
-      g.fillStyle = ev.type === 'boss'
+      g.fillStyle = (ev.type === 'target' && !!ev.boss)
         ? '#E5484D'
         : done ? 'rgba(255,255,255,.85)' : 'rgba(40,60,55,.42)';
-      const r = ev.type === 'boss' ? h * 0.95 : h * 0.62;
+      const r = (ev.type === 'target' && !!ev.boss) ? h * 0.95 : h * 0.62;
       g.beginPath();
       g.arc(x, y + h / 2, r, 0, Math.PI * 2);
       g.fill();
@@ -239,8 +267,13 @@ export class Hud {
    * hiç kıpırdamayan bir bar bilgi değil gürültü.
    */
   private bossBar(s: State): void {
-    if (s.status !== 'playing' || s.bossHp <= 0) return;
-    const d = bossZ() - s.z;
+    if (s.status !== 'playing') return;
+    const bi = TRACK.length - 1;
+    const bev = TRACK[bi];
+    if (bev.type !== 'target') return;
+    const ts = s.targets[bi];
+    if (ts.broken) return;
+    const d = bev.z - s.z;
     if (d > STRIKE.range + 8 || d < -2) return;
     const g = this.g;
     const L = this.L;
@@ -255,7 +288,7 @@ export class Hud {
     g.fillStyle = 'rgba(20,28,24,.55)';
     roundRect(g, x, y, w, h, h / 2);
     g.fill();
-    const p = Math.max(0, s.bossHp / BOSS_HP);
+    const p = Math.max(0, ts.hp / BOSS_HP);
     g.fillStyle = '#E5484D';
     roundRect(g, x, y, Math.max(h, w * p), h, h / 2);
     g.fill();
@@ -263,10 +296,59 @@ export class Hud {
     g.font = '800 ' + Math.round(h * 0.72) + 'px ' + FONT;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText(COPY.need + '  ' + Math.ceil(s.bossHp), L.w / 2, y + h / 2 + 0.5);
+    g.fillText(COPY.need + '  ' + Math.ceil(ts.hp), L.w / 2, y + h / 2 + 0.5);
     g.restore();
   }
 
+  /**
+   * SİLAH KARTI — referanstaki "EQUIPPED" panelinin karşılığı.
+   *
+   * İki sayaçlı bir oyunda ikisi de ekranda olmak zorunda: üstteki çip kaç
+   * ADAM olduğunu, bu kart bir vuruşun kaç HASAR verdiğini söylüyor. Kart
+   * sağda ve dar, çünkü asıl okunacak şey hedefin üstündeki can; bu sayı
+   * onun ne kadar ineceğini açıklayan dipnot.
+   */
+  private weaponCard(s: State): void {
+    const g = this.g;
+    const L = this.L;
+    const w = Math.max(52, Math.min(L.w * 0.15, 72));
+    const h = w * 1.12;
+    const x = L.w - w - Math.max(10, L.w * 0.028);
+    const y = Math.max(12, L.h * 0.024) + Math.min(Math.max(46, L.h * 0.062), 64) + h * 0.42;
+
+    // Yükseldiği an büyüyüp yerine oturuyor — sessiz bir yükseltme fark
+    // edilmiyordu.
+    const pop = Math.max(0, 1 - this.wepPop);
+    const k = 1 + pop * 0.28;
+    g.save();
+    g.translate(x + w / 2, y + h / 2);
+    g.scale(k, k);
+    g.translate(-w / 2, -h / 2);
+
+    g.fillStyle = 'rgba(24,18,34,.78)';
+    roundRect(g, 0, 0, w, h, w * 0.18);
+    g.fill();
+    g.strokeStyle = pop > 0 ? '#FFD45F' : 'rgba(255,255,255,.28)';
+    g.lineWidth = 2;
+    roundRect(g, 1, 1, w - 2, h - 2, w * 0.17);
+    g.stroke();
+
+    g.fillStyle = 'rgba(255,255,255,.62)';
+    g.font = '800 ' + Math.round(w * 0.17) + 'px ' + FONT;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('BLADE', w / 2, h * 0.17);
+
+    bladeIcon(g, w / 2, h * 0.45, w * 0.42);
+
+    const num = String(s.weapon);
+    const size = Math.round(w * 0.34);
+    g.font = '900 ' + size + 'px ' + FONT;
+    outlinedText(g, num, w / 2, h * 0.81, size, '#FFD45F', '#FF9F45', 'rgba(16,12,20,.9)');
+    g.restore();
+  }
+
+  /** Tutorial: sağa sola giden el + iki ok. */
   /** Tutorial: sağa sola giden el + iki ok. */
   private swipeHint(): void {
     const g = this.g;
@@ -423,8 +505,8 @@ export class Hud {
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     const numSize = Math.min(L.w * 0.16, 76);
-    fitFont(g, String(s.power), L.w * 0.5, '900', numSize, FONT);
-    outlinedText(g, String(s.power), L.w / 2, cy + size * 1.06, numSize,
+    fitFont(g, String(s.crowd), L.w * 0.5, '900', numSize, FONT);
+    outlinedText(g, String(s.crowd), L.w / 2, cy + size * 1.06, numSize,
       won ? '#FFD45F' : '#FF8A8A', won ? '#FF9F45' : '#E5484D', 'rgba(16,24,20,.9)');
 
     const title = won ? COPY.win : COPY.lose;
@@ -434,7 +516,7 @@ export class Hud {
 
     g.fillStyle = 'rgba(255,255,255,.72)';
     g.font = '600 ' + Math.round(Math.min(L.w * 0.045, 21)) + 'px ' + FONT;
-    g.fillText(won ? s.power + ' ' + COPY.winSub : COPY.loseSub,
+    g.fillText(won ? s.crowd + ' ' + COPY.winSub : COPY.loseSub,
       L.w / 2, cy + size * 1.06 + Math.min(L.w * 0.19, 92));
 
     if (celebrating) return;

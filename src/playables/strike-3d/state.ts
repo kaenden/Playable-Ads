@@ -4,103 +4,102 @@
  * Crowd Rush'taki ayrımın aynısı: burada three.js yok, canvas yok. 3D
  * görünüm de 2D yedek görünüm de AYNI durumu okuyor.
  */
-import { STRIKE, TRACK, Gate, Boss, applyOp, opGood, opLabel } from './config';
+import { STRIKE, TRACK, Gate, Target, applyOp, opGood, opLabel } from './config';
 
 export type EvOut =
-  /**
-   * `label` kapının KENDİ etiketi, farkın değil.
-   *
-   * Önce farkı yazıyorduk ve güç 1'in altına inemediği için kırpılan bir
-   * kapı ekranda "+0" gösteriyordu — bozuk görünüyor. Kapının üstünde ne
-   * yazıyorsa ekranda o beliriyor artık; oyuncunun az önce geçtiği panelin
-   * yankısı, ve her zaman anlamlı.
-   */
+  /** `label` kapının KENDİ etiketi, farkın değil: 1'in altına kırpılan bir
+   *  kapı "+0" gösteriyordu ve bozuk görünüyordu. */
   | { type: 'gate'; good: boolean; before: number; after: number; label: string }
-  | { type: 'kill'; x: number; z: number }
+  | { type: 'break'; z: number; upgraded: number }
   | { type: 'hurt'; n: number }
   | { type: 'finish'; won: boolean };
-
-/** Tek düşman. Konumu sabit, tek değişkeni canı. */
-export interface Foe {
-  x: number;
-  z: number;
-  hp: number;
-  /** Hangi gruba ait — grup geçildiğinde ceza bunun üstünden sayılıyor. */
-  wave: number;
-}
 
 /** Havadaki silah. */
 export interface Shot {
   x: number;
   z: number;
-  /** Hedef düşmanın dizideki sırası; -1 ise patron. */
+  /** Hedefin TRACK içindeki indeksi; -1 ise hedefsiz. */
   target: number;
-  /** Fırlatıldığı andaki güç — havadayken kapıdan geçmek onu değiştirmesin. */
+  /** Fırlatıldığı andaki güç — havadayken silah yükselirse bu değişmesin. */
   dmg: number;
-  /** Görsel: dönüş açısı. */
   spin: number;
+}
+
+/** Bir hedefin çalışma zamanı durumu. TRACK indeksiyle eşleşiyor. */
+export interface TargetState {
+  hp: number;
+  /** Kırıldı mı — kırılan hedef ne çiziliyor ne ceza kesiyor. */
+  broken: boolean;
 }
 
 export interface State {
   z: number;
   x: number;
   steer: number;
-  /** Sayaç: silah gücü. */
-  power: number;
+  /** Sayaç bir: adam sayısı. Kapılardan geliyor, atış SIKLIĞINI belirliyor. */
+  crowd: number;
+  /** Sayaç iki: silah gücü. Tuzaklardan geliyor, vuruşun BÜYÜKLÜĞÜNÜ belirliyor. */
+  weapon: number;
   status: 'playing' | 'won' | 'lost';
   started: boolean;
   t: number;
   pre: number;
   next: number;
   endT: number;
-  foes: Foe[];
+  targets: TargetState[];
   shots: Shot[];
-  bossHp: number;
   fireAcc: number;
   events: EvOut[];
 }
 
+const GA = 2.39996323;
+
+/** Kalabalık dizilimi — Crowd Rush'taki ayçiçeği spiralinin aynısı. */
+export function offsetX(i: number): number {
+  return Math.cos(i * GA) * STRIKE.spread * Math.sqrt(i);
+}
+
+export function offsetZ(i: number): number {
+  return Math.sin(i * GA) * STRIKE.spread * Math.sqrt(i);
+}
+
 /**
- * DÜŞMAN DİZİLİMİ — SAF SAF, DAĞINIK DEĞİL.
+ * HEDEF FİGÜRLERİNİN YERLEŞİMİ — saf saf, dağınık değil.
  *
- * İlk sürümde Crowd Rush'ın ayçiçeği spiralini kullanıyordum: kalabalık
- * için doğru, hedef için yanlış. Referans kreatifte (Hell Escape) hedefler
- * koridoru kapatan SAFLAR hâlinde duruyor ve her birinin canı üstünde
- * yazıyor. Spiralde figürler birbirinin önüne binince o sayılar üst üste
- * düşüyor ve okunmaz oluyor — dizilimin asıl işi artık yer açmak.
+ * Kalabalık için spiral doğru, hedef için yanlış: figürler birbirinin önüne
+ * binince üstlerindeki can sayısı üst üste düşüyor ve okunmaz oluyor.
  *
- * Saf başına en fazla `foeCols` düşman, koridora eşit aralıklı; artanlar
- * arkaya yeni saf oluyor. Böylece hem hepsi görünüyor hem sayılar ayrık.
+ * Saflar oyuncuya DOĞRU uzuyor, en arka saf tam `ev.z` üstünde — ceza orada
+ * işlediği için, saflar ileri uzasaydı ceza oyuncunun daha varmadığı bir
+ * safı da ölmüş sayardı.
  */
-function buildFoes(): Foe[] {
-  const out: Foe[] = [];
-  for (let e = 0; e < TRACK.length; e++) {
-    const ev = TRACK[e];
-    if (ev.type !== 'wave') continue;
-    const cols = Math.min(STRIKE.foeCols, ev.count);
-    const span = (STRIKE.halfW - 0.5) * 2;
-    const rows = Math.ceil(ev.count / cols);
-    for (let i = 0; i < ev.count; i++) {
-      const c = i % cols;
-      const r = Math.floor(i / cols);
-      const rowN = Math.min(cols, ev.count - r * cols);
-      // Her saf KENDİ içinde ortalanıyor; yarım kalan son saf sola yaslanmıyor.
-      const step = span / Math.max(1, rowN);
-      // ARKA SAF YARIM ADIM KAYIK. Hizalı olduğunda arkadaki tam öndekinin
-      // ardına düşüyor ve iki can sayısı üst üste biniyordu.
-      const shift = r % 2 ? step * 0.5 : 0;
-      out.push({
-        x: Math.max(-span / 2, Math.min(span / 2, -span / 2 + step * (c + 0.5) + shift)),
-        // EN ARKA SAF TAM `ev.z` ÜSTÜNDE. Saflar oyuncuya doğru uzuyor,
-        // çünkü ceza `ev.z` geçilince işliyor: saflar ileri uzasaydı ceza,
-        // oyuncunun daha varmadığı bir safı da ölmüş sayardı.
-        z: ev.z - (rows - 1 - r) * STRIKE.foeRowGap,
-        hp: ev.hp,
-        wave: e,
-      });
-    }
-  }
-  return out;
+export function targetSlot(ev: Target, i: number): { x: number; z: number } {
+  const cols = Math.min(STRIKE.foeCols, ev.count);
+  const span = (STRIKE.halfW - 0.5) * 2;
+  const rows = Math.ceil(ev.count / cols);
+  const c = i % cols;
+  const r = Math.floor(i / cols);
+  const rowN = Math.min(cols, ev.count - r * cols);
+  const step = span / Math.max(1, rowN);
+  // Arka saf yarım adım kayık: hizalı olduğunda tam öndekinin ardına düşüyor.
+  const shift = r % 2 ? step * 0.5 : 0;
+  const x =
+    ev.count === 1
+      ? 0
+      : Math.max(-span / 2, Math.min(span / 2, -span / 2 + step * (c + 0.5) + shift));
+  return { x, z: ev.z - (rows - 1 - r) * STRIKE.foeRowGap };
+}
+
+/** Hedefin canı düştükçe ayakta kalan figür sayısı da düşüyor. */
+export function standing(ev: Target, ts: TargetState): number {
+  if (ts.broken) return 0;
+  return Math.max(1, Math.ceil((ts.hp / ev.hp) * ev.count));
+}
+
+function freshTargets(): TargetState[] {
+  return TRACK.map((ev) =>
+    ev.type === 'target' ? { hp: ev.hp, broken: false } : { hp: 0, broken: true }
+  );
 }
 
 export function createState(): State {
@@ -108,16 +107,16 @@ export function createState(): State {
     z: 0,
     x: 0,
     steer: 0,
-    power: STRIKE.start,
+    crowd: STRIKE.startCrowd,
+    weapon: STRIKE.startWeapon,
     status: 'playing',
     started: false,
     t: 0,
     pre: STRIKE.countIn,
     next: 0,
     endT: 0,
-    foes: buildFoes(),
+    targets: freshTargets(),
     shots: [],
-    bossHp: (TRACK[TRACK.length - 1] as Boss).hp,
     fireAcc: 0,
     events: [],
   };
@@ -128,16 +127,16 @@ export function reset(s: State): void {
   s.z = f.z;
   s.x = f.x;
   s.steer = f.steer;
-  s.power = f.power;
+  s.crowd = f.crowd;
+  s.weapon = f.weapon;
   s.status = f.status;
   s.started = f.started;
   s.t = f.t;
   s.pre = f.pre;
   s.next = f.next;
   s.endT = f.endT;
-  s.foes = f.foes;
+  s.targets = f.targets;
   s.shots.length = 0;
-  s.bossHp = f.bossHp;
   s.fireAcc = 0;
   s.events.length = 0;
 }
@@ -159,33 +158,22 @@ export function nextGate(s: State): Gate | null {
   return null;
 }
 
-/** Patronun z'si — görünüm mesafeyi buradan hesaplıyor. */
-export function bossZ(): number {
-  return (TRACK[TRACK.length - 1] as Boss).z;
+/** Kaç adam gerçekten atış yapıyor — akış sıklığı buradan geliyor. */
+export function throwers(s: State): number {
+  return Math.max(1, Math.min(s.crowd, STRIKE.throwCap));
 }
 
-/**
- * Menzildeki en yakın canlı hedef. Silah kendi buluyor: nişan alma yok,
- * parmağın tek işi kapı seçmek.
- */
+/** Menzildeki en yakın kırılmamış hedef. Nişan alma yok, silah kendi buluyor. */
 function acquire(s: State): number {
-  let best = -2;
-  let bestZ = Infinity;
-  for (let i = 0; i < s.foes.length; i++) {
-    const f = s.foes[i];
-    if (f.hp <= 0) continue;
-    if (f.z <= s.z) continue;
-    if (f.z - s.z > STRIKE.range) continue;
-    if (f.z < bestZ) {
-      bestZ = f.z;
-      best = i;
-    }
+  for (let i = 0; i < TRACK.length; i++) {
+    const ev = TRACK[i];
+    if (ev.type !== 'target') continue;
+    if (s.targets[i].broken) continue;
+    if (ev.z <= s.z - 1) continue;
+    if (ev.z - s.z > STRIKE.range) continue;
+    return i;
   }
-  if (best >= 0) return best;
-  // Grup kalmadıysa patron hedeftir — ama sadece menzile girince.
-  const bz = bossZ();
-  if (s.bossHp > 0 && bz > s.z && bz - s.z <= STRIKE.range) return -1;
-  return -2;
+  return -1;
 }
 
 export function tick(s: State, dt: number): void {
@@ -210,81 +198,98 @@ export function tick(s: State, dt: number): void {
   fire(s, dt);
   moveShots(s, dt);
 
-  while (s.next < TRACK.length && TRACK[s.next].z <= s.z) {
-    const ev = TRACK[s.next];
+  // HEDEF OLAYLARI BİRAZ GEÇTEN İŞLİYOR (grace).
+  //
+  // Hedefin tam üstünde işletince, o karede hâlâ HAVADA olan son vuruş
+  // hedefi kırmadan önce ceza kesiliyordu: oyuncu hedefi kırıyor ama yine
+  // de bir adam kaybediyor. 1.6 birim, yani bir vuruşun uçuş payı.
+  while (s.next < TRACK.length && TRACK[s.next].z + (TRACK[s.next].type === 'target' ? 1.6 : 0) <= s.z) {
+    const idx = s.next;
+    const ev = TRACK[idx];
     s.next++;
     if (ev.type === 'gate') {
       const op = s.x < 0 ? ev.left : ev.right;
-      const before = s.power;
-      s.power = Math.max(1, applyOp(s.power, op));
-      s.events.push({ type: 'gate', good: opGood(op), before, after: s.power, label: opLabel(op) });
-    } else if (ev.type === 'wave') {
-      // Temizlenemeyen her düşman güçten bir puan götürüyor.
-      let left = 0;
-      for (const f of s.foes) {
-        if (f.wave === s.next - 1 && f.hp > 0) {
-          left++;
-          f.hp = 0;
-        }
-      }
-      // Silah hep elde kalıyor: sıfıra düşüp reklamı ortasında bitirmek,
-      // gösterimi ödül anına hiç ulaştırmıyor.
-      const hurt = Math.min(left, s.power - 1);
-      if (hurt > 0) {
-        s.power -= hurt;
-        s.events.push({ type: 'hurt', n: hurt });
-      }
-    } else {
-      const won = s.bossHp <= 0;
-      s.status = won ? 'won' : 'lost';
+      const before = s.crowd;
+      s.crowd = Math.max(1, applyOp(s.crowd, op));
+      s.events.push({ type: 'gate', good: opGood(op), before, after: s.crowd, label: opLabel(op) });
+      continue;
+    }
+
+    const ts = s.targets[idx];
+    if (ts.broken) continue;
+
+    if (ev.boss) {
+      s.status = 'lost';
       s.endT = 0;
-      s.events.push({ type: 'finish', won });
+      s.events.push({ type: 'finish', won: false });
       s.z = ev.z;
       return;
     }
+    // Ayakta kalan her figür bir adam götürüyor. Kalabalık hep 1'de duruyor:
+    // sıfıra düşüp reklamı ortasında bitirmek ödül anına hiç ulaşmıyor.
+    const hurt = Math.min(standing(ev, ts), s.crowd - 1);
+    if (hurt > 0) {
+      s.crowd -= hurt;
+      s.events.push({ type: 'hurt', n: hurt });
+    }
+  }
+
+  // Patron kırıldıysa oyun orada bitiyor; ona varmayı beklemeye gerek yok.
+  const last = TRACK.length - 1;
+  if (s.targets[last].broken) {
+    s.status = 'won';
+    s.endT = 0;
+    s.events.push({ type: 'finish', won: true });
   }
 }
 
 function fire(s: State, dt: number): void {
   s.fireAcc += dt;
-  if (s.fireAcc < STRIKE.fireEvery) return;
+  const every = Math.max(STRIKE.minFire, STRIKE.baseFire / throwers(s));
+  if (s.fireAcc < every) return;
   s.fireAcc = 0;
   if (s.shots.length >= STRIKE.shotCap) return;
   const target = acquire(s);
-  if (target === -2) return;
-  s.shots.push({ x: s.x, z: s.z + 0.7, target, dmg: s.power, spin: 0 });
+  if (target < 0) return;
+  // Atıcı kalabalığın içinden SIRAYLA çıkıyor, rastgele değil: akış düzenli
+  // görünsün ve her atış aynı noktadan çıkmasın.
+  const who = s.shots.length % throwers(s);
+  s.shots.push({
+    x: s.x + offsetX(who),
+    z: s.z + offsetZ(who) + 0.7,
+    target,
+    dmg: s.weapon,
+    spin: 0,
+  });
 }
 
 function moveShots(s: State, dt: number): void {
-  const bz = bossZ();
   for (let i = s.shots.length - 1; i >= 0; i--) {
     const sh = s.shots[i];
     sh.z += STRIKE.shotSpeed * dt;
     sh.spin += dt * 22;
 
-    // Hedef bu arada öldüyse yeni hedef ara; bulunmazsa silah geçip gidiyor.
-    if (sh.target >= 0 && s.foes[sh.target].hp <= 0) {
+    if (sh.target < 0 || s.targets[sh.target].broken) {
       sh.target = acquire(s);
-    }
-
-    if (sh.target === -1) {
-      if (sh.z >= bz) {
-        s.bossHp = Math.max(0, s.bossHp - sh.dmg);
-        s.shots.splice(i, 1);
+      if (sh.target < 0) {
+        if (sh.z > s.z + STRIKE.range + 6) s.shots.splice(i, 1);
+        continue;
       }
-      continue;
-    }
-    if (sh.target < 0) {
-      if (sh.z > s.z + STRIKE.range + 6) s.shots.splice(i, 1);
-      continue;
     }
 
-    const f = s.foes[sh.target];
-    if (sh.z >= f.z) {
-      f.hp -= sh.dmg;
-      s.shots.splice(i, 1);
-      if (f.hp <= 0) s.events.push({ type: 'kill', x: f.x, z: f.z });
-    }
+    const ev = TRACK[sh.target] as Target;
+    if (sh.z < ev.z) continue;
+
+    const ts = s.targets[sh.target];
+    ts.hp -= sh.dmg;
+    s.shots.splice(i, 1);
+    if (ts.hp > 0) continue;
+
+    ts.hp = 0;
+    ts.broken = true;
+    const up = ev.gives && ev.gives > s.weapon ? ev.gives : 0;
+    if (up) s.weapon = up;
+    s.events.push({ type: 'break', z: ev.z, upgraded: up });
   }
 }
 

@@ -20,8 +20,8 @@ export interface RunView {
   gate(good: boolean, label: string): void;
   /** Temizlenemeyen düşmanların bedeli. */
   hurt(n: number): void;
-  /** Düşman düştü — efekt onun dünya konumunda patlıyor. */
-  kill(wx: number, wz: number): void;
+  /** Hedef kırıldı. `upgraded` sıfırdan büyükse silah o değere çıktı. */
+  broke(wz: number, upgraded: number): void;
   finish(won: boolean): void;
   reset(): void;
 }

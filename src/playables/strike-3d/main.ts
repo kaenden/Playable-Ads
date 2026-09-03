@@ -102,9 +102,10 @@ function loop(now: number): void {
     } else if (ev.type === 'hurt') {
       view.hurt(ev.n);
       sfx.crush();
-    } else if (ev.type === 'kill') {
-      view.kill(ev.x, ev.z);
-      sfx.step();
+    } else if (ev.type === 'break') {
+      view.broke(ev.z, ev.upgraded);
+      if (ev.upgraded) sfx.gain();
+      else sfx.crush();
     } else {
       view.finish(ev.won);
       if (ev.won) sfx.smash();

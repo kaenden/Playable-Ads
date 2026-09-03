@@ -10,7 +10,7 @@
  * iki sayıda: kalabalık nerede duruyor ve önünde ne var.
  */
 import { STRIKE, TRACK, GATE_COLOR, opLabel, opGood } from './config';
-import { State } from './state';
+import { State, offsetX, offsetZ, targetSlot, standing } from './state';
 import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { Fx } from '../../core/fx';
@@ -79,8 +79,8 @@ export class View2D implements RunView {
     this.fx.shake = this.L.w * 0.04;
   }
 
-  kill(): void {
-    /* 2D yedekte ölüm efekti yok: yedeğin işi oyunu OYNANIR tutmak,
+  broke(): void {
+    /* 2D yedekte kırılma efekti yok: yedeğin işi oyunu OYNANIR tutmak,
        gösteriyi eşitlemek değil. */
   }
 
@@ -139,11 +139,11 @@ export class View2D implements RunView {
           g.textBaseline = 'middle';
           g.fillText(opLabel(op), x0 + wdt / 2, y);
         }
-      } else if (ev.type === 'boss') {
+      } else if (ev.boss) {
         // Patron: tek dev daire. Düşman grupları burada çizilmiyor, çünkü
         // onlar parkurun bir parçası değil DURUMUN bir parçası — canları
         // değişiyor ve aşağıda tek tek çiziliyorlar.
-        if (s.bossHp > 0) {
+        if (!s.targets[TRACK.indexOf(ev)].broken) {
           const br = Math.max(22, L.w * 0.07);
           g.fillStyle = '#B33A3A';
           g.beginPath();
@@ -153,17 +153,22 @@ export class View2D implements RunView {
       }
     }
 
-    // Düşmanlar — 3D'dekiyle AYNI konumlar, aynı durumdan.
+    // Hedef figürleri — 3D'dekiyle AYNI konumlar, aynı durumdan.
     const r = Math.max(7, L.w * 0.022);
-    for (const f of s.foes) {
-      if (f.hp <= 0) continue;
-      if (f.z < s.z - 2 || f.z > s.z + 58) continue;
-      const x = this.sx(f.x, camX);
-      const y = this.sy(f.z, s.z);
-      g.fillStyle = '#B33A3A';
-      g.beginPath();
-      g.arc(x, y, r, 0, Math.PI * 2);
-      g.fill();
+    for (let e = 0; e < TRACK.length; e++) {
+      const ev = TRACK[e];
+      if (ev.type !== 'target' || ev.boss) continue;
+      const ts = s.targets[e];
+      if (ts.broken) continue;
+      if (ev.z < s.z - 2 || ev.z > s.z + 58) continue;
+      const live = standing(ev, ts);
+      for (let i = 0; i < live; i++) {
+        const slot = targetSlot(ev, i);
+        g.fillStyle = '#B33A3A';
+        g.beginPath();
+        g.arc(this.sx(slot.x, camX), this.sy(slot.z, s.z), r, 0, Math.PI * 2);
+        g.fill();
+      }
     }
 
     // Havadaki silahlar.
@@ -174,21 +179,20 @@ export class View2D implements RunView {
       g.fillRect(x - 5, y - 2, 10, 4);
     }
 
-    // Oyuncu.
-    const px0 = this.sx(s.x, camX);
-    const py0 = this.sy(s.z, s.z);
-    g.fillStyle = 'rgba(18,42,36,.25)';
-    g.beginPath();
-    g.ellipse(px0, py0 + r * 0.9, r * 1.3, r * 0.55, 0, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = '#1E2430';
-    g.beginPath();
-    g.arc(px0, py0, r * 1.15, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = '#F6D1A5';
-    g.beginPath();
-    g.arc(px0, py0 - r * 0.55, r * 0.58, 0, Math.PI * 2);
-    g.fill();
+    // Oyuncu kalabalığı.
+    const crew = Math.min(s.crowd, STRIKE.crowdCap);
+    for (let i = 0; i < crew; i++) {
+      const x = this.sx(s.x + offsetX(i), camX);
+      const y = this.sy(s.z + offsetZ(i), s.z);
+      g.fillStyle = 'rgba(18,42,36,.25)';
+      g.beginPath();
+      g.ellipse(x, y + r * 0.9, r * 1.2, r * 0.5, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#1E2430';
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
     g.restore();
 
     this.fx.draw(g, dt);
