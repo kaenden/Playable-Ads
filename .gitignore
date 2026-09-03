@@ -1,0 +1,28 @@
+# Build çıktısı — her `npm run build:assets` ile yeniden üretiliyor.
+dist/
+node_modules/
+
+# İndirilen asset paketleri. Kenney CC0, yani dağıtılabilirler; ama 25 MB'lık
+# zip'leri depoda tutmanın anlamı yok. `assets-lab/in-*` altındaki AYIKLANMIŞ
+# modeller depoda duruyor, hattın girdisi onlar.
+assets-lab/vendor/
+
+# Geçici
+*.log
+.DS_Store
+
+# Khronos örnek modelleri (Avocado, BoomBox, DamagedHelmet, Duck) — 22 MB ve
+# Draco/KTX2 deneyi dışında kullanılmıyorlar. Sonuçlar 03-3D-ASSET-EXPERIMENT.md'de.
+assets-lab/in-3d/
+
+# Referans reklam kayıtları. Üçüncü tarafın kreatifleri — teardown notları
+# (Sample Ads/*.md) depoda, videolar değil.
+Sample Ads/*.mp4
+Sample Ads/frames/
+
+# Üretilen çıktılar. `npm run showcase` ve `npm run site` her seferinde
+# yeniden üretiyor; 5 MB'lık bir dosyayı her derlemede depoya yazmanın anlamı
+# yok. İSTİSNA: docs/ — GitHub Pages'in servis ettiği klasör o, commit'lenmek
+# zorunda ve yayınlanan sürümün ne olduğu depoda görünür kalsın diye iyi de.
+showcase/index.html
+assets-lab/.render/

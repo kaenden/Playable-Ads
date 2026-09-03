@@ -1,0 +1,46 @@
+{
+  "name": "playable-ads-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playable ad portfolio + single-file build pipeline (MRAID / Meta / Google / Unity / AppLovin / TikTok)",
+  "type": "module",
+  "scripts": {
+    "dev": "node build/build.mjs --dev",
+    "build": "node build/build.mjs",
+    "build:one": "node build/build.mjs --net",
+    "dev:3d": "node build/build.mjs --dev --pl merge-3d",
+    "dev:escape": "node build/build.mjs --dev --pl escape-3d",
+    "dev:td": "node build/build.mjs --dev --pl defense-2d",
+    "dev:m2": "node build/build.mjs --dev --pl match-2d",
+    "dev:m3": "node build/build.mjs --dev --pl match-3d",
+    "dev:run": "node build/build.mjs --dev --pl run-3d",
+    "probe:3d": "node build/glb-probe.mjs && node build/draco-probe.mjs",
+    "showcase": "node build/build.mjs && node build/showcase.mjs",
+    "site": "node build/site.mjs",
+    "serve": "node build/serve.mjs",
+    "assets:2d": "node build/assets-2d.mjs",
+    "assets:td": "node build/extract-kenney.mjs && node build/assets-2d.mjs --in in-2d-td --out out-2d-td --max 1024",
+    "assets:cars": "node build/assets-3d.mjs --in in-3d-cars --out out-3d-cars --tris 3000 --palette --merge cars",
+    "assets:food": "node build/assets-3d.mjs --in in-3d-food --out out-3d-food --tris 2500 --palette --merge food",
+    "assets:run": "node build/assets-3d.mjs --in in-3d-run --out out-3d-run --tris 2500 --tex 512 --merge run",
+    "build:assets": "node build/build.mjs --art atlas",
+    "assets:3d": "node build/assets-3d.mjs",
+    "assets:creatures": "node build/export-creatures.mjs",
+    "preflight": "node build/preflight.mjs"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "draco3dgltf": "^1.5.7",
+    "esbuild": "^0.25.0",
+    "meshoptimizer": "^1.2.0",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.35.4",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@types/three": "^0.185.4",
+    "three": "^0.185.1"
+  }
+}

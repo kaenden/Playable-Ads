@@ -1,0 +1,7 @@
+# Depo LF ile tutuluyor; Windows'ta çalışma kopyası CRLF olabilir.
+* text=auto eol=lf
+*.png binary
+*.webp binary
+*.glb binary
+*.zip binary
+*.mp4 binary
