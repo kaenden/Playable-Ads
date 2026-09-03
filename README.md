@@ -754,7 +754,8 @@ Chrome DevTools'ta sentetik pointer event'leriyle, **iki playable'da da**:
 16. ~~Playable #4: üçüncü taraf asset paketiyle 2D~~ ✅ `defense-2d` — gerçek
     zamanlı kule savunma, Kenney CC0 seti, 299 sprite'tan 37'si, 133.6 -> 23.3 KB
 17. Gerçek ağ validator'larına yükleme (hesap gerekiyor — son adım)
-17b. ~~Yayınlanabilir site çıktısı~~ ✅ `npm run site` -> `dist/site/`
+17b. ~~Yayınlanabilir site çıktısı ve YAYIN~~ ✅ canlı:
+    **https://kaenden.github.io/Playable-Ads/** — `npm run site` -> `dist/site/`
     (ilk açılış 151 KB, her birimin kendi adresi, link önizlemesi, indirilebilir
     ağ paketleri). Adımlar: [05-YAYINLAMA.md](05-YAYINLAMA.md)
 18. Telefonda yeniden ölçüm — dört birim birden (masaüstü sayıları elde var,

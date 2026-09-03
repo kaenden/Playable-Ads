@@ -1,5 +1,11 @@
 # Yayınlama — vitrini başvuruda kullanılabilir hâle getirmek
 
+> **Yayında:** https://kaenden.github.io/Playable-Ads/
+> Depo: https://github.com/kaenden/Playable-Ads · kaynak `main` dalı `/docs`
+>
+> Güncelleme: `npm run build:assets && npm run site --  --base https://kaenden.github.io/Playable-Ads`
+> sonra `dist/site/` içeriğini `docs/`'a kopyalayıp push et. Bir dakika içinde canlıya geçiyor.
+
 ## Kısa cevap
 
 **Hosting'e para vermene gerek yok.** Bu bir statik site: sunucuda çalışan
