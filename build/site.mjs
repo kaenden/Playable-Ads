@@ -30,6 +30,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, copyFileSyn
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { loadIdentity, identityVars } from './identity.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST = join(ROOT, 'dist');
@@ -68,6 +69,10 @@ const ZIPS = ['google', 'ironsource', 'mintegral', 'tiktok'];
 function esc(t) {
   return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// Kunye kontrolu EN BASTA: isim bossa burada duruyoruz. Asagidaki rmSync
+// dist/site'i sildigi icin, gec kalan bir hata calisan ciktiyi da goturur.
+const IDENT = identityVars(loadIdentity(ROOT), true);
 
 rmSync(OUT, { recursive: true, force: true });
 for (const d of ['u', 'covers', 'og', 'dl']) mkdirSync(join(OUT, d), { recursive: true });
@@ -170,7 +175,7 @@ vars['%%DOWNLOADS%%'] =
   '    <p class="eyebrow">Packages</p>\n' +
   '    <p style="font-size:14px;color:var(--muted);max-width:62ch;margin-bottom:14px">\n' +
   '      What actually ships to a network: one HTML file, zipped where the network wants a zip.\n' +
-  '      Every unit is packaged for ten targets; four of them are here to download.\n' +
+  '      Every unit is packaged for eight networks; four of them are here to download.\n' +
   '    </p>\n' +
   '    <div class="tablewrap"><table>\n' +
   '      <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>\n' +
@@ -185,8 +190,11 @@ const posterMeta = {
 };
 const shared = {
   ...posterMeta,
+  ...IDENT,
   '%%RATIO_M%%': (statSync(join(DIST, 'match-3d', 'showcase', 'index.html')).size /
     statSync(join(DIST, 'match-2d', 'showcase', 'index.html')).size).toFixed(1) + '×',
+  '%%RATIO_3D%%': (statSync(join(DIST, 'merge-3d-atlas', 'showcase', 'index.html')).size /
+    statSync(join(DIST, 'merge-2d-atlas', 'showcase', 'index.html')).size).toFixed(1) + '×',
   '%%PCT_META_3D%%': ((statSync(join(DIST, 'merge-3d-atlas', 'showcase', 'index.html')).size /
     (2 * 1024 * 1024)) * 100).toFixed(1) + '%',
   '%%BUILD%%': 'build ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',

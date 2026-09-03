@@ -1,0 +1,16 @@
+{
+  "_": "Vitrinin künyesi. Boş bırakılan alan sayfaya BASILMIYOR. name boşken site derlenmiyor — bkz. build/identity.mjs",
+
+  "name": "Bora Zimba",
+  "role": "Playable Ads Developer",
+  "location": "Izmir, Turkey",
+
+  "pitch": "I build playable ad units as single HTML5 files — game logic, both renderers, the asset pipeline and the per-network packaging. I came to this from 2D game art and UI design, which is why the units are art-directed as well as engineered.",
+
+  "email": "borazimba@gmail.com",
+  "github": "https://github.com/kaenden",
+  "linkedin": "https://www.linkedin.com/in/bora-z/",
+  "cv": "",
+
+  "repo": "https://github.com/kaenden/Playable-Ads"
+}

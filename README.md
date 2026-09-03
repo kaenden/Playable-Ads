@@ -14,6 +14,8 @@ gelmediğinde ya da ağın limiti yer bırakmadığında başvurulan yol.
 - 3D asset deneyi (Draco / KTX2 ölçümü): [03-3D-ASSET-EXPERIMENT.md](03-3D-ASSET-EXPERIMENT.md)
 - **Asset optimizasyon hattı (2D + 3D):** [04-ASSET-PIPELINE.md](04-ASSET-PIPELINE.md)
 - Sahadan kayıtlar ve teardown'lar: [Sample Ads/](Sample%20Ads/)
+- **Pozisyon, unvan ve kapatılacak eksikler:** [06-POZISYON.md](06-POZISYON.md)
+- Yayınlama ve başvuruda kullanım: [05-YAYINLAMA.md](05-YAYINLAMA.md)
 - **Vitrin (paylaşılabilir link):** https://claude.ai/code/artifact/34f3200b-b2d9-458c-ae74-11ec0793eaf0
 
 ---

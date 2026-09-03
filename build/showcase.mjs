@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, mkdirSync, statSync, existsSync, readdirSy
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { loadIdentity, identityVars } from './identity.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST = join(ROOT, 'dist');
@@ -92,6 +93,10 @@ const posters = {
   '2D': await poster('merge-2d'),
 };
 
+// Kunye tek kaynaktan: showcase/identity.json. Artifact calisma kopyasi
+// oldugu icin isim eksikse durmuyoruz — sayfanin tepesinde rozet cikiyor.
+const ident = loadIdentity(ROOT);
+
 const vars = {
   '%%B64_2D%%': u2d.b64,
   '%%B64_3D%%': u3d.b64,
@@ -136,11 +141,14 @@ const vars = {
   '%%HREF_2D%%': '#',
   '%%DOWNLOADS%%': '',
   '%%RATIO_M%%': (um3.bytes / um2.bytes).toFixed(1) + '×',
+  '%%RATIO_3D%%': (u3d.bytes / u2d.bytes).toFixed(1) + '×',
   '%%PCT_META_3D%%': pctStr(u3d.bytes, META_LIMIT),
   // Sayfada görünen sürüm damgası: bir sorun bildirildiğinde hangi kopyanın
   // görüldüğü tahmin edilmek zorunda kalmıyor.
   '%%BUILD%%': 'build ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
 };
+
+Object.assign(vars, identityVars(ident, false));
 
 let page = readFileSync(TEMPLATE, 'utf8');
 for (const [k, v] of Object.entries(vars)) page = page.split(k).join(v);

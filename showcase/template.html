@@ -53,6 +53,23 @@ p{margin:0}
 }
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
+/* ---------- kunye: sayfanin en ustunde, ince bir serit ----------
+   Hero degil serit: vitrinde ilk ekran isin kendisi olmali, ismin degil.
+   Isim burada durur, is hemen altinda baslar. */
+.top{border-bottom:1px solid var(--line-soft);background:var(--surface)}
+.topbar{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px 18px;
+  padding-top:15px;padding-bottom:15px}
+.topbar .who{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 12px;flex:1;min-width:0}
+.topbar .nm{font-family:Archivo,sans-serif;font-weight:800;font-size:16.5px;letter-spacing:-.012em}
+.topbar .rl{font-size:13px;color:var(--muted)}
+.topbar .todo{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--alert);
+  border:1px dashed var(--alert);border-radius:6px;padding:3px 9px}
+.lk{display:flex;flex-wrap:wrap;gap:6px}
+.lk a{font-size:12.5px;text-decoration:none;color:var(--ink-2);white-space:nowrap;
+  border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+.lk a:hover{border-color:var(--ink-2);background:var(--surface-2)}
+.lk a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
 /* ---------- stage: the work comes first ---------- */
 .stage{padding:34px 0 40px}
 .intro{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;margin-bottom:30px}
@@ -97,6 +114,33 @@ p{margin:0}
 .info .genre{font-size:12.5px;color:var(--ink-2);line-height:1.45}
 .info .num{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
   line-height:1.5;font-variant-numeric:tabular-nums}
+
+/* ---------- ikili: ayni oyun, iki renderer ----------
+   Yedi kart esit agirlikta dizilince dordu "ayni oyun iki kere" gibi degil
+   "doldurma" okunuyordu. Halbuki bu projenin en saglam muhendislik iddiasi
+   tam olarak o: sanat sabit, sadece cizim degisiyor. Esleme gorunur olunca
+   zayiflik gibi duran sey olcum haline geliyor. */
+.paired{margin-top:clamp(30px,4vw,44px);padding-top:clamp(26px,3vw,34px);
+  border-top:1px solid var(--line)}
+.pairhead{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;max-width:66ch}
+.pairhead .lead{font-size:14.5px;line-height:1.6;color:var(--ink-2)}
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:clamp(20px,3vw,34px)}
+.pair{display:flex;flex-direction:column;gap:13px}
+.pairtop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+.pairtop h2{font-size:15.5px}
+.pairtop .delta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.7vw,18px)}
+.two .info h3{font-size:14px}
+
+/* ---------- iletisim ---------- */
+.contact{padding:40px 0 4px;border-top:1px solid var(--line-soft)}
+.contact .row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+  gap:18px;margin-top:10px}
+.contact h2{font-size:clamp(19px,2.6vw,23px)}
+.contact .say p{font-size:14px;line-height:1.6;color:var(--ink-2);max-width:54ch;margin-top:7px}
 
 /* ---------- modal: tek oyun, telefon çerçevesinde ---------- */
 .modal[hidden]{display:none!important}
@@ -222,10 +266,14 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:640px){
   .works{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .pairs{grid-template-columns:1fr}
+  .contact .row{align-items:flex-start}
   .frame{height:min(72vh,620px)}
   .stage{padding:26px 0 32px}
 }
 </style>
+
+%%TOPBAR%%
 
 <main class="stage">
   <div class="wrap">
@@ -234,8 +282,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <h1>Seven units, one pipeline</h1>
       <p>Five mechanics, eight ad networks. Every unit is built from supplied art and
         inlined into one HTML file that makes no network requests. Tap any cover to
-        play it here — each one is the real package, not a video. Two of them are the
-        same game twice: same art, one drawn flat, one in 3D.</p>
+        play it here — each one is the real package, not a video.</p>
     </div>
 
     <div class="works">
@@ -272,51 +319,74 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           <p class="num">%%SIZE_TD%%</p>
         </div>
       </article>
-      <article class="work">
-        <a class="tile" href="%%HREF_M3%%" data-play="m3" aria-label="Play Sweet Match 3D">
-          <img src="%%POSTER_M3%%" alt="Sweet Match 3D playable, opening screen" loading="lazy" width="500" height="828">
-          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
-        </a>
-        <div class="info">
-          <h3>Sweet Match 3D</h3>
-          <p class="genre">Match-3 &middot; Three.js</p>
-          <p class="num">%%SIZE_M3%%</p>
-        </div>
-      </article>
-      <article class="work">
-        <a class="tile" href="%%HREF_M2%%" data-play="m2" aria-label="Play Sweet Match">
-          <img src="%%POSTER_M2%%" alt="Sweet Match playable, opening screen" loading="lazy" width="500" height="828">
-          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
-        </a>
-        <div class="info">
-          <h3>Sweet Match</h3>
-          <p class="genre">Match-3 &middot; Canvas 2D</p>
-          <p class="num">%%SIZE_M2%%</p>
-        </div>
-      </article>
-      <article class="work">
-        <a class="tile" href="%%HREF_3D%%" data-play="3d" aria-label="Play Merge Dragons 3D">
-          <img src="%%POSTER_3D%%" alt="Merge Dragons 3D playable, opening screen" loading="lazy" width="500" height="828">
-          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
-        </a>
-        <div class="info">
-          <h3>Merge Dragons 3D</h3>
-          <p class="genre">Merge &middot; Three.js</p>
-          <p class="num">%%SIZE_3D%%</p>
-        </div>
-      </article>
-      <article class="work">
-        <a class="tile" href="%%HREF_2D%%" data-play="2d" aria-label="Play Merge Dragons">
-          <img src="%%POSTER_2D%%" alt="Merge Dragons playable, opening screen" loading="lazy" width="500" height="828">
-          <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
-        </a>
-        <div class="info">
-          <h3>Merge Dragons</h3>
-          <p class="genre">Merge &middot; Canvas 2D</p>
-          <p class="num">%%SIZE_2D%%</p>
-        </div>
-      </article>
     </div>
+
+    <section class="paired">
+      <div class="pairhead">
+        <p class="eyebrow">Same game, built twice</p>
+        <p class="lead">Two of the mechanics ship in both renderers with the art held
+          constant — the flat sprites are rendered from the very models the 3D unit puts
+          on screen. Logic, layout, HUD and animation curves are one shared file, and a
+          scripted playthrough of each pair produces byte-identical results. Only the
+          drawing differs, so the gap between the two sizes is the renderer and nothing else.</p>
+      </div>
+      <div class="pairs">
+        <div class="pair">
+          <div class="pairtop"><h2>Match-3</h2><span class="delta">3D is %%RATIO_M%% the size</span></div>
+          <div class="two">
+          <article class="work">
+            <a class="tile" href="%%HREF_M3%%" data-play="m3" aria-label="Play Sweet Match 3D">
+              <img src="%%POSTER_M3%%" alt="Sweet Match 3D playable, opening screen" loading="lazy" width="500" height="828">
+              <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+            </a>
+            <div class="info">
+              <h3>Sweet Match 3D</h3>
+              <p class="genre">Three.js</p>
+              <p class="num">%%SIZE_M3%%</p>
+            </div>
+          </article>
+          <article class="work">
+            <a class="tile" href="%%HREF_M2%%" data-play="m2" aria-label="Play Sweet Match">
+              <img src="%%POSTER_M2%%" alt="Sweet Match playable, opening screen" loading="lazy" width="500" height="828">
+              <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+            </a>
+            <div class="info">
+              <h3>Sweet Match</h3>
+              <p class="genre">Canvas 2D</p>
+              <p class="num">%%SIZE_M2%%</p>
+            </div>
+          </article>
+          </div>
+        </div>
+        <div class="pair">
+          <div class="pairtop"><h2>Merge</h2><span class="delta">3D is %%RATIO_3D%% the size</span></div>
+          <div class="two">
+          <article class="work">
+            <a class="tile" href="%%HREF_3D%%" data-play="3d" aria-label="Play Merge Dragons 3D">
+              <img src="%%POSTER_3D%%" alt="Merge Dragons 3D playable, opening screen" loading="lazy" width="500" height="828">
+              <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+            </a>
+            <div class="info">
+              <h3>Merge Dragons 3D</h3>
+              <p class="genre">Three.js</p>
+              <p class="num">%%SIZE_3D%%</p>
+            </div>
+          </article>
+          <article class="work">
+            <a class="tile" href="%%HREF_2D%%" data-play="2d" aria-label="Play Merge Dragons">
+              <img src="%%POSTER_2D%%" alt="Merge Dragons playable, opening screen" loading="lazy" width="500" height="828">
+              <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
+            </a>
+            <div class="info">
+              <h3>Merge Dragons</h3>
+              <p class="genre">Canvas 2D</p>
+              <p class="num">%%SIZE_2D%%</p>
+            </div>
+          </article>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -427,12 +497,6 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           are Kenney's Food Kit models, CC0. The 3D unit puts the models on the grid.
           The 2D unit uses sprites that were rendered from those same models — which is
           how most match-3 art is actually made, pre-rendered 3D rather than drawn flat.
-        </p>
-        <p>
-          Both units share one file of game logic, one layout, one HUD and one set of
-          animation curves. A scripted playthrough of each produces byte-identical
-          results, which is the check that the comparison is really controlled.
-          Only the drawing differs.
         </p>
         <div class="tablewrap">
           <table>
@@ -864,6 +928,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 
 %%DOWNLOADS%%
+%%CONTACT%%
 <footer>
   <div class="wrap">
     <p class="stamp mono">%%BUILD%%</p>
