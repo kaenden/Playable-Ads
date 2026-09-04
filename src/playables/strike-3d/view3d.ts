@@ -53,13 +53,15 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { STRIKE, TRACK, TRACK_LEN, GATE_COLOR, Gate, Target, opLabel, opGood } from './config';
+import {
+  STRIKE, TRACK, TRACK_LEN, GATE_COLOR, RARITY, Gate, Target, opLabel, opGood, upgradeRank,
+} from './config';
 import { State, offsetX, offsetZ, targetSlot, standing } from './state';
 import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { weaponGeometry, weaponIcon, weaponName, weaponTier, WEAPONS } from './weapons';
 import { Fx } from '../../core/fx';
-import { outlinedText } from '../../core/draw';
+import { outlinedText, roundRect } from '../../core/draw';
 
 /** Arayüzle aynı yazı yığını — can sayıları HUD'un parçası gibi okunmalı. */
 const FONT = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
@@ -309,6 +311,8 @@ export class View3D implements RunView {
   private bx0 = new Float32Array(1);
   private bz0 = new Float32Array(1);
   private bossDown = false;
+  /** Hedef başına önceki karede ayakta kalan figür — ölüm efekti için. */
+  private wasStanding: number[] = TRACK.map(() => -1);
   /** Hiç kımıldamayan her şey burada toplanıp tek seferde birleştiriliyor. */
   private statics = new Group();
   /** Süslerin ayak izleri — hepsi tek bir gölge yığınına dönüşecek. */
@@ -408,15 +412,18 @@ export class View3D implements RunView {
     // soğutuyor, kimliği modelin kendisi taşıyor.
     this.foeSquad = new Squad({
       h: CHAR_H, clip: 'idle', cap: STRIKE.foeCap, facing: Math.PI,
-      model: 'character-l', tint: 0xd8ffd0,
+      model: 'character-l', tint: 0xd8ffd0, bob: 0.07,
     });
     this.scene.add(this.foeSquad.root);
 
     // Patron aynı karakterin 2.9 katı. Dev bir model üretmek yerine ölçek:
     // blok karakterde bu kayıpsız çalışıyor, silüet zaten kutulardan oluşuyor.
+    // PATRON ÜÇÜNCÜ KARAKTER. Zombilerin devi olarak çizmek "aynı düşman ama
+    // büyük" demekti; paketteki deniz yaratığı ise ayrı bir tür ve son
+    // karşılaşmayı gerçekten SON karşılaşma yapıyor. Bedeli tek doku.
     this.boss = new Squad({
       h: CHAR_H * 2.9, clip: 'idle', cap: 1, facing: Math.PI,
-      model: 'character-l', tint: 0xffc8b4,
+      model: 'character-o', tint: 0xffe0d4, bob: 0.13,
     });
     this.scene.add(this.boss.root);
     this.buildShots();
@@ -915,6 +922,28 @@ export class View3D implements RunView {
     }
   }
 
+  /**
+   * Bir vuruş değdi.
+   *
+   * NORMAL VURUŞ SESSİZ VE KÜÇÜK. Saniyede on dört vuruş var; her birine
+   * tam bir patlama vermek ekranı sise çeviriyordu. Dört kıvılcım yetiyor:
+   * "değdi" bilgisi geliyor, dikkat çalınmıyor.
+   *
+   * KRİTİK İSE OLAY. Kırmızı ve büyük bir sayı, gerçek bir patlama ve kısa
+   * bir sarsıntı — çünkü kritiğin işi zaten fark edilmek.
+   */
+  hit(wx: number, wz: number, dmg: number, crit: boolean): void {
+    const [x, y] = this.worldScreen(LANE * wx, wz, CHAR_H * 0.9);
+    if (!crit) {
+      this.fx.spark(x, y, this.L.w * 0.05, '#FFE9A8');
+      return;
+    }
+    this.hud.pop(x, y, String(dmg), '#FF4A3D', 1.2, 0.6);
+    this.fx.burst(x, y, this.L.w * 0.075, 3, '#FF9A6A');
+    this.fx.shake = this.L.w * 0.028;
+    this.grade.pulse('#FFC0A0');
+  }
+
   finish(won: boolean): void {
     // Kazanınca klip DEĞİŞMİYOR: oyuncu koşarak barikatın içinden geçiyor.
     // Sevinme animasyonu koşuyla çelişiyordu — aynı anda hem koş hem zıpla.
@@ -924,6 +953,7 @@ export class View3D implements RunView {
 
   reset(): void {
     this.smashT = -1;
+    for (let i = 0; i < this.wasStanding.length; i++) this.wasStanding[i] = -1;
     this.after = 0;
     this.stepAcc = 0;
     this.hud.reset();
@@ -984,12 +1014,33 @@ export class View3D implements RunView {
         // içinde kayboluyordu. Altında ise düşman figürlerinin üstünde
         // duruyor — hem koyu bir zemin buluyor hem de referanstaki gibi
         // "silah düşmanın üzerinde" okunuyor.
-        const iy = y + size * 0.88;
-        const ir = size * 0.5;
-        weaponIcon(g, x - size * 0.2, iy, ir, weaponTier(ev.gives));
-        const fs = Math.round(size * 0.46);
+        //
+        // NADİRLİK ÇERÇEVESİ. Oyuncunun zaten bildiği dil: yeşil sıradan,
+        // mavi nadir, mor epik. Parkurun üç yükseltmesi sırayla bu üçünü
+        // taşıyor, yani "sonuncusu en iyisi" bilgisi yazı olmadan geliyor.
+        // Çerçeve hafifçe süzülüyor ve nefes alan bir parıltısı var: duran
+        // bir rozet dekor, kıpırdayan bir rozet ÖDÜL gibi okunuyor.
+        const rank = upgradeRank(e);
+        const col = RARITY[Math.max(0, Math.min(RARITY.length - 1, rank))];
+        const float = Math.sin(this.t * 2.4 + rank * 1.3) * size * 0.09;
+        const glow = 0.55 + 0.45 * Math.sin(this.t * 3.1 + rank);
+        const iy = y + size * 0.94 + float;
+        const box = size * 0.86;
+        g.save();
+        g.shadowColor = col;
+        g.shadowBlur = box * (0.24 + glow * 0.34);
+        g.fillStyle = 'rgba(14,20,30,.72)';
+        roundRect(g, x - box / 2, iy - box / 2, box, box, box * 0.22);
+        g.fill();
+        g.strokeStyle = col;
+        g.lineWidth = Math.max(2, box * 0.07);
+        roundRect(g, x - box / 2, iy - box / 2, box, box, box * 0.22);
+        g.stroke();
+        g.restore();
+        weaponIcon(g, x, iy, box * 0.34, weaponTier(ev.gives));
+        const fs = Math.round(size * 0.4);
         g.font = '900 ' + fs + 'px ' + FONT;
-        outlinedText(g, '+' + ev.gives, x + size * 0.42, iy, fs,
+        outlinedText(g, '+' + ev.gives, x + box * 0.62, iy + box * 0.34, fs,
           '#FFD45F', '#FF9F45', 'rgba(16,12,20,.9)');
       }
       g.restore();
@@ -1082,6 +1133,20 @@ export class View3D implements RunView {
       if (ts.broken) continue;
       if (ev.z < cz - 6 || ev.z > cz + 60) continue;
       const live = standing(ev, ts);
+      // ÖLÜM GÖRÜNÜR OLMALI. Saf eriyordu ama figürler sessizce yok oluyordu:
+      // can düşüyor, biri kayboluyor, ekranda hiçbir şey olmuyordu. Ayakta
+      // kalan sayısı azaldığında AYRILANIN yerinde küçük bir patlama, o
+      // erimeyi öldürmeye çeviriyor. İlk kare hariç (prev < 0), yoksa hedef
+      // görüş alanına girdiği anda toplu patlama olurdu.
+      const prev = this.wasStanding[e];
+      if (prev >= 0 && live < prev) {
+        for (let i = live; i < prev; i++) {
+          const slot = targetSlot(ev, i);
+          const [dx, dy] = this.worldScreen(LANE * slot.x, slot.z, CHAR_H * 0.8);
+          this.fx.burst(dx, dy, this.L.w * 0.042, 0, '#8FE07A');
+        }
+      }
+      this.wasStanding[e] = live;
       for (let i = 0; i < live && n < STRIKE.foeCap; i++) {
         const slot = targetSlot(ev, i);
         this.fx0[n] = LANE * slot.x;

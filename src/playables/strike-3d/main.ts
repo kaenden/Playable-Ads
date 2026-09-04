@@ -106,6 +106,11 @@ function loop(now: number): void {
       view.broke(ev.z, ev.upgraded);
       if (ev.upgraded) sfx.gain();
       else sfx.crush();
+    } else if (ev.type === 'hit') {
+      // Normal vuruş sessiz: saniyede on dört ses üst üste binince gürültü
+      // oluyor. Kritik kendi sesini alıyor.
+      view.hit(ev.x, ev.z, ev.dmg, ev.crit);
+      if (ev.crit) sfx.gain();
     } else {
       view.finish(ev.won);
       if (ev.won) sfx.smash();

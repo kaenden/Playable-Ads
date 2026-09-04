@@ -354,7 +354,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="info">
           <h3>Blade Rush</h3>
           <p class="genre">3D action runner &middot; Three.js</p>
-          <p class="num">859.3 KB</p>
+          <p class="num">892.8 KB</p>
         </div>
       </article>
       <article class="work">
@@ -558,7 +558,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     <details>
       <summary>
         <span class="sig"></span>
-        <span class="t">Two games, 58.3 KB apart</span>
+        <span class="t">Two games, 91.8 KB apart</span>
         <span class="s">Crowd Rush &middot; Blade Rush</span>
       </summary>
       <div class="body">
@@ -570,10 +570,10 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           stones, a beached canoe, the one character in the pack with an eye patch and
           the green one for the enemies &mdash; running two counters at once: gates change how many men you have,
           breakable targets change what each thrown blade is worth. Finished packages:
-          801.0 KB and 859.3 KB.
+          801.0 KB and 892.8 KB.
         </p>
         <div class="ledger">
-          <div><div class="n good">58.3 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.1% of the 5&nbsp;MB budget</div></div>
+          <div><div class="n good">91.8 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.8% of the 5&nbsp;MB budget</div></div>
           <div><div class="n">0</div><div class="c">Models authored. Every mesh is a different pick from the same two CC0 kits; the enemies are the player's own character, tinted, and the weapons are geometry drawn in code</div></div>
           <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
         </div>
@@ -630,13 +630,37 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             build used the same fifteen as its sibling. So this one draws a different
             sixteen: palm trees instead of pines, a stone obelisk and clay jars
             instead of flowers and mushrooms, a beached canoe, the pirate with the eye
-            patch instead of the plain runner, and a second character &mdash; the green
-            one &mdash; so the enemies are a different species rather than the player
-            tinted red. On top of that, a beach palette and one extra plane for the
+            patch instead of the plain runner, and two more characters &mdash; the green
+            one for the enemies and the fanged one for the boss &mdash; so a fight is
+            against a different species, not the player tinted red. On top of that, a beach palette and one extra plane for the
             sea: two triangles and a gradient, and that alone is what says
             <em>island</em>. Re-picking from a kit you already have
             is most of what a re-skin actually is, and it is the request a studio with
             one art pack and six creatives to ship will keep making.</p>
+          </article>
+          <article>
+            <p class="t">Reward</p><h3>Rarity is a language players already speak</h3>
+            <p>The three upgrades on the track now sit in a green, a blue and a purple
+            frame, in that order, each with a soft glow and a slow float. Nobody has to
+            be told that purple is the good one &mdash; every game they have played
+            taught them that already, so a colour does the work a line of text would
+            do worse. The frames come off the track, not a second list: the code counts
+            which upgrade this is and picks the colour, so adding a fourth upgrade
+            moves the colours by itself.</p>
+          </article>
+          <article>
+            <p class="t">Fairness</p><h3>A crit you cannot lose to</h3>
+            <p>Critical hits are the obvious way to give a runner texture: every tenth
+            throw lands for triple, in a big red number. What they are <em>not</em> is
+            random. A playable is paid for per impression and this track is tuned so
+            the player who picks right clears the last target with a few units to
+            spare; a random multiplier there means the same play sometimes wins and
+            sometimes loses, and the version that loses burns the impression. So the
+            crit runs on a counter, not a die. The average is exactly &times;1.2, which
+            is what let me raise every target's health by the same 1.2 and keep the
+            balance identical &mdash; then re-measure all three paths to prove it:
+            perfect wins with the boss at zero, straight loses at 500 of 516, missing
+            the second gate loses at 486.</p>
           </article>
           <article>
             <p class="t">Colour</p><h3>The kit's own colours were the problem</h3>
@@ -654,15 +678,15 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             calls; the whole fix is nine hex values and one light intensity.</p>
           </article>
           <article>
-            <p class="t">Pipeline</p><h3>Two characters meant two textures</h3>
+            <p class="t">Pipeline</p><h3>Three characters meant three textures</h3>
             <p>The asset step strips textures out of the merged GLB and ships them
             beside it, because an embedded texture is fetched through a blob URL that
-            ad containers refuse. That step assumed exactly one texture, and adding the
+            ad containers refuse. That step assumed exactly one texture, and adding a
             second character fell straight past the check &mdash; both textures would
             have stayed embedded and neither would have loaded inside the box. It now
             writes one file per texture and marks each material with which one it
             belongs to, so the runtime binds them separately. Worth the twenty lines: a
-            two-character scene is the normal case, not the exception.</p>
+            three-character scene is the normal case, not the exception.</p>
           </article>
           <article>
             <p class="t">Feedback</p><h3>The upgrade has to be visible in the air</h3>
@@ -1158,7 +1182,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Blade Rush</td><td class="num">859.3 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">892.8 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1188,7 +1212,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 08:55 UTC</p>
+    <p class="stamp mono">build 2026-09-04 09:18 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1221,7 +1245,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
-    'str': ['Blade Rush',       '3D action runner · Three.js · 859.3 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 892.8 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],

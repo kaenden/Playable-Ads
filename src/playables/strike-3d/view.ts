@@ -22,6 +22,8 @@ export interface RunView {
   hurt(n: number): void;
   /** Hedef kırıldı. `upgraded` sıfırdan büyükse silah o değere çıktı. */
   broke(wz: number, upgraded: number): void;
+  /** Bir vuruş değdi. Kritikse hasar büyük ve kırmızı yazılıyor. */
+  hit(wx: number, wz: number, dmg: number, crit: boolean): void;
   finish(won: boolean): void;
   reset(): void;
 }

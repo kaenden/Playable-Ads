@@ -1,10 +1,11 @@
 /**
  * Sahnenin bütün malzemesi tek dosyadan geliyor.
  *
- * `isle.glb` = 16 model tek GLB'de (123.4 KB): 1 animasyonlu karakter
- * (Kenney "Blocky Characters" — göz bantlı olanı) + 15 ada parçası (Kenney
- * "Nature Kit": palmiye, kaya, oberlisk, küp, kano, kütük). İkisi de CC0.
- * Yanında 4.8 KB'lık karakter dokusu ayrı taşınıyor.
+ * `isle.glb` = 18 model tek GLB'de (159.3 KB): 3 animasyonlu karakter
+ * (Kenney "Blocky Characters" — göz bantlı korsan, zombi, deniz yaratığı) +
+ * 15 ada parçası (Kenney "Nature Kit": palmiye, kaya, oberlisk, küp, kano,
+ * kütük). İkisi de CC0. Yanlarında üç karakter dokusu ayrı taşınıyor
+ * (toplam 15.9 KB).
  *
  * KARDEŞ BİRİM AYNI KİTTEN BAŞKA MODELLER ÇEKİYOR. Crowd Rush'ın `run.glb`i
  * çam ve çiçek taşıyor, bu palmiye ve harabe. Paket ortak, SEÇİM ayrı —
@@ -135,15 +136,20 @@ export function loadModels(): Promise<void> {
             models[name] = { node: child, size };
           }
           for (const c of gltf.animations) clips[c.name] = c;
-          // İKİ DOKU. Sahnede iki ayrı karakter var — oyuncunun korsanı ve
-          // zombi düşmanlar — ve dokuları farklı. Hat ikisini de ayrı dosyaya
-          // çıkardı (sebebi core/palette.ts'te) ve malzemeleri hangi dokuya
-          // ait olduklarıyla işaretledi. Karakter dokusu gerçek bir yüzey
-          // haritası, kartela değil: mipmap AÇIK, yoksa kalabalık
-          // uzaklaştıkça titriyor.
-          Promise.all([loadPalette(true, 1), loadPalette(true, 2)]).then(([a, b]) => {
-            applyPalette(gltf.scene, a, 'palette:');
-            applyPalette(gltf.scene, b, 'palette2:');
+          // ÜÇ DOKU. Sahnede üç ayrı karakter var — oyuncunun korsanı, zombi
+          // düşmanlar ve deniz yaratığı patron — ve üçünün dokusu farklı. Hat
+          // hepsini ayrı dosyaya çıkardı (sebebi core/palette.ts'te) ve
+          // malzemeleri hangi dokuya ait olduklarıyla işaretledi. Karakter
+          // dokusu gerçek bir yüzey haritası, kartela değil: mipmap AÇIK,
+          // yoksa kalabalık uzaklaştıkça titriyor.
+          Promise.all([
+            loadPalette(true, 1),
+            loadPalette(true, 2),
+            loadPalette(true, 3),
+          ]).then((texs) => {
+            for (let i = 0; i < texs.length; i++) {
+              applyPalette(gltf.scene, texs[i], i === 0 ? 'palette:' : 'palette' + (i + 1) + ':');
+            }
             res();
           });
         },

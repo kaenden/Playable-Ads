@@ -39,7 +39,7 @@ export class View2D implements RunView {
     document.body.appendChild(cv);
     this.cv = cv;
     this.g = cv.getContext('2d') as CanvasRenderingContext2D;
-    document.body.style.background = 'linear-gradient(180deg,#FFCE8C 0%,#FFF0DA 100%)';
+    document.body.style.background = 'linear-gradient(180deg,#1F7DC0 0%,#AEDCF2 100%)';
     this.hud = new Hud(this.g, this.L);
     this.resize();
   }
@@ -85,6 +85,10 @@ export class View2D implements RunView {
        gösteriyi eşitlemek değil. */
   }
 
+  hit(): void {
+    /* Aynı sebep: yedekte vuruş efekti de yok. */
+  }
+
   finish(): void {
     /* 2D yedekte ayrı bir yıkım animasyonu yok. */
   }
@@ -105,14 +109,14 @@ export class View2D implements RunView {
     g.translate(shx * 0.35, shy * 0.35);
 
     // Zemin ve patika.
-    g.fillStyle = '#2E9C86';
+    g.fillStyle = '#2FB3AE';
     g.fillRect(0, 0, L.w, L.h);
     const px = (L.w * 0.82) / (STRIKE.halfW * 2);
-    g.fillStyle = '#F0D9A8';
+    g.fillStyle = '#E8B646';
     g.fillRect(this.sx(-STRIKE.halfW, camX), 0, STRIKE.halfW * 2 * px, L.h);
 
     // İlerleme çizgileri: hız hissi.
-    g.strokeStyle = 'rgba(216,184,126,.7)';
+    g.strokeStyle = 'rgba(255,226,150,.6)';
     g.lineWidth = 3;
     for (let z = Math.floor(s.z / 4) * 4; z < s.z + AHEAD; z += 4) {
       const y = this.sy(z, s.z);
@@ -165,7 +169,7 @@ export class View2D implements RunView {
       const live = standing(ev, ts);
       for (let i = 0; i < live; i++) {
         const slot = targetSlot(ev, i);
-        g.fillStyle = '#B33A3A';
+        g.fillStyle = '#4F9E3C';
         g.beginPath();
         g.arc(this.sx(slot.x, camX), this.sy(slot.z, s.z), r, 0, Math.PI * 2);
         g.fill();

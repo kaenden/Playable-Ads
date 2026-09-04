@@ -156,9 +156,12 @@ function atlasData(playable) {
       glb: P.glb ? glbFrom(P.glb) : '',
       palette: P.glb ? paletteFrom(P.glb, 1) : '',
       palette2: P.glb ? paletteFrom(P.glb, 2) : '',
+      palette3: P.glb ? paletteFrom(P.glb, 3) : '',
     };
   }
-  if (ART !== 'atlas') return { b64: '', frames: '{}', glb: '', palette: '', palette2: '' };
+  if (ART !== 'atlas') {
+    return { b64: '', frames: '{}', glb: '', palette: '', palette2: '', palette3: '' };
+  }
   // Sadece 3D asset kullanan birim 2D atlası da gömmemeli.
   if (P.glbVariant) {
     return {
@@ -166,6 +169,7 @@ function atlasData(playable) {
       glb: glbFrom(P.glbVariant),
       palette: paletteFrom(P.glbVariant, 1),
       palette2: paletteFrom(P.glbVariant, 2),
+      palette3: paletteFrom(P.glbVariant, 3),
     };
   }
   const glb = join(ROOT, 'assets-lab', 'out-3d', 'creatures.opt.glb');
@@ -174,6 +178,7 @@ function atlasData(playable) {
     glb: existsSync(glb) ? readFileSync(glb).toString('base64') : '',
     palette: '',
     palette2: '',
+    palette3: '',
   };
 }
 
@@ -197,6 +202,7 @@ async function bundle(playable, network, minify) {
       __GLB_B64__: JSON.stringify(ATLAS.glb),
       __PALETTE_B64__: JSON.stringify(ATLAS.palette || ''),
       __PALETTE2_B64__: JSON.stringify(ATLAS.palette2 || ''),
+      __PALETTE3_B64__: JSON.stringify(ATLAS.palette3 || ''),
     },
     loader: { '.png': 'dataurl', '.webp': 'dataurl', '.mp3': 'dataurl', '.svg': 'dataurl' },
   });

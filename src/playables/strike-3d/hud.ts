@@ -32,6 +32,14 @@ interface Pop {
   text: string;
   color: string;
   life: number;
+  /** Punto çarpanı — kritik hasar normalden büyük yazılıyor. */
+  k: number;
+  /**
+   * Ömür (saniye). Kritikler KISA yaşıyor: beşte bir atış kritik, yani
+   * uzun ömürlü olsalar üst üste binip ekranı kapatıyorlar. Kapı ve ceza
+   * balonları seyrek olduğu için uzun kalabiliyor.
+   */
+  dur: number;
 }
 
 export class Hud {
@@ -50,8 +58,8 @@ export class Hud {
   constructor(private g: CanvasRenderingContext2D, private L: Layout) {}
 
   /** Kalabalığın üstünde yükselen "+5" / "-3" yazısı. */
-  pop(x: number, y: number, text: string, color: string): void {
-    this.pops.push({ x, y, text, color, life: 0 });
+  pop(x: number, y: number, text: string, color: string, k?: number, dur?: number): void {
+    this.pops.push({ x, y, text, color, life: 0, k: k || 1, dur: dur || 1.05 });
   }
 
   reset(): void {
@@ -199,16 +207,16 @@ export class Hud {
     for (let i = this.pops.length - 1; i >= 0; i--) {
       const p = this.pops[i];
       p.life += dt;
-      if (p.life > 1.05) {
+      if (p.life > p.dur) {
         this.pops.splice(i, 1);
         continue;
       }
-      const k = p.life / 1.05;
+      const k = p.life / p.dur;
       const grow = 1 - Math.pow(1 - Math.min(1, k * 4), 2);
       // Yazı EKRANA SIĞDIRILIYOR. Bu balonlar önce sadece "+8" gibi kısa
       // sayılar taşıyordu ve sabit punto yetiyordu; silah adları gelince
       // "GREAT AXE" ekranın iki yanından taştı.
-      const size = Math.min(this.L.w * 0.11, 52) * (1 + grow * 0.25);
+      const size = Math.min(this.L.w * 0.11, 52) * (1 + grow * 0.25) * p.k;
       g.save();
       g.globalAlpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
       g.textAlign = 'center';
@@ -219,8 +227,11 @@ export class Hud {
       // dizisinden okunuyor. parseInt doğrudan çalışmıyor — dizi ağırlıkla
       // başlıyor ("900 42px ...") ve 900 döndürüyordu.
       const fitted = +(/(\d+)px/.exec(g.font) || [0, size])[1] || size;
+      // Yükselme mesafesi ÖMÜRLE orantılı: kısa ömürlü kritik balonu, uzun
+      // ömürlü kapı balonuyla aynı yolu gitseydi bir çırpıda yukarı fırlayıp
+      // hedefin can sayısının üstüne oturuyordu.
       outlinedText(g, p.text, Math.max(fitted, Math.min(this.L.w - fitted, p.x)),
-        p.y - k * this.L.h * 0.11, fitted, '#ffffff', p.color, 'rgba(20,26,34,.85)');
+        p.y - k * this.L.h * 0.105 * p.dur, fitted, '#ffffff', p.color, 'rgba(20,26,34,.85)');
       g.restore();
     }
   }

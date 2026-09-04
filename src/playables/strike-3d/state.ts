@@ -11,6 +11,8 @@ export type EvOut =
    *  kapı "+0" gösteriyordu ve bozuk görünüyordu. */
   | { type: 'gate'; good: boolean; before: number; after: number; label: string }
   | { type: 'break'; z: number; upgraded: number }
+  /** Bir vuruş hedefe değdi. `crit` ise iki kat hasar verdi. */
+  | { type: 'hit'; x: number; z: number; dmg: number; crit: boolean }
   | { type: 'hurt'; n: number }
   | { type: 'finish'; won: boolean };
 
@@ -22,6 +24,8 @@ export interface Shot {
   target: number;
   /** Fırlatıldığı andaki güç — havadayken silah yükselirse bu değişmesin. */
   dmg: number;
+  /** Kritik mi: iki kat hasar, ekranda kırmızı ve büyük yazılıyor. */
+  crit: boolean;
   spin: number;
 }
 
@@ -49,6 +53,8 @@ export interface State {
   targets: TargetState[];
   shots: Shot[];
   fireAcc: number;
+  /** Kaç atış yapıldı — kritik ritmi buradan sayılıyor. */
+  throws: number;
   events: EvOut[];
 }
 
@@ -118,6 +124,7 @@ export function createState(): State {
     targets: freshTargets(),
     shots: [],
     fireAcc: 0,
+    throws: 0,
     events: [],
   };
 }
@@ -138,6 +145,7 @@ export function reset(s: State): void {
   s.targets = f.targets;
   s.shots.length = 0;
   s.fireAcc = 0;
+  s.throws = 0;
   s.events.length = 0;
 }
 
@@ -254,11 +262,17 @@ function fire(s: State, dt: number): void {
   // Atıcı kalabalığın içinden SIRAYLA çıkıyor, rastgele değil: akış düzenli
   // görünsün ve her atış aynı noktadan çıkmasın.
   const who = s.shots.length % throwers(s);
+  // KRİTİK RİTMİ. Rastgele değil sayaçla: sebebi config.ts'te — bir reklam
+  // kötü şansla kaybedilmemeli. Hasar fırlatma anında kilitleniyor, yani
+  // havadayken silah yükselse bile bu atış eski gücüyle vuruyor.
+  s.throws++;
+  const crit = s.throws % STRIKE.critEvery === 0;
   s.shots.push({
     x: s.x + offsetX(who),
     z: s.z + offsetZ(who) + 0.7,
     target,
-    dmg: s.weapon,
+    dmg: s.weapon * (crit ? STRIKE.critMul : 1),
+    crit,
     spin: 0,
   });
 }
@@ -282,6 +296,7 @@ function moveShots(s: State, dt: number): void {
 
     const ts = s.targets[sh.target];
     ts.hp -= sh.dmg;
+    s.events.push({ type: 'hit', x: sh.x, z: ev.z, dmg: sh.dmg, crit: sh.crit });
     s.shots.splice(i, 1);
     if (ts.hp > 0) continue;
 

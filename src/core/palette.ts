@@ -56,10 +56,11 @@ interface WithMap extends Material {
 /**
  * Hat, dokusunu söktüğü malzemenin adına bu öneki koyuyor.
  *
- * İKİ DOKULU SAHNE. Blade Rush'ta iki ayrı karakter var (korsan oyuncu,
- * zombi düşman) ve ikisinin dokusu farklı. Hat her dokuyu ayrı dosyaya
- * çıkarıyor ve malzemeleri `palette:` / `palette2:` diye işaretliyor;
- * burada hangi dokunun hangi işarete bağlanacağı çağıranda belirtiliyor.
+ * ÇOK DOKULU SAHNE. Blade Rush'ta üç ayrı karakter var (korsan oyuncu, zombi
+ * düşmanlar, deniz yaratığı patron) ve üçünün dokusu farklı. Hat her dokuyu
+ * ayrı dosyaya çıkarıyor ve malzemeleri `palette:` / `palette2:` / `palette3:`
+ * diye işaretliyor; hangi dokunun hangi işarete bağlanacağı çağıranda
+ * belirtiliyor.
  */
 const MARK = 'palette:';
 
@@ -77,7 +78,7 @@ function mimeOf(b64: string): string {
  * `smooth`: gerçek yüzey haritası (mipmap açık). Varsayılan kartela.
  */
 export function loadPalette(smooth?: boolean, which?: number): Promise<Texture | null> {
-  const b64 = which === 2 ? __PALETTE2_B64__ : __PALETTE_B64__;
+  const b64 = which === 3 ? __PALETTE3_B64__ : which === 2 ? __PALETTE2_B64__ : __PALETTE_B64__;
   if (!b64) return Promise.resolve(null);
   return new Promise<Texture | null>((res) => {
     const im = new Image();

@@ -110,6 +110,14 @@ export interface SquadOpts {
    * almak bedava: düşmanlar artık zombi.
    */
   model?: string;
+  /**
+   * Yerinde süzülme genliği (dünya birimi).
+   *
+   * Bekleme klibi çok sakin; düşman safı ekranda dümdüz ve cansız duruyordu.
+   * Her figüre KENDİ FAZINDA küçük bir dikey salınım vermek safı canlandırıyor
+   * ve hiçbir şeye mal olmuyor: zaten her kare yazılan matrisin y bileşeni.
+   */
+  bob?: number;
 }
 
 /**
@@ -165,6 +173,8 @@ export class Squad {
   private hide = new Matrix4().makeScale(0, 0, 0);
   private cap: number;
   private ok = false;
+  private bob = 0;
+  private time = 0;
   /** Eldeki silah: tek InstancedMesh, geometrisi yükseltmede değişiyor. */
   private heldMesh: InstancedMesh | null = null;
   private wantHeld = false;
@@ -182,6 +192,7 @@ export class Squad {
   constructor(o: SquadOpts) {
     this.cap = o.cap;
     this.wantHeld = !!o.held;
+    this.bob = o.bob || 0;
     const clip = clipNamed(o.clip);
     for (let p = 0; p < STRIKE.phases; p++) {
       const g = charClone(o.h, o.model);
@@ -320,6 +331,7 @@ export class Squad {
    */
   updateAt(xs: Float32Array, zs: Float32Array, n: number, dt: number): void {
     if (!this.ok) return;
+    this.time += dt;
     for (const d of this.donors) {
       d.mixer.update(dt);
       // Vericiler sahnede olmadığı için matrislerini three kendiliğinden
@@ -335,7 +347,10 @@ export class Squad {
         if (this.heldMesh) this.heldMesh.setMatrixAt(i, this.hide);
         continue;
       }
-      this.place.makeTranslation(xs[i], 0, zs[i]);
+      // Faz İNDEKSTEN geliyor: aynı anda inip kalkan bir saf robot ordusu
+      // gibi duruyor, dağınık faz kalabalık gibi.
+      const y = this.bob ? Math.sin(this.time * 2.6 + i * 1.7) * this.bob : 0;
+      this.place.makeTranslation(xs[i], y, zs[i]);
       const d = this.donors[i % this.donors.length];
       for (let k = 0; k < this.parts.length; k++) {
         const src = d.meshes[k];
@@ -359,7 +374,10 @@ export class Squad {
         this.heldMesh.setMatrixAt(i, this.held);
       }
       if (this.shadows) {
-        this.m.makeScale(0.62, 1, 0.62);
+        // Gölge YERDE kalıyor ve süzülen figürle birlikte hafifçe küçülüyor:
+        // yükselen bir cismin gölgesi büyümez, dağılır.
+        const k = 0.62 - y * 0.5;
+        this.m.makeScale(k, 1, k);
         this.m.setPosition(xs[i], 0.02, zs[i]);
         this.shadows.setMatrixAt(i, this.m);
       }

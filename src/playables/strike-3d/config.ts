@@ -90,6 +90,29 @@ export const STRIKE = {
   throwCap: 14,
   minFire: 0.035,
 
+  /**
+   * KRİTİK VURUŞ — ŞANS DEĞİL, RİTİM.
+   *
+   * Her `critEvery` atıştan biri `critMul` katı vuruyor. Rastgele bir
+   * yüzde daha "doğal" olurdu ama bir reklam KÖTÜ ŞANSLA KAYBEDİLMEMELİ:
+   * parkur, doğru kapıları seçen oyuncunun patronu son saniyede devirmesine
+   * göre ayarlı, ve oraya rastgelelik koymak aynı oynayışın bazen kazanıp
+   * bazen kaybetmesi demek. Gösterim başına para ödenen bir üründe bu
+   * kabul edilemez.
+   *
+   * Sabit ritim gözle yine rastgele okunuyor, çünkü atışlar kalabalığın
+   * içinden sırayla çıkıyor ve farklı zamanlarda varıyor. Ortalama hasar
+   * da kesin: (9×1 + 3) / 10 = ×1.2. Hedeflerin canı bu yüzden aynı oranda
+   * yükseltildi, yani denge kritiklerden ÖNCEKİYLE birebir aynı.
+   *
+   * Onda bir ve ÜÇ KAT, beşte bir ve iki kat değil. İkisinin ortalaması
+   * aynı ama ilki daha iyi okunuyor: beşte birde kırmızı sayılar üst üste
+   * biniyor ve hedefin canını kapatıyordu; onda bir seyrek geliyor ve üç
+   * kat olduğu için geldiğinde gerçekten olay oluyor.
+   */
+  critEvery: 10,
+  critMul: 3,
+
   /** Bu mesafeye giren hedefe ateş açılıyor; boşluğa silah atılmıyor. */
   range: 19,
   shotSpeed: 40,
@@ -119,11 +142,14 @@ export const STRIKE = {
  * menzil / hız / (baseFire / atıcı). Yani "bu hedef kırılır mı" sorusunun
  * cevabı baştan belli, ve parkur ona göre kuruldu:
  *
- *   kapı 1  ×3 → 3 adam,  silah 2  →  22 canlık yükseltme → silah 3
- *   kapı 2  ×2 → 6 adam,  silah 3  →  70 canlık tuzak, sonra 72 canlık
+ *   kapı 1  ×3 → 3 adam,  silah 2  →  26 canlık yükseltme → silah 3
+ *   kapı 2  ×2 → 6 adam,  silah 3  →  84 canlık tuzak, sonra 86 canlık
  *                                     yükseltme          → silah 5
- *   kapı 3  ×2 → 12 adam, silah 5  → 240 canlık yükseltme → silah 9
- *   kapı 4  ×2 → 24 adam (14 ile sınırlı), silah 9 → 430 canlık patron
+ *   kapı 3  ×2 → 12 adam, silah 5  → 288 canlık yükseltme → silah 9
+ *   kapı 4  ×2 → 24 adam (14 ile sınırlı), silah 9 → 516 canlık patron
+ *
+ * Canlar kritik vuruş eklenirken %20 yükseltildi (bkz. STRIKE.critEvery):
+ * ortalama hasar tam o oranda arttığı için parkurun zorluğu değişmedi.
  *
  * Her adım BİLEREK dar: doğru kapıyı seçen oyuncu hedefi son saniyede
  * kırıyor. Bir kapıyı kaçırmak zinciri koparıyor, çünkü kırılamayan
@@ -135,19 +161,45 @@ export const STRIKE = {
  */
 export const TRACK: Event[] = [
   { type: 'gate', z: 19, left: { kind: 'mul', v: 3 }, right: { kind: 'sub', v: 1 } },
-  { type: 'target', z: 38, count: 4, hp: 22, gives: 3 },
+  { type: 'target', z: 38, count: 4, hp: 26, gives: 3 },
   { type: 'gate', z: 57, left: { kind: 'div', v: 2 }, right: { kind: 'mul', v: 2 } },
-  { type: 'target', z: 76, count: 6, hp: 70 },
-  { type: 'target', z: 95, count: 6, hp: 72, gives: 5 },
+  { type: 'target', z: 76, count: 6, hp: 84 },
+  { type: 'target', z: 95, count: 6, hp: 86, gives: 5 },
   { type: 'gate', z: 114, left: { kind: 'mul', v: 2 }, right: { kind: 'sub', v: 4 } },
-  { type: 'target', z: 133, count: 8, hp: 240, gives: 9 },
+  { type: 'target', z: 133, count: 8, hp: 274, gives: 9 },
   { type: 'gate', z: 152, left: { kind: 'div', v: 3 }, right: { kind: 'mul', v: 2 } },
-  { type: 'target', z: 176, count: 1, hp: 430, boss: true, scale: 2.9 },
+  { type: 'target', z: 176, count: 1, hp: 516, boss: true, scale: 2.9 },
 ];
 
 export const TRACK_LEN = 194;
 
 export const BOSS_HP = (TRACK[TRACK.length - 1] as Target).hp;
+
+/**
+ * YÜKSELTME NADİRLİĞİ — yeşil, mavi, mor.
+ *
+ * Oyuncunun zaten bildiği dil: her oyunda yeşil sıradan, mavi nadir, mor
+ * epik. Parkurdaki üç yükseltme sırayla bu üç çerçeveyi taşıyor, yani
+ * "bu sonuncusu ve en iyisi" bilgisi tek bakışta, yazı olmadan geliyor.
+ */
+export const RARITY = ['#3FBF5F', '#3D8FE6', '#A855F7'];
+
+/**
+ * Bu hedef kaçıncı yükseltme? Parkurda `gives` taşıyan hedefler sırayla
+ * sayılıyor; -1 = yükseltme vermiyor. Sıra parkurdan TÜRETİLİYOR, ayrıca
+ * yazılmıyor: parkura yeni bir yükseltme eklendiğinde renkler kendiliğinden
+ * kayıyor, elle güncellenecek ikinci bir liste yok.
+ */
+export function upgradeRank(idx: number): number {
+  let n = 0;
+  for (let i = 0; i < TRACK.length; i++) {
+    const ev = TRACK[i];
+    if (ev.type !== 'target' || !ev.gives) continue;
+    if (i === idx) return n;
+    n++;
+  }
+  return -1;
+}
 
 export const GATE_COLOR = {
   good: '#2FBF71',

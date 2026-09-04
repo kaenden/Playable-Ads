@@ -59,6 +59,31 @@ export class Fx {
     if (level >= 4) this.shake = size * 0.06;
   }
 
+  /**
+   * Küçük çarpma kıvılcımı — halkasız, az partiküllü.
+   *
+   * `burst` en az 11 partikül ve bir halka üretiyor; saniyede on dört vuruş
+   * alan bir sahnede o, efekt değil sis oluyor. Bu sürüm tek bir vuruşun
+   * "değdi" demesi için: dört kıvılcım, yukarı doğru, halka yok.
+   */
+  spark(cx: number, cy: number, size: number, color: string, n?: number): void {
+    const k = n || 4;
+    for (let i = 0; i < k; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+      const sp = size * (0.7 + Math.random());
+      this.parts.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        life: 0,
+        max: 0.22 + Math.random() * 0.18,
+        size: size * (0.05 + Math.random() * 0.05),
+        color,
+      });
+    }
+  }
+
   /** Sarsıntı ofseti; renderer kendi transformunda uyguluyor. */
   shakeOffset(dt: number): [number, number] {
     if (this.shake <= 0.2) {
