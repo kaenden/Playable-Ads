@@ -21,6 +21,56 @@ function easeOut(p: number): number {
   return 1 - Math.pow(1 - p, 3);
 }
 
+/**
+ * Bu taşın ait olduğu eşleşmenin merkezi.
+ *
+ * Aynı satırdaki ve aynı sütundaki temizlenen taşlar toplanıyor; hangisi
+ * daha kalabalıksa eşleşme o yöndedir. L ve T biçimli temizliklerde köşe
+ * taşı iki gruba da ait oluyor ve o zaman ikisinin ortalaması alınıyor —
+ * görsel olarak da doğrusu bu.
+ */
+function groupCenter(s: State, i: number, col: number, row: number): [number, number] {
+  let hn = 0;
+  let hs = 0;
+  let vn = 0;
+  let vs = 0;
+  for (const j of s.clearing) {
+    const jc = j % M.cols;
+    const jr = (j / M.cols) | 0;
+    if (jr === row) {
+      hn++;
+      hs += jc;
+    }
+    if (jc === col) {
+      vn++;
+      vs += jr;
+    }
+  }
+  const cc = hn > 1 ? hs / hn : col;
+  const cr = vn > 1 ? vs / vn : row;
+  return [cc, cr];
+}
+
+/**
+ * Bu temizlikteki AYRI eşleşmelerin merkezleri.
+ *
+ * Bir hamle birbirinden uzak iki eşleşmeyi birden temizleyebiliyor; füzyon
+ * şimşeği o zaman iki ayrı yerde patlamalı. Aynı merkeze düşen taşlar
+ * yuvarlanmış anahtarla tekilleştiriliyor.
+ */
+export function clearCenters(s: State): Array<[number, number]> {
+  const seen: Record<string, boolean> = {};
+  const out: Array<[number, number]> = [];
+  for (const i of s.clearing) {
+    const c = groupCenter(s, i, i % M.cols, (i / M.cols) | 0);
+    const key = c[0].toFixed(1) + ',' + c[1].toFixed(1);
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(c);
+  }
+  return out;
+}
+
 export function visual(s: State, i: number): Vis {
   const col = i % M.cols;
   const row = (i / M.cols) | 0;
@@ -44,10 +94,23 @@ export function visual(s: State, i: number): Vis {
   if (s.phase === 'clear') {
     if (s.clearing.indexOf(i) < 0) return v;
     const p = Math.min(1, s.phaseT / M.clearFor);
-    // Önce hafif büyüyüp sonra sönüyor: doğrudan küçülmek "silindi" gibi
-    // duruyordu, ödül hissi vermiyordu.
-    v.scale = p < 0.25 ? 1 + p * 1.2 : Math.max(0, 1.3 - (p - 0.25) * 1.73);
-    v.alpha = p < 0.5 ? 1 : 1 - (p - 0.5) * 2;
+    // FÜZYON. Önceden taşlar oldukları yerde büyüyüp sönüyordu: "silindi"
+    // bilgisi geliyordu ama BİRLEŞTİKLERİ görünmüyordu. Şimdi eşleşmenin
+    // ortasına doğru çekilip orada büyüyorlar ve tek bir noktada
+    // patlıyorlar — üç taşın bir şeye dönüştüğü his, match-3'ün bütün
+    // ödülü zaten o.
+    //
+    // Merkez, TAŞIN KENDİ HİZASINDAN çıkıyor: aynı satır ya da sütondaki
+    // temizlenen taşların ortalaması. Bütün `clearing` dizisinin ortalaması
+    // yanlıştı — bir hamlede birbirinden uzak iki eşleşme birden
+    // temizlenebiliyor ve o zaman taşlar tahtanın ortasına doğru
+    // kayıyordu.
+    const [cc, cr] = groupCenter(s, i, col, row);
+    const pull = p < 0.6 ? easeOut(p / 0.6) * 0.85 : 0.85 + ((p - 0.6) / 0.4) * 0.15;
+    v.col = col + (cc - col) * pull;
+    v.row = row + (cr - row) * pull;
+    v.scale = p < 0.3 ? 1 + p * 1.15 : Math.max(0, 1.34 - (p - 0.3) * 1.92);
+    v.alpha = p < 0.62 ? 1 : 1 - (p - 0.62) / 0.38;
     return v;
   }
 

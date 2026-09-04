@@ -11,6 +11,7 @@ import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { visual } from './anim';
 import { Fx } from '../../core/fx';
+import { BACKDROP, LOOK, paintTray } from './look';
 import { roundRect } from '../../core/draw';
 import { draw as sprite, ready } from '../../core/atlas';
 
@@ -27,7 +28,7 @@ export class View2D {
     cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none';
     this.cv = cv;
     this.g = cv.getContext('2d') as CanvasRenderingContext2D;
-    document.body.style.background = 'linear-gradient(180deg,#F6E7FB 0%,#EBD7F5 55%,#E4CDEF 100%)';
+    document.body.style.background = BACKDROP;
     this.hud = new Hud(this.g, this.L);
     this.resize();
   }
@@ -39,11 +40,18 @@ export class View2D {
     this.g.setTransform(this.L.dpr, 0, 0, this.L.dpr, 0, 0);
   }
 
-  burstAt(i: number, kind: number): void {
+  burstAt(i: number, kind: number, chain?: number): void {
     const c = i % M.cols;
     const r = (i / M.cols) | 0;
     const [x, y] = this.L.center(c, r);
-    this.fx.burst(x, y, this.L.cell * 0.5, 2, TINT[kind] || '#ffffff');
+    this.fx.burst(x, y, this.L.cell * (0.5 + Math.min(3, (chain || 1) - 1) * 0.12),
+      2 + Math.min(3, (chain || 1) - 1), TINT[kind] || '#ffffff');
+  }
+
+  /** Füzyon anı: taşların birleştiği noktada beyaz bir şimşek. */
+  flashAt(col: number, row: number, chain: number): void {
+    const [x, y] = this.L.center(col, row);
+    this.fx.burst(x, y, this.L.cell * (0.7 + chain * 0.08), 4, LOOK.spark);
   }
 
   render(s: State, ui: UiState, dt: number): void {
@@ -58,31 +66,22 @@ export class View2D {
     g.save();
     g.translate(shx, shy);
 
-    // --- tahta
+    // --- tahta. Çizimi `look.ts` yapıyor: 3D sürüm aynı fonksiyonu doku
+    // olarak zemin düzlemine yapıştırıyor, yani iki tahtanın pikselleri
+    // birebir aynı.
     const b = L.board;
     const pad = c * 0.14;
     g.save();
-    g.shadowColor = 'rgba(70,30,90,.22)';
-    g.shadowBlur = c * 0.5;
-    g.shadowOffsetY = c * 0.12;
-    g.fillStyle = 'rgba(255,255,255,.62)';
-    roundRect(g, b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, c * 0.34);
-    g.fill();
+    g.shadowColor = 'rgba(12,2,22,.5)';
+    g.shadowBlur = c * 0.7;
+    g.shadowOffsetY = c * 0.16;
+    paintTray(g, b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, c, M.cols, M.rows, pad);
     g.restore();
-
-    for (let i = 0; i < M.cols * M.rows; i++) {
-      const col = i % M.cols;
-      const row = (i / M.cols) | 0;
-      // Dama deseni: hücre sınırı çizgiyle değil tonla veriliyor, daha temiz.
-      g.fillStyle = (col + row) % 2 ? 'rgba(139,92,180,.10)' : 'rgba(139,92,180,.05)';
-      roundRect(g, b.x + col * c + c * 0.04, b.y + row * c + c * 0.04, c * 0.92, c * 0.92, c * 0.2);
-      g.fill();
-    }
 
     // --- seçim
     if (ui.sel >= 0 && s.phase === 'idle') {
       const [sx, sy] = L.center(ui.sel % M.cols, (ui.sel / M.cols) | 0);
-      g.strokeStyle = 'rgba(255,214,95,.95)';
+      g.strokeStyle = LOOK.pick;
       g.lineWidth = Math.max(2.5, c * 0.06);
       roundRect(g, sx - c * 0.46, sy - c * 0.46, c * 0.92, c * 0.92, c * 0.2);
       g.stroke();
@@ -104,6 +103,12 @@ export class View2D {
         const [x, y] = L.center(v.col, v.row);
         // Boştaki hafif nefes: tahta tamamen donuk durmasın.
         const idle = s.phase === 'idle' ? 1 + Math.sin(this.t * 2.2 + i * 0.7) * 0.018 : 1;
+        // Temas gölgesi: koyu tepside taşlar aksi hâlde havada duruyor.
+        g.globalAlpha = v.alpha * 0.5;
+        g.fillStyle = 'rgba(10,2,18,.55)';
+        g.beginPath();
+        g.ellipse(x, y + c * 0.34, c * 0.3 * v.scale, c * 0.11 * v.scale, 0, 0, Math.PI * 2);
+        g.fill();
         g.globalAlpha = v.alpha;
         sprite(g, KINDS[kind], x, y, c * 0.86 * v.scale * idle);
         g.globalAlpha = 1;

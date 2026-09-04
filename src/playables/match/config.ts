@@ -48,8 +48,16 @@ export const M = {
 /** Tür adları — hem sprite hem model adı olarak kullanılıyor. */
 export const KINDS = ['donut', 'cupcake', 'cherries', 'banana', 'burger'];
 
-/** Partikül ve HUD renkleri; sprite'ların baskın tonundan alındı. */
-export const TINT = ['#E8B98A', '#C77BD8', '#E0453F', '#F5CE3B', '#C98A4B'];
+/**
+ * Partikül ve HUD renkleri.
+ *
+ * Önceden sprite'ın baskın tonundan alınıyordu ve koyu tepside patlamalar
+ * sönük kalıyordu: bej bir çöreğin patlaması da bej oluyor, erik zeminde
+ * kaybediliyordu. Artık her tür KENDİ ailesinden ama doygunluğu tavana
+ * çekilmiş bir renkle patlıyor — nesnenin rengi değil, PATLAMASININ rengi.
+ * Modellere dokunulmadı; bunlar sadece partikül.
+ */
+export const TINT = ['#FFC271', '#FF74E2', '#FF4756', '#FFE23B', '#FF9E42'];
 
 export const COPY = {
   title: 'Sweet Match — Playable',

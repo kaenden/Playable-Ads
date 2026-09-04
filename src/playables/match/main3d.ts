@@ -8,6 +8,8 @@ import { sfx } from './sfx';
 import { loadAtlas } from '../../core/atlas';
 import { loadModels } from './models';
 import { View3D } from './view3d';
+import { clearCenters } from './anim';
+import { chainWord } from './look';
 import { View2D } from './view2d';
 
 const cv = document.getElementById('c') as HTMLCanvasElement;
@@ -99,10 +101,21 @@ function loop(now: number): void {
 
   for (const ev of drainEvents(state)) {
     if (ev.type === 'clear' && ev.cells) {
-      for (const i of ev.cells) view.burstAt(i, state.cells[i] < 0 ? 0 : state.cells[i]);
+      const chain = ev.chain || 1;
+      for (const i of ev.cells) view.burstAt(i, state.cells[i] < 0 ? 0 : state.cells[i], chain);
+      // FÜZYON ŞİMŞEĞİ, eşleşmenin merkezinde. Taşlar oraya doğru
+      // çekildiği için patlama da orada olmalı; hücre hücre patlatmak
+      // "üçü birden yok oldu" diyor, merkezdeki tek şimşek "üçü BİRLEŞTİ".
+      for (const [cc, cr] of clearCenters(state)) view.flashAt(cc, cr, chain);
+      const word = chainWord(chain);
+      if (word) view.hud.combo(word);
       // Zincir derinleştikçe perde yükseliyor: cascade kulakla da duyuluyor.
-      sfx.clear(ev.chain || 1);
-      if ((ev.chain || 1) >= 3) view.fx.shake = Math.max(view.fx.shake, view.L.h * 0.006);
+      sfx.clear(chain);
+      // Sarsıntı da zincirle büyüyor; ilk temizlikte yok, çünkü her
+      // hamlede sarsılan bir ekran kısa sürede yorucu oluyor.
+      if (chain >= 2) {
+        view.fx.shake = Math.max(view.fx.shake, view.L.h * 0.004 * Math.min(4, chain));
+      }
       ui.hint = null;
       idle = 0;
     } else if (ev.type === 'swap') {

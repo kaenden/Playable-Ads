@@ -15,11 +15,14 @@ import {
   DirectionalLight,
   DoubleSide,
   Group,
+  InstancedMesh,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   OrthographicCamera,
   PlaneGeometry,
   Scene,
+  SRGBColorSpace,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -30,6 +33,7 @@ import { Hud } from './hud';
 import { visual } from './anim';
 import { Fx } from '../../core/fx';
 import { pieceFor } from './models';
+import { BACKDROP, LOOK, blobCanvas, paintTray } from './look';
 
 /** Izgara düzlemi XZ; kamera bu yönden bakıyor. */
 const YAW = (0 * Math.PI) / 180;
@@ -39,6 +43,12 @@ const DIR = new Vector3(
   Math.sin(PITCH),
   Math.cos(YAW) * Math.cos(PITCH)
 ).normalize();
+
+/** Elle kurulan her dokuya sRGB demek gerekiyor; sebebi buildBoard'da. */
+function srgb(t: CanvasTexture): CanvasTexture {
+  t.colorSpace = SRGBColorSpace;
+  return t;
+}
 
 interface Slot {
   kind: number;
@@ -57,6 +67,9 @@ export class View3D {
   private hudCtx: CanvasRenderingContext2D;
   private world = new Group();
   private slots: Array<Slot | null> = [];
+  private shadows: InstancedMesh | null = null;
+  private sm = new Matrix4();
+  private hideM = new Matrix4().makeScale(0, 0, 0);
   private t = 0;
 
   constructor(gl: HTMLCanvasElement) {
@@ -66,18 +79,27 @@ export class View3D {
     document.body.appendChild(hud);
     this.cv = hud;
     this.hudCtx = hud.getContext('2d') as CanvasRenderingContext2D;
-    document.body.style.background = 'linear-gradient(180deg,#F6E7FB 0%,#EBD7F5 55%,#E4CDEF 100%)';
+    document.body.style.background = BACKDROP;
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true, alpha: true });
     this.scene.add(this.world);
 
-    this.scene.add(new AmbientLight(0xdce8ff, 0.75));
-    const key = new DirectionalLight(0xfff6e8, 1.5);
+    // IŞIK KOYU ZEMİNE GÖRE YENİDEN KURULDU. Açık zeminde çalışan yumuşak
+    // ortam ışığı erik bir tepsinin üstünde modelleri gri bırakıyordu:
+    // ortam ışığı her yüzeye aynı değeri ekler, yani kontrastı yer. Ortam
+    // kısıldı, anahtar yükseldi, ve ARKADAN bir kenar ışığı eklendi —
+    // koyu zeminde silueti çizen şey o. Bu tam olarak renderer'ın satın
+    // aldığı şey; sprite'ta taklidi yok.
+    this.scene.add(new AmbientLight(0xffe6ff, 0.42));
+    const key = new DirectionalLight(0xfff4e2, 1.85);
     key.position.set(-2.2, 3.4, 2.6);
     this.scene.add(key);
-    const fill = new DirectionalLight(0x9ec4ff, 0.5);
+    const fill = new DirectionalLight(0xB98CFF, 0.55);
     fill.position.set(2.6, 1.2, -2.0);
     this.scene.add(fill);
+    const rim = new DirectionalLight(0xFFC7F2, 0.9);
+    rim.position.set(0.6, 1.6, -3.2);
+    this.scene.add(rim);
 
     this.buildBoard();
     this.hud = new Hud(this.hudCtx, this.L);
@@ -94,28 +116,50 @@ export class View3D {
    * Deseni 2D sürümün tahtasıyla aynı: iki oyun aynı oyun gibi görünmeli.
    */
   private buildBoard(): void {
+    // Tepsi TEK TARİFTEN: `look.ts` içindeki aynı fonksiyon 2D sürümde
+    // doğrudan tuvale çiziliyor, burada bir dokuya çizilip zemin düzlemine
+    // yapıştırılıyor. İki tahtanın pikselleri birebir aynı.
     const px = 72;
+    const pad = px * 0.14;
     const cv = document.createElement('canvas');
-    cv.width = M.cols * px;
-    cv.height = M.rows * px;
+    cv.width = M.cols * px + pad * 2;
+    cv.height = M.rows * px + pad * 2;
     const g = cv.getContext('2d') as CanvasRenderingContext2D;
-    g.fillStyle = 'rgba(255,255,255,.62)';
-    g.fillRect(0, 0, cv.width, cv.height);
-    for (let i = 0; i < M.cols * M.rows; i++) {
-      const col = i % M.cols;
-      const row = (i / M.cols) | 0;
-      g.fillStyle = (col + row) % 2 ? 'rgba(139,92,180,.16)' : 'rgba(139,92,180,.07)';
-      const m = px * 0.04;
-      g.fillRect(col * px + m, row * px + m, px - m * 2, px - m * 2);
-    }
+    paintTray(g, 0, 0, cv.width, cv.height, px, M.cols, M.rows, pad);
     const tex = new CanvasTexture(cv);
+    // RENK UZAYI ŞART. Varsayılanda CanvasTexture lineer veri sayılıyor ve
+    // çıkışta sRGB'ye çevrilirken KOYU değerler ciddi biçimde açılıyor:
+    // #2A0940 seçtiğim tepsi ekranda orta mor çıkıyordu. Doku zaten sRGB
+    // piksel taşıyor, söylemek yetiyor.
+    tex.colorSpace = SRGBColorSpace;
     const plane = new Mesh(
-      new PlaneGeometry(M.cols, M.rows),
+      new PlaneGeometry(M.cols + (pad * 2) / px, M.rows + (pad * 2) / px),
       new MeshBasicMaterial({ map: tex, transparent: true, side: DoubleSide })
     );
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(M.cols / 2, 0, M.rows / 2);
     this.world.add(plane);
+
+    // TEMAS GÖLGELERİ — hepsi tek çizim çağrısı.
+    //
+    // Koyu tepsi taşları öne çıkardı ama aynı zamanda havada bıraktı:
+    // altlarında hiçbir şey yoktu. Hücre başına bir yumuşak leke, taşı
+    // zemine oturtuyor ve derinliği okunur yapıyor.
+    const bg = new PlaneGeometry(1, 1);
+    bg.rotateX(-Math.PI / 2);
+    const shadows = new InstancedMesh(
+      bg,
+      new MeshBasicMaterial({
+        map: srgb(new CanvasTexture(blobCanvas(64))),
+        transparent: true,
+        depthWrite: false,
+      }),
+      M.cols * M.rows
+    );
+    shadows.frustumCulled = false;
+    shadows.renderOrder = -1;
+    this.shadows = shadows;
+    this.world.add(shadows);
   }
 
   resize(): void {
@@ -169,11 +213,18 @@ export class View3D {
     cam.updateProjectionMatrix();
   }
 
-  burstAt(i: number, kind: number): void {
+  burstAt(i: number, kind: number, chain?: number): void {
     const col = i % M.cols;
     const row = (i / M.cols) | 0;
     const [x, y] = this.L.center(col, row);
-    this.fx.burst(x, y, this.L.cell * 0.5, 2, TINT[kind] || '#ffffff');
+    this.fx.burst(x, y, this.L.cell * (0.5 + Math.min(3, (chain || 1) - 1) * 0.12),
+      2 + Math.min(3, (chain || 1) - 1), TINT[kind] || '#ffffff');
+  }
+
+  /** Füzyon anı: taşların birleştiği noktada beyaz bir şimşek. */
+  flashAt(col: number, row: number, chain: number): void {
+    const [x, y] = this.L.center(col, row);
+    this.fx.burst(x, y, this.L.cell * (0.7 + chain * 0.08), 4, LOOK.spark);
   }
 
   render(s: State, ui: UiState, dt: number): void {
@@ -207,11 +258,24 @@ export class View3D {
       // Yavaş dönüş: modelin hacmi ancak dönerken okunuyor.
       g.rotation.y = this.t * 0.55 + i * 0.9;
       g.visible = v.alpha > 0.05;
+      if (this.shadows) {
+        // Gölge YERDE kalıyor ve taş büyüdükçe yayılıyor.
+        const k = 0.78 * v.scale * (v.alpha > 0.05 ? 1 : 0);
+        this.sm.makeScale(k, 1, k * 0.62);
+        this.sm.setPosition(v.col + 0.5, 0.012, v.row + 0.62);
+        this.shadows.setMatrixAt(i, this.sm);
+      }
     }
     for (let i = s.cells.length; i < this.slots.length; i++) {
       const slot = this.slots[i];
       if (slot) this.world.remove(slot.g);
       this.slots[i] = null;
+    }
+    if (this.shadows) {
+      for (let i = 0; i < M.cols * M.rows; i++) {
+        if (s.cells[i] === undefined || s.cells[i] < 0) this.shadows.setMatrixAt(i, this.hideM);
+      }
+      this.shadows.instanceMatrix.needsUpdate = true;
     }
 
     const [shx, shy] = this.fx.shakeOffset(dt);
@@ -225,7 +289,7 @@ export class View3D {
     if (ui.sel >= 0 && s.phase === 'idle') {
       const [sx, sy] = L.center(ui.sel % M.cols, (ui.sel / M.cols) | 0);
       const c = L.cell;
-      g2.strokeStyle = 'rgba(255,214,95,.95)';
+      g2.strokeStyle = LOOK.pick;
       g2.lineWidth = Math.max(2.5, c * 0.06);
       g2.beginPath();
       g2.arc(sx, sy, c * 0.44, 0, Math.PI * 2);

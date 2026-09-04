@@ -22,9 +22,43 @@ export class Hud {
 
   constructor(private g: CanvasRenderingContext2D, private L: Layout) {}
 
+  /**
+   * Zincir sözü — "SWEET!", "TASTY!"...
+   *
+   * Cascade match-3'ün en ödüllendirici anı ve önceki sürümde ekranda hiç
+   * karşılığı yoktu: üç taş da patlasa dokuz taş da patlasa aynı
+   * görünüyordu. Söz tahtanın ortasında beliriyor, büyüyor ve soluyor.
+   */
+  combo(text: string): void {
+    this.comboText = text;
+    this.comboT = 0;
+  }
+
+  private comboText = '';
+  private comboT = 99;
+
+  private drawCombo(dt: number): void {
+    if (this.comboT > 0.9) return;
+    this.comboT += dt;
+    const g = this.g;
+    const L = this.L;
+    const p = Math.min(1, this.comboT / 0.9);
+    const grow = 1 - Math.pow(1 - Math.min(1, p * 3.4), 2);
+    const size = Math.min(L.w * 0.115, 52) * (0.7 + grow * 0.42);
+    g.save();
+    g.globalAlpha = p < 0.62 ? 1 : 1 - (p - 0.62) / 0.38;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    fitFont(g, this.comboText, L.w * 0.8, '900', size, FONT);
+    outlinedText(g, this.comboText, L.w / 2, L.board.y + L.board.h * 0.42 - p * L.h * 0.05,
+      size, '#FFF6C8', '#FF9AE8', 'rgba(38,6,52,.9)');
+    g.restore();
+  }
+
   draw(s: State, ui: UiState, dt: number): void {
     this.t += dt;
     this.header(s);
+    if (s.status === 'playing') this.drawCombo(dt);
     if (ui.hint && s.phase === 'idle' && s.status === 'playing') this.hand(ui.hint);
     if (s.status === 'playing') this.ctaButton(this.L.cta, 1 + Math.sin(this.t * 3) * 0.02);
     else this.endcard(s);
@@ -83,13 +117,14 @@ export class Hud {
         pg.addColorStop(1, low ? '#D92F2F' : '#E8930C');
         g.fillStyle = pg;
       } else {
-        g.fillStyle = 'rgba(70,40,90,.16)';
+        // Harcanmış hamle yuvası: koyu zeminde koyu bir yuva görünmüyordu.
+        g.fillStyle = 'rgba(255,226,252,.16)';
       }
       roundRect(g, px0, rowY, pipW, pipH, pipH / 2);
       g.fill();
       g.globalAlpha = 1;
     }
-    g.fillStyle = 'rgba(70,40,90,.6)';
+    g.fillStyle = 'rgba(255,226,252,.72)';
     g.font = '700 ' + Math.round(pipH * 1.05) + 'px ' + FONT;
     g.textAlign = 'left';
     g.textBaseline = 'top';
@@ -103,13 +138,13 @@ export class Hud {
     const r = this.L.sound;
     const cx = r.x + r.w / 2;
     const cy = r.y + r.h / 2;
-    g.fillStyle = 'rgba(70,40,90,.16)';
+    g.fillStyle = 'rgba(255,226,252,.2)';
     g.beginPath();
     g.arc(cx, cy, r.w / 2, 0, Math.PI * 2);
     g.fill();
 
     const u = r.w * 0.13;
-    g.fillStyle = '#3B1B4A';
+    g.fillStyle = '#FFE9FB';
     g.beginPath();
     g.moveTo(cx - u * 1.5, cy - u * 0.6);
     g.lineTo(cx - u * 0.6, cy - u * 0.6);
@@ -120,7 +155,7 @@ export class Hud {
     g.closePath();
     g.fill();
 
-    g.strokeStyle = '#3B1B4A';
+    g.strokeStyle = '#FFE9FB';
     g.lineWidth = Math.max(1.5, u * 0.34);
     if (audio.on) {
       g.beginPath();

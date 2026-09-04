@@ -413,7 +413,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       </div>
       <div class="pairs">
         <div class="pair">
-          <div class="pairtop"><h2>Match-3</h2><span class="delta">3D is 15.9× the size</span></div>
+          <div class="pairtop"><h2>Match-3</h2><span class="delta">3D is 14.9× the size</span></div>
           <div class="two">
           <article class="work">
             <a class="tile" href="u/sweet-match-3d/" data-play="m3" aria-label="Play Sweet Match 3D">
@@ -423,7 +423,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <div class="info">
               <h3>Sweet Match 3D</h3>
               <p class="genre">Three.js</p>
-              <p class="num">687.4 KB</p>
+              <p class="num">688.5 KB</p>
             </div>
           </article>
           <article class="work">
@@ -434,7 +434,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <div class="info">
               <h3>Sweet Match</h3>
               <p class="genre">Canvas 2D</p>
-              <p class="num">43.2 KB</p>
+              <p class="num">46.1 KB</p>
             </div>
           </article>
           </div>
@@ -798,15 +798,46 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
               <tr><td>Art, after the pipeline</td><td class="num">11.2 KB</td><td class="num">42.0 KB</td></tr>
               <tr><td>Game, HUD, audio, ad lifecycle</td><td class="num">32.8 KB</td><td class="num">32.8 KB</td></tr>
               <tr><td>Three.js + glTF loader</td><td class="num">—</td><td class="num">608 KB</td></tr>
-              <tr><td><b>Package</b></td><td class="num"><b>43.2 KB</b></td><td class="num"><b>687.4 KB</b></td></tr>
-              <tr><td>Of the 5 MB cap</td><td class="num">0.84%</td><td class="num">13.4%</td></tr>
+              <tr><td><b>Package</b></td><td class="num"><b>46.1 KB</b></td><td class="num"><b>688.5 KB</b></td></tr>
+              <tr><td>Of the 5 MB cap</td><td class="num">0.90%</td><td class="num">13.4%</td></tr>
             </tbody>
           </table>
         </div>
         <div class="ledger">
-          <div><div class="n">15.9×</div><div class="c">The whole difference between the two units</div></div>
+          <div><div class="n">14.9×</div><div class="c">The whole difference between the two units</div></div>
           <div><div class="n">3.8×</div><div class="c">The difference in the art alone — models against sprites rendered from them</div></div>
           <div><div class="n bad">608 KB</div><div class="c">The renderer. Everything else is rounding</div></div>
+        </div>
+        <div class="notes">
+          <article>
+            <p class="t">Appeal</p><h3>The art was fine; the room it sat in was not</h3>
+            <p>This pair shipped looking washed out, and the reason was not the pieces.
+            Kenney's food models are pale by design &mdash; beige doughnut, cream
+            cupcake, soft yellow banana &mdash; and they were sitting on a near-white
+            lilac board, so the busiest part of the screen had the least contrast in it.
+            The fix could not be to recolour the art, because the art being identical is
+            the entire experiment. So the room changed instead: a raspberry backdrop
+            with sprinkles, and a tray darker than anything else on screen, which puts
+            the pale pieces at maximum contrast exactly where the player is looking.
+            One catch cost half an hour &mdash; a hand-built canvas texture defaults to
+            linear colour in three.js, so the near-black tray came back mid-purple until
+            it was told it was already sRGB.</p>
+          </article>
+          <article>
+            <p class="t">Feel</p><h3>Three pieces should fuse, not vanish</h3>
+            <p>A cleared match used to grow slightly and fade in place: the board told
+            you it had happened, but it never felt like a reward. Now the matched
+            pieces pull toward the centre of their own line, swell, and go off as one
+            flash &mdash; three things becoming one, which is what a match actually is.
+            Cascades finally show too: the chain depth was in the state all along and
+            nothing on screen used it, so a second clear now shakes the board, throws a
+            wider burst and calls it &mdash; SWEET, TASTY, DELICIOUS. The first clear
+            stays quiet, because a game that shouts on every move stops being heard.</p>
+            <p>All of it lives in the files both units share, so the 2D build got the
+            same fusion, the same cascade and the same tray for free. That is the point
+            of the pair: the fair comparison is only fair if improving one improves
+            both.</p>
+          </article>
         </div>
         <p>
           <b>Choosing 3D is not an art decision, it is a 608 KB decision.</b> The art
@@ -1246,8 +1277,8 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <tr><td>Blade Rush</td><td class="num">892.9 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Sweet Match</td><td class="num">43.2 KB</td><td class="dl"><a href="dl/sweet-match-google.zip" download>google</a> <a href="dl/sweet-match-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Sweet Match 3D</td><td class="num">688.5 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Sweet Match</td><td class="num">46.1 KB</td><td class="dl"><a href="dl/sweet-match-google.zip" download>google</a> <a href="dl/sweet-match-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Merge Dragons 3D</td><td class="num">975.1 KB</td><td class="dl"><a href="dl/merge-dragons-3d-google.zip" download>google</a> <a href="dl/merge-dragons-3d-ironsource.zip" download>ironsource</a> <a href="dl/merge-dragons-3d-mintegral.zip" download>mintegral</a> <a href="dl/merge-dragons-3d-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Merge Dragons</td><td class="num">263.5 KB</td><td class="dl"><a href="dl/merge-dragons-google.zip" download>google</a> <a href="dl/merge-dragons-ironsource.zip" download>ironsource</a> <a href="dl/merge-dragons-mintegral.zip" download>mintegral</a> <a href="dl/merge-dragons-tiktok.zip" download>tiktok</a></td></tr>
       </tbody>
@@ -1273,7 +1304,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 12:10 UTC</p>
+    <p class="stamp mono">build 2026-09-04 12:58 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1309,8 +1340,8 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     'str': ['Blade Rush',       '3D action runner · Three.js · 892.9 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
-    'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],
-    'm2':  ['Sweet Match',      'Match-3 · Canvas 2D · 43.2 KB'],
+    'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 688.5 KB'],
+    'm2':  ['Sweet Match',      'Match-3 · Canvas 2D · 46.1 KB'],
     '3d':  ['Merge Dragons 3D', 'Merge · Three.js · 975.1 KB'],
     '2d':  ['Merge Dragons',    'Merge · Canvas 2D · 263.5 KB']
   };

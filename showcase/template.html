@@ -781,6 +781,37 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           <div><div class="n">3.8×</div><div class="c">The difference in the art alone — models against sprites rendered from them</div></div>
           <div><div class="n bad">608 KB</div><div class="c">The renderer. Everything else is rounding</div></div>
         </div>
+        <div class="notes">
+          <article>
+            <p class="t">Appeal</p><h3>The art was fine; the room it sat in was not</h3>
+            <p>This pair shipped looking washed out, and the reason was not the pieces.
+            Kenney's food models are pale by design &mdash; beige doughnut, cream
+            cupcake, soft yellow banana &mdash; and they were sitting on a near-white
+            lilac board, so the busiest part of the screen had the least contrast in it.
+            The fix could not be to recolour the art, because the art being identical is
+            the entire experiment. So the room changed instead: a raspberry backdrop
+            with sprinkles, and a tray darker than anything else on screen, which puts
+            the pale pieces at maximum contrast exactly where the player is looking.
+            One catch cost half an hour &mdash; a hand-built canvas texture defaults to
+            linear colour in three.js, so the near-black tray came back mid-purple until
+            it was told it was already sRGB.</p>
+          </article>
+          <article>
+            <p class="t">Feel</p><h3>Three pieces should fuse, not vanish</h3>
+            <p>A cleared match used to grow slightly and fade in place: the board told
+            you it had happened, but it never felt like a reward. Now the matched
+            pieces pull toward the centre of their own line, swell, and go off as one
+            flash &mdash; three things becoming one, which is what a match actually is.
+            Cascades finally show too: the chain depth was in the state all along and
+            nothing on screen used it, so a second clear now shakes the board, throws a
+            wider burst and calls it &mdash; SWEET, TASTY, DELICIOUS. The first clear
+            stays quiet, because a game that shouts on every move stops being heard.</p>
+            <p>All of it lives in the files both units share, so the 2D build got the
+            same fusion, the same cascade and the same tray for free. That is the point
+            of the pair: the fair comparison is only fair if improving one improves
+            both.</p>
+          </article>
+        </div>
         <p>
           <b>Choosing 3D is not an art decision, it is a 608 KB decision.</b> The art
           barely moves — 31 KB either way on a 5 MB budget. What you are buying is the
