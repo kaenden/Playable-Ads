@@ -69,10 +69,10 @@ const PLAYABLES = {
   // bu birim tek bir görsel dosyası bile taşımıyor (karakter dokusu hariç).
   'run-3d': {
     entry: 'playables/run-3d/main.ts',
-    title: 'Crowd Rush — Playable',
+    title: 'Gate Crashers — Playable',
     glb: ['out-3d-run', 'run.glb'],
   },
-  // AYNI PAKET, BAŞKA SEÇİM. Blade Rush, Crowd Rush'ın koridorunu, kamerasını,
+  // AYNI PAKET, BAŞKA SEÇİM. Blade Rush, Gate Crashers'ın koridorunu, kamerasını,
   // instancing düzenini ve derlemesini paylaşıyor; değişen şey mekanik ve
   // AYNI KİTTEN YAPILAN SEÇİM. Aynı Kenney paketlerinden farklı modeller
   // çekiliyor: çam yerine palmiye, çiçek yerine küp ve oberlisk, ve

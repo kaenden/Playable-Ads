@@ -77,7 +77,7 @@ Asset kaynakları (hepsi CC0, ticari kullanım serbest):
 Sekiz ağ için ayrı paketleniyor (+ preview ve vitrin hedefleri = 10),
 prosedürel yedeği olanlar iki sanat yoluyla: **100 paket.**
 
-### Beşinci birim: `run-3d` (Crowd Rush)
+### Beşinci birim: `run-3d` (Gate Crashers)
 
 İlk animasyonlu karakterli birim ve ilk "tahta" yerine SAHNE kuran birim.
 Karakter Kenney Blocky Characters, koridor Kenney Nature Kit; ikisi de CC0,
@@ -777,4 +777,4 @@ Chrome DevTools'ta sentetik pointer event'leriyle, **iki playable'da da**:
 25. ~~Sanat yönü geçişi (yeni asset olmadan)~~ ✅ ışık, palet, kamera, atmosfer,
     toz ve tepki — paket 796.5 -> 801.2 KB, yani 4.7 KB
 26. Kendi asset üretimimiz — 2D için Invoke, 3D için görüntüden mesh; karakter
-    PARÇALI kurulacak (rig yok). Pilot: aynı Crowd Rush, sadece karakter değişik
+    PARÇALI kurulacak (rig yok). Pilot: aynı Gate Crashers, sadece karakter değişik

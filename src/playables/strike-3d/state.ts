@@ -1,7 +1,7 @@
 /**
  * Oyun mantığı — çizimden tamamen bağımsız.
  *
- * Crowd Rush'taki ayrımın aynısı: burada three.js yok, canvas yok. 3D
+ * Gate Crashers'taki ayrımın aynısı: burada three.js yok, canvas yok. 3D
  * görünüm de 2D yedek görünüm de AYNI durumu okuyor.
  */
 import { STRIKE, TRACK, Gate, Target, applyOp, opGood, opLabel } from './config';
@@ -60,7 +60,7 @@ export interface State {
 
 const GA = 2.39996323;
 
-/** Kalabalık dizilimi — Crowd Rush'taki ayçiçeği spiralinin aynısı. */
+/** Kalabalık dizilimi — Gate Crashers'taki ayçiçeği spiralinin aynısı. */
 export function offsetX(i: number): number {
   return Math.cos(i * GA) * STRIKE.spread * Math.sqrt(i);
 }

@@ -51,11 +51,11 @@ const pctStr = (n) => {
 
 /**
  * Birimler. `key` şablondaki yer tutucu, `slug` adres, `dist` build klasörü.
- * Adresler oyunun ADIYLA: `/u/crowd-rush/` bir insana bir şey söylüyor,
+ * Adresler oyunun ADIYLA: `/u/gate-crashers/` bir insana bir şey söylüyor,
  * `/u/run-3d/` söylemiyor.
  */
 const UNITS = [
-  { key: 'run', slug: 'crowd-rush', dist: 'run-3d', poster: 'run-3d', name: 'Crowd Rush', genre: '3D runner', engine: 'Three.js' },
+  { key: 'run', slug: 'gate-crashers', was: ['crowd-rush'], dist: 'run-3d', poster: 'run-3d', name: 'Gate Crashers', genre: '3D runner', engine: 'Three.js' },
   { key: 'str', slug: 'blade-rush', dist: 'strike-3d', poster: 'strike-3d', name: 'Blade Rush', genre: '3D action runner', engine: 'Three.js' },
   { key: 'esc', slug: 'traffic-escape', dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Traffic Escape', genre: 'Block puzzle', engine: 'Three.js' },
   { key: 'td', slug: 'tower-rush', dist: 'defense-2d', poster: 'defense-2d', name: 'Tower Rush', genre: 'Tower defense', engine: 'Canvas 2D' },
@@ -145,6 +145,23 @@ for (const u of UNITS) {
   page = page.replace('</head>', meta + '\n</head>');
   mkdirSync(join(OUT, 'u', u.slug), { recursive: true });
   writeFileSync(join(OUT, 'u', u.slug, 'index.html'), page);
+
+  // ESKİ ADRES ÖLMESİN. Bir birim yeniden adlandırıldığında paylaşılmış
+  // linkler 404 veriyor; portfolyoda kırık link, olmayan projeden kötü.
+  // Eski yol yerinde kalıyor ve yenisine yönlendiriyor — statik barındırmada
+  // yönlendirme kuralı yazılamadığı için meta refresh + canonical.
+  for (const old of u.was || []) {
+    mkdirSync(join(OUT, 'u', old), { recursive: true });
+    writeFileSync(
+      join(OUT, 'u', old, 'index.html'),
+      '<!doctype html><meta charset="utf-8">' +
+        '<title>' + esc(u.name) + '</title>' +
+        '<link rel="canonical" href="../' + u.slug + '/">' +
+        '<meta http-equiv="refresh" content="0; url=../' + u.slug + '/">' +
+        '<meta name="robots" content="noindex">' +
+        '<p>Moved to <a href="../' + u.slug + '/">' + esc(u.name) + '</a>.</p>'
+    );
+  }
   unitBytes += Buffer.byteLength(page);
 
   const K = u.key.toUpperCase();

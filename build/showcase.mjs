@@ -113,7 +113,7 @@ const posters = {
 // Şimdilik sadece iki kardeş birimin logosu var; deneme onlarda yapılıyor,
 // tutarsa kalanlara da aynı hattan üretilecek.
 const logos = {
-  RUN: await logo('crowd-rush'),
+  RUN: await logo('gate-crashers'),
   STR: await logo('blade-rush'),
 };
 

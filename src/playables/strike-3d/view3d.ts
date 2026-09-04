@@ -1,7 +1,7 @@
 /**
  * 3D görünüm — koridor, kalabalık, kapılar, duvar.
  *
- * KARDEŞ BİRİMDEN AYRIŞMAK. Crowd Rush ile hat, koridor, kamera ve instancing
+ * KARDEŞ BİRİMDEN AYRIŞMAK. Gate Crashers ile hat, koridor, kamera ve instancing
  * düzeni ortak; ilk sürümde ASSET SEÇİMİ ve RENK de ortaktı ve ikisi ekranda
  * aynı oyun gibi duruyordu. İzleyici bir oyunu mekaniğinden değil görüntüsünden
  * tanıyor.
@@ -604,7 +604,7 @@ export class View3D implements RunView {
         const sz = propSize(name);
         this.spots.push([px, pz, sz ? (sz.x / (sz.y || 1)) * h * 1.5 : h]);
       }
-      // RESİF TAŞLARI. Crowd Rush'ta bu döngü uzağa iri ağaçlar koyuyordu;
+      // RESİF TAŞLARI. Gate Crashers'ta bu döngü uzağa iri ağaçlar koyuyordu;
       // burada kumsal bitiyor, o yüzden aynı bütçe SUYUN İÇİNE gidiyor.
       // Sudan çıkan birkaç taş, düz turkuaz bir düzlemi denize çeviriyor —
       // ve gölge lekesi almadıkları için yüzüyormuş gibi de durmuyorlar.

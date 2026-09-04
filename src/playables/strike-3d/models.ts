@@ -7,7 +7,7 @@
  * kütük). İkisi de CC0. Yanlarında üç karakter dokusu ayrı taşınıyor
  * (toplam 15.9 KB).
  *
- * KARDEŞ BİRİM AYNI KİTTEN BAŞKA MODELLER ÇEKİYOR. Crowd Rush'ın `run.glb`i
+ * KARDEŞ BİRİM AYNI KİTTEN BAŞKA MODELLER ÇEKİYOR. Gate Crashers'ın `run.glb`i
  * çam ve çiçek taşıyor, bu palmiye ve harabe. Paket ortak, SEÇİM ayrı —
  * gerçek işte de bir stüdyodan gelen kit tek, ondan çıkarılan kreatif çok.
  *

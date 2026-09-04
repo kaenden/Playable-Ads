@@ -1,5 +1,5 @@
 /**
- * Crowd Rush — koridorda büyüyen kalabalık.
+ * Gate Crashers — koridorda büyüyen kalabalık.
  *
  * TÜR SEÇİMİ. Referans kreatiflerde en çok görülen 3D playable kalıbı bu:
  * karakter kendiliğinden koşuyor, oyuncunun tek işi sağa sola yön vermek.
@@ -205,7 +205,7 @@ export const COPY = {
   lose: 'NOT ENOUGH!',
   loseSub: 'you needed ' + NEED,
   again: 'TRY AGAIN',
-  brand: 'CROWD RUSH',
-  tagline: 'Grow your army. Break the wall.',
+  brand: 'GATE CRASHERS',
+  tagline: 'Pick the gate. Break the wall.',
   need: 'NEED',
 };

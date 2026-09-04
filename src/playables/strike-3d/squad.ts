@@ -1,7 +1,7 @@
 /**
  * Takım — aynı karakterden N tanesini birkaç çizim çağrısında oynatmak.
  *
- * Crowd Rush'taki kalabalık sınıfının aynısı, tek farkla: orada bütün
+ * Gate Crashers'taki kalabalık sınıfının aynısı, tek farkla: orada bütün
  * figürler TEK BİR MERKEZİN etrafında diziliyordu (kalabalık birlikte
  * koşuyor), burada her figürün kendi mutlak konumu var — düşman grupları
  * parkurun farklı yerlerinde duruyor ve tek tek ölüyorlar. O yüzden yerleşim
@@ -71,7 +71,7 @@ export function blobTexture(): CanvasTexture {
   cv.height = 64;
   const g = cv.getContext('2d') as CanvasRenderingContext2D;
   const grd = g.createRadialGradient(32, 32, 2, 32, 32, 31);
-  // Gölge rengi ZEMİNDEN geliyor. Crowd Rush'ta zemin yeşildi ve leke de
+  // Gölge rengi ZEMİNDEN geliyor. Gate Crashers'ta zemin yeşildi ve leke de
   // yeşile çalıyordu; burada zemin kum ve dolgu ışığı denizden geliyor, yani
   // gölge MOR-MAVİ. Kahverengi bir leke kumun üstünde kir gibi duruyordu.
   // Gölge SAYDAM BOYA, ve saydam boya doygunluk düşürür. Kalabalık artı

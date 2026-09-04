@@ -90,7 +90,7 @@ createServer((req, res) => {
     return;
   }
   // Klasör isteğinde index.html: `dist/site/` çıktısındaki adresler
-  // `/u/crowd-rush/` biçiminde ve gerçek statik host'ların hepsi bunu
+  // `/u/gate-crashers/` biçiminde ve gerçek statik host'ların hepsi bunu
   // böyle çözüyor. Yerel sunucu da aynı davranmalı, yoksa siteyi
   // yayınlamadan önce deneyemiyoruz.
   let file = join(DIST, url);

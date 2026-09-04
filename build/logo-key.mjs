@@ -6,7 +6,7 @@
  *
  * NEDEN ANAHTARLAMA. Flux saydam arka plan üretemiyor; her zaman dolu bir
  * zemin veriyor. Klasik çözüm yeşil perde ama logonun kendisi yeşil
- * olabiliyor (Crowd Rush tam olarak yeşil), o yüzden perde MACENTA:
+ * olabiliyor (Gate Crashers tam olarak yeşil), o yüzden perde MACENTA:
  * paletin hiçbir yerinde yok.
  *
  * ÖLÇÜT RENK MESAFESİ DEĞİL, "MACENTALIK". Tek bir referans renge uzaklığa
@@ -41,12 +41,12 @@ const argS = (k, d) => (argv.indexOf(k) >= 0 ? argv[argv.indexOf(k) + 1] : d);
  * Seçilen varyantlar — dörder üretimden birer tane.
  *
  * Seçim ölçütü renk: her logo kendi biriminin İKİ ANA RENGİNİ taşıyor.
- * Crowd Rush yeşil-altın bir çayır, Blade Rush altın-turkuaz bir ada.
+ * Gate Crashers yeşil-altın bir çayır, Blade Rush altın-turkuaz bir ada.
  * Logonun oyunla aynı paleti taşıması, kapak ile oyun arasındaki bağı
  * yazı olmadan kuruyor.
  */
 const PICK = {
-  'crowd-rush': +argS('--crowd', 4),
+  'gate-crashers': +argS('--crowd', 1),
   'blade-rush': +argS('--blade', 1),
 };
 

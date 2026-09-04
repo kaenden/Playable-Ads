@@ -47,13 +47,14 @@ const KEY_RGB = [255, 0, 255];
  */
 const LOGOS = {
   'run-3d': {
-    file: 'crowd-rush',
+    file: 'gate-crashers',
     prompt:
-      'mobile game logo wordmark, the words "CROWD RUSH" in two stacked lines, ' +
+      'mobile game logo wordmark, the words "GATE CRASHERS" in two stacked lines, ' +
       'bold chunky rounded 3D beveled letters, glossy candy finish, thick white ' +
       'outline and dark forest green drop shadow, vivid grass green to sunny ' +
-      'golden yellow gradient on the letters, a small row of tiny blocky runner ' +
-      'silhouettes charging along the bottom edge of the wordmark, clean flat ' +
+      'golden yellow gradient on the letters, a smashed wooden gate with ' +
+      'splintered broken planks behind the wordmark, a row of tiny blocky runner ' +
+      'silhouettes charging through the gap along the bottom edge, clean flat ' +
       'vector illustration, sharp edges, centered composition, isolated on a ' +
       'solid flat magenta background, no scenery, no photo, casual hyper-casual ' +
       'mobile game branding, high contrast, crisp',

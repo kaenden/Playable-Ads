@@ -72,7 +72,7 @@ npm run serve            # http://localhost:8080/site/ ile yerelde dene
 | Ne | Tek dosya, her şey içinde | Gerçek site, parçalı |
 | İlk açılış | 5.3 MB | **151 KB** |
 | Oyunlar | Sayfanın içinde gömülü | Tıklanınca kendi adresinden |
-| Her birimin linki | yok | **var** (`/u/crowd-rush/`) |
+| Her birimin linki | yok | **var** (`/u/gate-crashers/`) |
 | Link önizlemesi | yok | **var** |
 | Nerede kullanılır | Artifact, e-posta eki, çevrimdışı | Web sitesi |
 
@@ -84,7 +84,7 @@ eklemek ya da "tek dosya" istendiğinde göndermek için.
 ```
 index.html            vitrin — 7 kapak, tıklayınca oyun açılıyor
 covers/*.webp         kapaklar (toplam 97 KB)
-u/crowd-rush/         her birim kendi adresinde, tam ekran
+u/gate-crashers/         her birim kendi adresinde, tam ekran
 og/*.png              link önizleme kartları
 dl/*.zip              ağ paketleri, indirilebilir
 ```

@@ -328,13 +328,13 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 
     <div class="works">
       <article class="work">
-        <a class="tile branded" href="%%HREF_RUN%%" data-play="run" aria-label="Play Crowd Rush">
-          <img src="%%POSTER_RUN%%" alt="Crowd Rush playable, opening screen" loading="lazy" width="500" height="828">
+        <a class="tile branded" href="%%HREF_RUN%%" data-play="run" aria-label="Play Gate Crashers">
+          <img src="%%POSTER_RUN%%" alt="Gate Crashers playable, opening screen" loading="lazy" width="500" height="828">
           <span class="brand"><img src="%%LOGO_RUN%%" alt="" loading="lazy"></span>
           <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
         </a>
         <div class="info">
-          <h3>Crowd Rush</h3>
+          <h3>Gate Crashers</h3>
           <p class="genre">3D runner &middot; Three.js</p>
           <p class="num">%%SIZE_RUN%%</p>
         </div>
@@ -472,7 +472,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <summary>
         <span class="sig"></span>
         <span class="t">A crowd of thirty in six draw calls</span>
-        <span class="s">Crowd Rush</span>
+        <span class="s">Gate Crashers</span>
       </summary>
       <div class="body">
         <p>
@@ -553,7 +553,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <summary>
         <span class="sig"></span>
         <span class="t">Two games, %%DELTA_RS%% apart</span>
-        <span class="s">Crowd Rush &middot; Blade Rush</span>
+        <span class="s">Gate Crashers &middot; Blade Rush</span>
       </summary>
       <div class="body">
         <p>
@@ -633,8 +633,15 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             one art pack and six creatives to ship will keep making.</p>
           </article>
           <article>
-            <p class="t">Branding</p><h3>A logo the build can regenerate</h3>
-            <p>Both runners now have a wordmark, and the tile shows it instead of a
+            <p class="t">Branding</p><h3>The name was the last thing that matched</h3>
+            <p>These two shipped as <em>Crowd Rush</em> and <em>Blade Rush</em>, and
+            that shared word undid the point of the pair: a viewer reads two titles
+            ending in the same noun as one game and its re-skin, which is the opposite
+            of what the comparison is for. The runner is <em>Gate Crashers</em> now
+            &mdash; named after what the player actually does, since every decision in
+            it is a gate and the last thing that happens is a wall coming down. Nothing
+            about the build changed; the old URL still resolves and redirects.</p>
+            <p>Both units also have a wordmark now, and the tile shows it instead of a
             screenshot until you point at it &mdash; then the shot comes into focus
             behind it and the play prompt appears. What matters is where the logo comes
             from: a local FLUX.2 Klein through Invoke's API, driven by a build script
@@ -1234,7 +1241,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 <script>
 (function(){
   var UNITS = {
-    'run': ['Crowd Rush',       '3D runner · Three.js · %%SIZE_RUN%%'],
+    'run': ['Gate Crashers',    '3D runner · Three.js · %%SIZE_RUN%%'],
     'str': ['Blade Rush',       '3D action runner · Three.js · %%SIZE_STR%%'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · %%SIZE_ESC%%'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · %%SIZE_TD%%'],

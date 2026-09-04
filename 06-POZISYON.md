@@ -231,7 +231,7 @@ unvanla sunulduğuna göre değer değiştiriyor.
 graphics zanaatinde değil, **kanca ve kurgu**da; kesim işi DaVinci Resolve
 (ücretsiz) seviyesinde kalıyor.
 
-- [ ] **Bir video reklam** — Crowd Rush'tan. AI kanca (Wan 2.2) + kendi
+- [ ] **Bir video reklam** — Gate Crashers'tan. AI kanca (Wan 2.2) + kendi
       gameplay çekimin + end card. Tier 1 bittikten sonra.
 - [ ] Statik / end-card seti — videonun yan ürünü, ayrı iş değil.
 
@@ -243,13 +243,13 @@ G3D'nin marketing artist ilanı şunu istiyor:
 > gameplay sequences"
 
 Marketing artist bunun için geliştiriciye gider. **Sen geliştiricisin.**
-Crowd Rush'ın videosunu çekmek için kimseden görüntü istemen gerekmiyor —
+Gate Crashers'ın videosunu çekmek için kimseden görüntü istemen gerekmiyor —
 oyun senin, kamerayı istediğin yere koyabilirsin.
 
 Yani hedef şu: **tek mekanik, üç teslim biçimi.**
 
 ```
-Crowd Rush ─┬─ playable   (var)
+Gate Crashers ─┬─ playable   (var)
             ├─ video ad   (yok)
             └─ statik set (yok)
 ```

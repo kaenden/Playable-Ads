@@ -1,7 +1,7 @@
 /**
  * HUD — 3D sahnenin ÜSTÜNDEKİ 2D katman.
  *
- * ARAYÜZ DE BU OYUNA AİT. Crowd Rush'tan devralındığında krem çipler ve
+ * ARAYÜZ DE BU OYUNA AİT. Gate Crashers'tan devralındığında krem çipler ve
  * turuncu bir CTA taşıyordu; sahne adaya taşınınca arayüz hâlâ öteki oyunun
  * arayüzüydü ve ikisi ekranda aynı ürün gibi duruyordu. Bu birimin kendi
  * düzeni: koyu levhalar, turkuaz ilerleme, kırmızı CTA — ve altın SADECE
@@ -266,7 +266,7 @@ export class Hud {
   /**
    * Patron can barı — sadece menzile girince.
    *
-   * Bu birimde sayaç GÜCÜ ölçüyor, hedefi değil. Crowd Rush'ta duvarın
+   * Bu birimde sayaç GÜCÜ ölçüyor, hedefi değil. Gate Crashers'ta duvarın
    * üstünde "NEED 24" yazıyordu ve oyuncu ne kadar geride olduğunu tek
    * bakışta görüyordu; burada o bilgi patronun canında. Barsız hâlinde
    * son on saniye kör bir bekleyişti: silahlar gidiyor, bir şey oluyor mu
