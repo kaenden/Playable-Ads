@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build notes — Playable Ads Lab</title>
+<meta name="description" content="How each playable ad unit is put together: rendering, asset pipeline, size budget and the mistakes found on the way.">
+<style>html,body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Playable Ads Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+<style>
+:root{
+  --ink:#0E1424;
+  --ink-2:#3A465F;
+  --muted:#5F6D88;
+  --paper:#EDF0F6;
+  --surface:#FFFFFF;
+  --surface-2:#F6F8FC;
+  --line:#D2DAE7;
+  --line-soft:#E2E8F1;
+  --signal:#0F7D47;
+  --alert:#B23C09;
+  --shadow:0 2px 6px rgba(14,20,36,.07),0 26px 60px -22px rgba(14,20,36,.35);
+  --radius:14px;
+  --maxw:1080px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E7ECF7; --ink-2:#B3BDD2; --muted:#8593AE;
+    --paper:#0A0E19; --surface:#121828; --surface-2:#161D30;
+    --line:#26304A; --line-soft:#1D2537;
+    --signal:#4FD48A; --alert:#F0803F;
+    --shadow:0 2px 6px rgba(0,0,0,.45),0 30px 70px -24px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E7ECF7; --ink-2:#B3BDD2; --muted:#8593AE;
+  --paper:#0A0E19; --surface:#121828; --surface-2:#161D30;
+  --line:#26304A; --line-soft:#1D2537;
+  --signal:#4FD48A; --alert:#F0803F;
+  --shadow:0 2px 6px rgba(0,0,0,.45),0 30px 70px -24px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font:450 16px/1.6 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+h1,h2,h3{font-family:Archivo,"Segoe UI",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-weight:800;font-size:clamp(30px,5vw,46px);line-height:1.03;letter-spacing:-.022em}
+h2{font-weight:700;font-size:17px;letter-spacing:-.01em}
+h3{font-weight:700;font-size:15.5px;letter-spacing:-.006em}
+p{margin:0}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- kunye: sayfanin en ustunde, ince bir serit ----------
+   Hero degil serit: vitrinde ilk ekran isin kendisi olmali, ismin degil.
+   Isim burada durur, is hemen altinda baslar. */
+.top{border-bottom:1px solid var(--line-soft);background:var(--surface)}
+.topbar{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px 18px;
+  padding-top:15px;padding-bottom:15px}
+.topbar .who{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 12px;flex:1;min-width:0}
+.topbar .nm{font-family:Archivo,sans-serif;font-weight:800;font-size:16.5px;letter-spacing:-.012em}
+.topbar .rl{font-size:13px;color:var(--muted)}
+.topbar .todo{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--alert);
+  border:1px dashed var(--alert);border-radius:6px;padding:3px 9px}
+.lk{display:flex;flex-wrap:wrap;gap:6px}
+.lk a{font-size:12.5px;text-decoration:none;color:var(--ink-2);white-space:nowrap;
+  border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+.lk a:hover{border-color:var(--ink-2);background:var(--surface-2)}
+.lk a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* ---------- stage: the work comes first ---------- */
+.stage{padding:clamp(56px,9vw,104px) 0 clamp(40px,6vw,64px)}
+/* HERO SESSİZ VE BÜYÜK.
+   Önceki sürümde küçük bir göz üstü etiketi, orta boy bir başlık ve beş
+   satırlık bir paragraf vardı; üçü birlikte sayfanın ilk ekranını bir
+   makale girişine çeviriyordu. Vitrinde ilk ekranın işi tek bir cümle
+   söyleyip işi göstermek. Başlık büyüdü, paragraf tek satıra indi,
+   aradaki boşluk üç katına çıktı. */
+.intro{display:flex;flex-direction:column;gap:clamp(14px,2vw,20px);
+  align-items:center;text-align:center;margin-bottom:clamp(38px,6vw,64px)}
+.intro p{font-size:clamp(16px,2.1vw,19px);line-height:1.55;color:var(--ink-2);max-width:44ch}
+
+/* ---------- works grid: kapak, sonra oyun ----------
+   Önceki düzende yedi oyun birden açılıyordu. Yan yana koşan yedi canlı
+   kreatif "portfolyo" değil "karmaşa" okunuyordu — ve sayfa açılışta yedi
+   oyunu birden çalıştırmak zorundaydı. Şimdi her birim önce KAPAĞIYLA
+   duruyor; oyun ancak tıklanınca ve tek başına açılıyor. */
+ /* KART SAYISI DEĞİL KART BOYU. 210px'lik ızgara masaüstünde beş kapağı
+    yan yana diziyordu ve her biri küçük bir küçük resim gibi duruyordu;
+    oysa sayfanın kahramanı bu kapaklar. 300px'te satıra üç tane giriyor
+    ve kapak gerçekten kapak oluyor. */
+.works{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:clamp(22px,3.2vw,40px);
+}
+.work{display:flex;flex-direction:column;gap:14px}
+ /* Çerçeve YOK, gölge VAR. İnce gri bir kenarlık kapağı bir tabloya
+    oturtuyor; gölge onu sayfanın üstüne kaldırıyor. Kapağın kendisi zaten
+    dolu bir görsel, sınırını kendi taşıyor. */
+.tile{
+  position:relative;display:block;width:100%;aspect-ratio:9/16;padding:0;
+  text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;
+  border:0;border-radius:22px;overflow:hidden;cursor:pointer;
+  background:var(--surface-2);box-shadow:var(--shadow);
+  transition:transform .22s cubic-bezier(.2,.7,.3,1), box-shadow .22s ease;
+}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile:hover,.tile:focus-visible{
+  transform:translateY(-6px) scale(1.012);
+  box-shadow:0 6px 14px rgba(14,20,36,.12),0 44px 80px -30px rgba(14,20,36,.6);
+}
+.tile:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+.hover{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:rgba(10,14,25,.55);color:#fff;opacity:0;transition:opacity .18s ease;
+  font:600 13px/1 "IBM Plex Sans",sans-serif;letter-spacing:.02em;
+}
+.tile:hover .hover,.tile:focus-visible .hover{opacity:1}
+/* MARKALI KAPAK — kapalıyken logo, üstüne gelince oyunun kendisi.
+   Ekran görüntüsü kapağın altında duruyor ve kısılmış hâlde; logo onun
+   üstünde. Fare değince görüntü açılıyor, logo çekiliyor ve "click to play"
+   geliyor. İki bilgi de aynı karede: NE olduğu ve NASIL göründüğü. */
+.branded > img{
+  /* Ekran görüntüsü BULANIK ve kısık: keskin bırakıldığında kapılar, sayılar
+     ve kalabalık logoyla yarışıyor ve ikisi de okunmuyor. Hafif bir ölçek,
+     bulanıklığın kenardan içeri çektiği saydam pikselleri kapatıyor. */
+  filter:brightness(.52) saturate(.85) blur(3px);transform:scale(1.05);
+  transition:filter .24s ease, transform .24s ease;
+}
+.branded:hover > img,.branded:focus-visible > img{filter:none;transform:none}
+.brand{
+  position:absolute;inset:0;display:grid;place-items:center;padding:9% 8%;
+  pointer-events:none;transition:opacity .22s ease, transform .22s ease;
+}
+.brand img{width:100%;height:auto;object-fit:contain;
+  filter:drop-shadow(0 10px 22px rgba(6,10,22,.55))}
+.branded:hover .brand,.branded:focus-visible .brand{opacity:0;transform:scale(.93)}
+.hover .disc{
+  width:46px;height:46px;border-radius:50%;background:#fff;color:#0E1424;
+  display:grid;place-items:center;font-size:16px;
+}
+.info{display:flex;flex-direction:column;gap:2px}
+.info h3{font-size:15px}
+.info .genre{font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.info .num{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  line-height:1.5;font-variant-numeric:tabular-nums}
+
+/* ---------- ikili: ayni oyun, iki renderer ----------
+   Yedi kart esit agirlikta dizilince dordu "ayni oyun iki kere" gibi degil
+   "doldurma" okunuyordu. Halbuki bu projenin en saglam muhendislik iddiasi
+   tam olarak o: sanat sabit, sadece cizim degisiyor. Esleme gorunur olunca
+   zayiflik gibi duran sey olcum haline geliyor. */
+.paired{margin-top:clamp(30px,4vw,44px);padding-top:clamp(26px,3vw,34px);
+  border-top:1px solid var(--line)}
+.pairhead{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;max-width:66ch}
+.pairhead .lead{font-size:14.5px;line-height:1.6;color:var(--ink-2)}
+/* Tek çift kaldı ve kısıtsız bırakınca sayfanın tamamına yayılıp iki dev
+   afişe dönüşüyordu — üstteki kapaklardan büyük. Genişliği sınırlamak
+   ikisini yeniden ÇİFT gibi okutuyor. */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:clamp(20px,3vw,34px);max-width:760px}
+.pair{display:flex;flex-direction:column;gap:13px}
+.pairtop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+.pairtop h2{font-size:15.5px}
+.pairtop .delta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.7vw,18px)}
+.two .info h3{font-size:14px}
+
+/* ---------- iletisim ---------- */
+.contact{padding:40px 0 4px;border-top:1px solid var(--line-soft)}
+.contact .row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+  gap:18px;margin-top:10px}
+.contact h2{font-size:clamp(19px,2.6vw,23px)}
+.contact .say p{font-size:14px;line-height:1.6;color:var(--ink-2);max-width:54ch;margin-top:7px}
+
+/* ---------- modal: tek oyun, telefon çerçevesinde ---------- */
+.modal[hidden]{display:none!important}
+.modal{
+  position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;padding:18px;
+  background:rgba(8,11,20,.82);backdrop-filter:blur(6px);
+}
+.frame{
+  position:relative;height:min(86vh,820px);aspect-ratio:9/18.5;width:auto;max-width:94vw;
+  border-radius:26px;border:1px solid rgba(255,255,255,.16);background:#0F1230;
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.9);overflow:hidden;
+}
+.frame iframe{width:100%;height:100%;border:0;display:block;background:#0F1230}
+.modal-bar{display:flex;align-items:center;gap:12px;color:#E7ECF7}
+.modal-bar .who{font-family:Archivo,sans-serif;font-weight:700;font-size:15px}
+.modal-bar .what{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:#9AA6C4}
+.chip{
+  display:inline-block;text-decoration:none;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;
+  color:#E7ECF7;font:500 12px/1 "IBM Plex Sans",sans-serif;padding:8px 14px;cursor:pointer;
+}
+.chip:hover{background:rgba(255,255,255,.18)}
+.chip:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---------- indirilebilir paketler (sadece site surumunde) ---------- */
+.downloads{padding:38px 0 8px;border-top:1px solid var(--line-soft)}
+.downloads .dl{display:flex;flex-wrap:wrap;gap:8px}
+.downloads .dl a{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;text-decoration:none;
+  color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+}
+.downloads .dl a:hover{border-color:var(--ink-2);background:var(--surface-2)}
+.downloads .dl a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* ---------- four numbers, nothing more ---------- */
+ /* KUTULAR GİTTİ. Dört ayrı hücre, aralarında çizgi, her biri kendi
+    zemininde — bir tabloydu ve sayfanın ortasında ağırlık yapıyordu.
+    Aynı dört sayı, çizgisiz ve zeminsiz, tek bir satır gibi okunuyor. */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:clamp(20px,3vw,34px);max-width:var(--maxw);margin:0 auto;
+  padding:clamp(30px,4.5vw,52px) 22px;
+}
+.stats div{padding:0;text-align:center}
+.stats .n{font-family:"IBM Plex Mono",monospace;font-size:clamp(26px,3.4vw,34px);font-weight:600;
+  line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stats .c{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* ---------- depth, folded away ---------- */
+ /* NOTLARA GİDEN TEK BAĞLANTI (sitede). Sekiz bin kelimelik mühendislik
+    yazısı ana sayfayı makaleye çeviriyordu; artık orada değil, ve yerinde
+    duran şey onu isteyen için tek bir satır. */
+.more{padding:0 0 clamp(40px,6vw,72px)}
+.morelink{display:flex;align-items:baseline;gap:14px;text-decoration:none;color:inherit;
+  border-top:1px solid var(--line-soft);padding:22px 2px 0;
+  transition:border-color .18s ease}
+.morelink:hover{border-color:var(--ink-2)}
+.morelink:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+.morelink .k{font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(17px,2.2vw,21px);
+  letter-spacing:-.012em;white-space:nowrap}
+.morelink .d{font-size:14px;color:var(--muted);flex:1;line-height:1.5}
+.morelink .ar{font-size:20px;color:var(--ink-2);transition:transform .18s ease}
+.morelink:hover .ar{transform:translateX(4px)}
+.morelink.back{border-top:0;border-bottom:1px solid var(--line-soft);padding:0 2px 18px}
+.morelink.back:hover .ar{transform:translateX(-4px)}
+@media (max-width:560px){
+  .morelink{flex-wrap:wrap;gap:6px 12px}
+  .morelink .d{flex:1 0 100%}
+}
+
+.depth{padding:44px 0 20px}
+.depth-head{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+details{border-top:1px solid var(--line)}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{
+  list-style:none;cursor:pointer;padding:18px 2px;display:flex;align-items:center;gap:14px;
+}
+summary::-webkit-details-marker{display:none}
+summary:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:4px}
+.sig{
+  flex:none;width:19px;height:19px;border:1px solid var(--line);border-radius:5px;
+  position:relative;color:var(--muted);
+}
+.sig::before,.sig::after{
+  content:"";position:absolute;background:currentColor;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+}
+.sig::before{width:9px;height:1.5px}
+.sig::after{width:1.5px;height:9px}
+details[open] .sig::after{display:none}
+summary .t{flex:1;font-family:Archivo,sans-serif;font-weight:700;font-size:16px}
+summary .s{font-size:13px;color:var(--muted);text-align:right}
+.body{padding:2px 0 30px;display:flex;flex-direction:column;gap:20px}
+.body p{font-size:14.5px;line-height:1.65;color:var(--ink-2);max-width:70ch}
+
+/* meters */
+.meters{display:flex;flex-direction:column;gap:18px}
+.meter .top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:7px}
+.meter .label{font-size:14px;font-weight:600}
+.meter .val{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.meter .val b{color:var(--ink);font-weight:600}
+.track{position:relative;height:26px;border:1px solid var(--line);border-radius:7px;
+  background:var(--surface-2);overflow:hidden}
+.ticks{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr)}
+.ticks span{border-right:1px dashed var(--line-soft)}
+.ticks span:last-child{border-right:0}
+.fill{position:absolute;left:0;top:0;bottom:0;min-width:3px;width:var(--pct);
+  background:var(--signal);border-radius:6px 0 0 6px}
+.fill.warn{background:var(--alert)}
+.scale{display:flex;justify-content:space-between;margin-top:5px;
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted)}
+
+/* tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:500px}
+th,td{padding:11px 15px;text-align:left;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+th{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--signal)}
+
+/* ledger */
+.ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;
+  background:var(--line-soft);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+.ledger div{background:var(--surface);padding:15px 17px}
+.ledger .n{font-family:"IBM Plex Mono",monospace;font-size:21px;font-weight:600;line-height:1.15;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ledger .n.bad{color:var(--alert)}
+.ledger .n.good{color:var(--signal)}
+.ledger .c{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.45}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;
+  background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden}
+.notes article{background:var(--surface);padding:19px}
+.notes h3{margin-bottom:6px}
+.notes p{font-size:13.5px;line-height:1.55;color:var(--ink-2)}
+.notes .t{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+
+footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
+/* Sürüm damgası: "hangi kopyaya bakıyorum" sorusunu tahmin olmaktan çıkarıyor. */
+.stamp{font-size:11px;letter-spacing:.08em;color:var(--muted);opacity:.75;margin-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){
+  .works{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .pairs{grid-template-columns:1fr}
+  .contact .row{align-items:flex-start}
+  .stage{padding:26px 0 32px}
+
+  /* TELEFONDA TAM EKRAN.
+     Masaustunde telefon cercevesi bir sey anlatiyor: "bu bir mobil
+     kreatif". Telefonda anlatacak bir sey yok, cunku zaten telefondasin —
+     orada cerceve sadece oyunu kucultuyor. Birim ekrani kapliyor, kontrol
+     seridi altta ince bir cizgi olarak kaliyor.
+     dvh: iOS'ta adres cubugu acilip kapandikca 100vh yaniliyor. */
+  .modal{padding:0;gap:0;justify-content:flex-start;backdrop-filter:none}
+  .frame{
+    width:100%;height:calc(100vh - 44px);height:calc(100dvh - 44px);
+    max-width:none;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none;
+  }
+  .modal-bar{
+    width:100%;height:44px;flex:none;padding:0 10px;gap:8px;
+    background:#0F1230;border-top:1px solid rgba(255,255,255,.1);
+  }
+  .modal-bar .who{font-size:13px;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  /* Teknik satir ve tam ekran linki telefonda yer yok: birim ZATEN tam ekran. */
+  .modal-bar .what,.modal-bar #modal-open{display:none}
+  .chip{padding:7px 12px;font-size:11.5px}
+}
+</style>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="who">
+      <span class="nm">Bora Zimba</span>
+      <span class="rl">Playable Ads Developer &middot; Izmir, Turkey</span>
+    </div>
+    <nav class="lk" aria-label="Contact">
+      <a href="mailto:borazimba@gmail.com">borazimba@gmail.com</a>
+      <a href="https://github.com/kaenden" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.linkedin.com/in/bora-z/" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap" style="padding-top:26px"><a class="morelink back" href="../"><span class="ar" aria-hidden="true">&larr;</span><span class="k">Back to the units</span></a></div><section class="depth">
+  <div class="wrap">
+    <div class="depth-head">
+      <p class="eyebrow">Under the hood</p>
+      <p style="font-size:14px;color:var(--muted);max-width:60ch">
+        For anyone who wants the engineering rather than the units.
+      </p>
+      <p style="font-size:14px;color:var(--ink-2);max-width:66ch">
+        None of these have run a campaign, so there is no performance data on this page
+        and I am not going to imply any. What each write-up carries instead is the metric
+        the decision was made against &mdash; because in this format nearly every design
+        choice is a bet on one of three numbers: how many people understand the ad fast
+        enough to engage, how many reach the call to action at all, and how many
+        impressions get paid for and return nothing.
+      </p>
+    </div>
+
+    <details open>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">A crowd of thirty in six draw calls</span>
+        <span class="s">Gate Crashers</span>
+      </summary>
+      <div class="body">
+        <p>
+          The runner is the first unit here with an animated character in it, and the
+          first with a scene rather than a board. The character is Kenney's Blocky
+          Characters, the corridor is Kenney's Nature Kit, both CC0 — fifteen models
+          that arrive as 224.0 KB of separate files and ship as one 105.5 KB glTF
+          with the character's texture carried beside it.
+        </p>
+        <p>
+          The thing that makes the crowd affordable is how the character is animated.
+          It has no skeleton: the pack moves seven nodes — a torso, two arms, two legs,
+          a head, a root — and each part stays a rigid box. That has two consequences
+          worth more than the file size.
+        </p>
+        <div class="notes">
+          <article>
+            <p class="t">Animation</p><h3>Three runners, thirty bodies</h3>
+            <p>Everyone on screen plays the same sprint; only the footfall differs. So
+            the animation is evaluated three times per frame, not thirty. Three hidden
+            "donor" characters hold the poses at three offsets in the cycle and every
+            visible runner reads one of them. One donor made the crowd march in
+            lockstep; three is enough to look like a crowd.</p>
+          </article>
+          <article>
+            <p class="t">Draw calls</p><h3>One call per body part, not per body</h3>
+            <p>The first version cloned a character per runner: twenty-six runners times
+            six parts is 156 draw calls, and the scene opened at 337. Now each body part
+            is a single instanced mesh — every left leg in one call, every torso in one.
+            The crowd costs six calls plus one for the shadows whether it holds five
+            runners or thirty. A rigged character could not do this; a rigid part is
+            just a matrix.</p>
+          </article>
+          <article>
+            <p class="t">Scenery</p><h3>Nothing that never moves stays separate</h3>
+            <p>Fifty-odd trees, rocks and fence posts line the corridor, each with two
+            or three materials of its own. None of them move, so at startup every
+            surface that shares a material is baked into world space and merged into one
+            mesh. That, with the instanced crowd, took the scene from 337 draw calls to
+            81.</p>
+          </article>
+          <article>
+            <p class="t">Color</p><h3>Cinematic grading made it worse</h3>
+            <p>The first pass at making this scene look richer added the thing that
+            usually works: a warm-over-cool tint and a vignette on a layer above the
+            render. It came out pale. A layer above the render can only lay translucent
+            paint over the image, and translucent paint always costs saturation — which
+            is the one thing this look cannot spare. The tint came out; the vignette
+            stayed, because it does a job. The color moved into the lights and the
+            materials instead.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>The counter is the crowd</h3>
+            <p>No timer, no move budget. Every mistake in this unit — a wrong gate, a
+            rock taken head-on — is paid for in runners, so the only number on screen is
+            the size of your crowd, and the wall at the end asks for a number in the
+            same unit. The player never has to translate. That is a comprehension-speed
+            decision: an ad has about three seconds to be understood, and every unit of
+            translation it asks for is spent out of that budget — which is the budget
+            IPM is really measuring.</p>
+          </article>
+        </div>
+        <div class="ledger">
+          <div><div class="n good">81</div><div class="c">Draw calls, down from 337, with a bigger crowd on screen</div></div>
+          <div><div class="n">6</div><div class="c">Calls for the whole crowd, at any size</div></div>
+          <div><div class="n good">794.7 KB</div><div class="c">Single file, 15.5% of the 5 MB cap, fifteen models and a full animation set inside</div></div>
+        </div>
+        <p>
+          One thing the pack gives away for free: it ships twenty-seven clips — sitting,
+          driving, a wheelchair set, emotes. Dropping the twenty-five this unit never
+          plays makes the file <em>bigger</em>, because the clips share their keyframe
+          buffers. They all ship.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Two games, 98.6 KB apart</span>
+        <span class="s">Gate Crashers &middot; Blade Rush</span>
+      </summary>
+      <div class="body">
+        <p>
+          The two runners share a corridor, a camera, a build and the same two Kenney
+          kits. What differs is the mechanic and the <em>pick</em> from those kits. One
+          grows a crowd through a green meadow of pines and flowers, and pays for
+          mistakes in runners. The other raids a pirate island &mdash; palms, reef
+          stones, a beached canoe, the one character in the pack with an eye patch and
+          the green one for the enemies &mdash; running two counters at once: gates change how many men you have,
+          breakable targets change what each thrown blade is worth. Finished packages:
+          794.7 KB and 893.3 KB.
+        </p>
+        <div class="ledger">
+          <div><div class="n good">98.6 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.8% of the 5&nbsp;MB budget</div></div>
+          <div><div class="n">0</div><div class="c">Models authored. Every mesh is a different pick from the same two CC0 kits; the enemies are the player's own character, tinted, and the weapons are geometry drawn in code</div></div>
+          <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
+        </div>
+        <p>
+          This is the second controlled comparison on this page. The match-3 pair holds
+          the art constant and changes the renderer; this pair holds the renderer
+          <em>and</em> the kit constant and changes the game. That is the
+          shape of the actual job: a studio has one art pack and wants six creatives
+          out of it, and the question is never "can you build a game" but "how much of
+          the last one survives into the next one".
+        </p>
+        <div class="notes">
+          <article>
+            <p class="t">Reuse</p><h3>What survived, and what did not</h3>
+            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor geometry,
+            the scenery merge and the instanced character rig all carried over
+            untouched. Rewritten: the track definition, the game logic, the enemy and
+            projectile systems, the parts of the view that draw them, and the colour
+            grade. The split fell almost exactly where the file boundaries already
+            were, which is the only real argument for having drawn them there.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>Two counters, because they buy different things</h3>
+            <p>My first version of this had one number and it was wrong. The crew size
+            sets how <em>often</em> a blade is thrown, since every man throws his own;
+            the blade level sets how <em>much</em> each one takes off. Gates raise the
+            first, breakable targets raise the second, and the boss falls to neither
+            alone &mdash; a big crew throwing weak blades runs out of corridor, a
+            strong blade in one hand does not throw often enough. Missing a gate is
+            not a one-off cost either: a crew too small to break the next upgrade
+            leaves the blade behind for the rest of the run.</p>
+          </article>
+          <article>
+            <p class="t">Readability</p><h3>The number belongs on the target</h3>
+            <p>The first build had none: enemies took damage silently and vanished,
+            and nothing on screen explained what the power counter was for. I pulled
+            frames out of a live creative in this genre and read the numbers off them
+            &mdash; 100, 88, 76, 64, 52, 40, 28, 16, 4 &mdash; all steps of twelve,
+            and the weapon card in the corner said 12. The ad explains nothing; the
+            viewer does the arithmetic and has the mechanic in three seconds. Health
+            is now printed over every enemy, sized by distance, and it comes down by
+            exactly the number in the counter. The enemies also had to stop being a
+            scattered cluster and stand in staggered ranks, because a number is only
+            readable if the figure carrying it is not behind another one.</p>
+          </article>
+          <article>
+            <p class="t">Identity</p><h3>Same kit, different pick</h3>
+            <p>Sharing the kit is the point; sharing the <em>look</em> was a mistake.
+            With the same meadow, the same sky and the same cream-and-orange
+            interface, the two units read as one game with a bug in it &mdash; nobody
+            identifies a title by its mechanic in the first second, they identify it
+            by what is on screen. The fix was not to buy art. Kenney's nature kit has
+            two hundred models and the character pack has eighteen, and the first
+            build used the same fifteen as its sibling. So this one draws a different
+            sixteen: palm trees instead of pines, a stone obelisk and clay jars
+            instead of flowers and mushrooms, a beached canoe, the pirate with the eye
+            patch instead of the plain runner, and two more characters &mdash; the green
+            one for the enemies and the fanged one for the boss &mdash; so a fight is
+            against a different species, not the player tinted red. On top of that, a beach palette and one extra plane for the
+            sea: two triangles and a gradient, and that alone is what says
+            <em>island</em>. Re-picking from a kit you already have
+            is most of what a re-skin actually is, and it is the request a studio with
+            one art pack and six creatives to ship will keep making.</p>
+          </article>
+          <article>
+            <p class="t">Branding</p><h3>The name was the last thing that matched</h3>
+            <p>These two shipped as <em>Crowd Rush</em> and <em>Blade Rush</em>, and
+            that shared word undid the point of the pair: a viewer reads two titles
+            ending in the same noun as one game and its re-skin, which is the opposite
+            of what the comparison is for. The runner is <em>Gate Crashers</em> now
+            &mdash; named after what the player actually does, since every decision in
+            it is a gate and the last thing that happens is a wall coming down. Nothing
+            about the build changed; the old URL still resolves and redirects.</p>
+            <p>Both units also have a wordmark now, and the tile shows it instead of a
+            screenshot until you point at it &mdash; then the shot comes into focus
+            behind it and the play prompt appears. What matters is where the logo comes
+            from: a local FLUX.2 Klein through Invoke's API, driven by a build script
+            like everything else here, with the seeds written down. The same command
+            returns the same four candidates, so "which one did we pick" is answered by
+            a file rather than by memory. Flux cannot output transparency, so the
+            prompt asks for a magenta backdrop and a second step keys it out &mdash; not
+            by distance to one colour, since the model gives a gradient rather than a
+            flat field, but by how magenta a pixel is: red and blue high, green low.
+            Gold, turquoise, navy and white all sit far from that, which is exactly why
+            the backdrop is magenta and not the usual green.</p>
+            <p>Order Up broke that rule and proved the point. Its wordmark is pink, and
+            pink scores <em>higher</em> on the magenta test than the backdrop it was
+            meant to be cut from &mdash; half the logo would have been erased. It is
+            shot on green instead, measured the other way round, and the cost is
+            visible in the file: the green sprinkles in the prompt were dropped, since
+            a green screen eats green confetti. Which screen to use is a property of
+            the logo, not of the pipeline, so it lives beside the seed.</p>
+          </article>
+          <article>
+            <p class="t">Reward</p><h3>Rarity is a language players already speak</h3>
+            <p>The three upgrades on the track now sit in a green, a blue and a purple
+            frame, in that order, each with a soft glow and a slow float. Nobody has to
+            be told that purple is the good one &mdash; every game they have played
+            taught them that already, so a colour does the work a line of text would
+            do worse. The frames come off the track, not a second list: the code counts
+            which upgrade this is and picks the colour, so adding a fourth upgrade
+            moves the colours by itself.</p>
+          </article>
+          <article>
+            <p class="t">Fairness</p><h3>A crit you cannot lose to</h3>
+            <p>Critical hits are the obvious way to give a runner texture: every tenth
+            throw lands for triple, in a big red number. What they are <em>not</em> is
+            random. A playable is paid for per impression and this track is tuned so
+            the player who picks right clears the last target with a few units to
+            spare; a random multiplier there means the same play sometimes wins and
+            sometimes loses, and the version that loses burns the impression. So the
+            crit runs on a counter, not a die. The average is exactly &times;1.2, which
+            is what let me raise every target's health by the same 1.2 and keep the
+            balance identical &mdash; then re-measure all three paths to prove it:
+            perfect wins with the boss at zero, straight loses at 500 of 516, missing
+            the second gate loses at 486.</p>
+          </article>
+          <article>
+            <p class="t">Colour</p><h3>The kit's own colours were the problem</h3>
+            <p>Even after the re-pick the scene read as one flat tone, and measuring
+            the materials said why: the kit ships its leaf green at #6fe5d5 and its
+            grass at #73ecdc &mdash; both mint, both the same family as the sea &mdash;
+            and its stone at #dcf1f4, a pale blue. What I had been reading as green was
+            cyan, so nothing separated from anything. Flat-colour materials are a gift,
+            though: the colour is the creative's to choose. A nine-entry table applied
+            at load puts leaves at a real green, grass at yellow-green, rock and bark at
+            brown, against golden sand and a proper blue sky. Then a sampled screenshot
+            said the sand was still only 29% saturated &mdash; the pale sky hemisphere
+            light was washing it, since everything added toward white costs saturation.
+            Turning that light down took it to 71%. No new assets, no textures, no draw
+            calls; the whole fix is nine hex values and one light intensity.</p>
+          </article>
+          <article>
+            <p class="t">Atmosphere</p><h3>One saturated colour is still one colour</h3>
+            <p>Even corrected, the frame came back at 44% brightness and 51% saturation
+            &mdash; dark and flat for a genre whose whole look is clean, bright and
+            loud. The first instinct, more light, made it worse: raising the key
+            pushed the sand's red channel into clipping, which <em>costs</em>
+            saturation, and the frame went brighter and duller at once. What worked was
+            three different things. The ambient light changed colour rather than
+            intensity, from pale blue to warm, so it lifts the gold by deepening it
+            instead of washing it. The transparent layers all came down &mdash;
+            vignette, fog start, shadow blobs, the near-white speckles in the trail
+            &mdash; because every semi-transparent overlay is paint over colour and
+            paint over colour always dulls it. And the ground stopped being one
+            surface: three quarters of the screen was a single golden plane, and no
+            amount of saturation reads as lively across an area that size, so it became
+            a gold trail, a yellow-green band, a sand shore and turquoise water.
+            Measured after: 51% brightness, 57% saturation.</p>
+          </article>
+          <article>
+            <p class="t">Pipeline</p><h3>Three characters meant three textures</h3>
+            <p>The asset step strips textures out of the merged GLB and ships them
+            beside it, because an embedded texture is fetched through a blob URL that
+            ad containers refuse. That step assumed exactly one texture, and adding a
+            second character fell straight past the check &mdash; both textures would
+            have stayed embedded and neither would have loaded inside the box. It now
+            writes one file per texture and marks each material with which one it
+            belongs to, so the runtime binds them separately. Worth the twenty lines: a
+            three-character scene is the normal case, not the exception.</p>
+          </article>
+          <article>
+            <p class="t">Feedback</p><h3>The upgrade has to be visible in the air</h3>
+            <p>The thrown object started as one yellow box, and the whole upgrade
+            arrived as a digit changing in the corner. So the weapon became four:
+            knife, hatchet, sword, great axe, each one longer than the last, so the
+            reward reads without anyone looking at the number. Each is a short list of
+            boxes, and that one list draws twice &mdash; as the instanced mesh flying
+            down the corridor and as the flat icon on the card and above the target
+            that grants it. The shape you are promised is the shape you get, because
+            there is only one description of it. The runners carry the current one
+            too: it hangs off the arm part's world matrix, so it swings with the run
+            without a line of animation &mdash; damped, because at full swing a great
+            axe scythes through its own owner. Cost: one draw call per tier in flight,
+            one for the crew's hands, and nothing at all in the package.</p>
+          </article>
+          <article>
+            <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>
+            <p>A wave has a size and a per-enemy health, and at first I tuned them
+            together. The result fell off a cliff: raising health from 20 to 22 turned
+            a group cleared without loss into one that cost eleven power. They are
+            different tests &mdash; health sets the power needed to drop an enemy in a
+            single throw, size sets how many throws the window allows. Once separated,
+            both became tunable, and the window turned out to be seventeen throws.</p>
+          </article>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">The same puzzle, twice</span>
+        <span class="s">2D vs 3D, art held constant</span>
+      </summary>
+      <div class="body">
+        <p>
+          Every 2D-versus-3D comparison I could find changes two things at once: the
+          renderer <em>and</em> the art. So this pair holds the art constant. The pieces
+          are Kenney's Food Kit models, CC0. The 3D unit puts the models on the grid.
+          The 2D unit uses sprites that were rendered from those same models — which is
+          how most match-3 art is actually made, pre-rendered 3D rather than drawn flat.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Component</th><th>2D unit</th><th>3D unit</th></tr></thead>
+            <tbody>
+              <tr><td>Art, after the pipeline</td><td class="num">11.2 KB</td><td class="num">42.0 KB</td></tr>
+              <tr><td>Game, HUD, audio, ad lifecycle</td><td class="num">32.8 KB</td><td class="num">32.8 KB</td></tr>
+              <tr><td>Three.js + glTF loader</td><td class="num">—</td><td class="num">608 KB</td></tr>
+              <tr><td><b>Package</b></td><td class="num"><b>50.4 KB</b></td><td class="num"><b>697.7 KB</b></td></tr>
+              <tr><td>Of the 5 MB cap</td><td class="num">0.98%</td><td class="num">13.6%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ledger">
+          <div><div class="n">13.8×</div><div class="c">The whole difference between the two units</div></div>
+          <div><div class="n">3.8×</div><div class="c">The difference in the art alone — models against sprites rendered from them</div></div>
+          <div><div class="n bad">608 KB</div><div class="c">The renderer. Everything else is rounding</div></div>
+        </div>
+        <div class="notes">
+          <article>
+            <p class="t">Appeal</p><h3>The art was fine; the room it sat in was not</h3>
+            <p>This pair shipped looking washed out, and the reason was not the pieces.
+            Kenney's food models are pale by design &mdash; beige doughnut, cream
+            cupcake, soft yellow banana &mdash; and they were sitting on a near-white
+            lilac board, so the busiest part of the screen had the least contrast in it.
+            The fix could not be to recolour the art, because the art being identical is
+            the entire experiment. So the room changed instead: a raspberry backdrop
+            with sprinkles, and a tray darker than anything else on screen, which puts
+            the pale pieces at maximum contrast exactly where the player is looking.
+            One catch cost half an hour &mdash; a hand-built canvas texture defaults to
+            linear colour in three.js, so the near-black tray came back mid-purple until
+            it was told it was already sRGB.</p>
+          </article>
+          <article>
+            <p class="t">Art</p><h3>Recolouring a kit that has no colours</h3>
+            <p>The pieces read as one brown mass &mdash; a cupcake whose frosting was
+            nearly black, a doughnut the same tan as the burger bun. Kenney's food
+            models carry no colour of their own: all five sample a single 512px
+            <em>palette chart</em>, and every surface's UV points at one swatch on it.
+            So "the frosting is too dark" is not a modelling problem, it is a question of
+            which square that triangle looks at.</p>
+            <p>Two swatches got repainted &mdash; the frosting to a light caramel, the
+            dark browns to warm chocolate. The doughnut was harder: it shares its
+            swatch with the burger bun, so turning it pink would have turned the bun
+            pink too. The fix was to free the square rather than fight over it. The
+            burger's triangles were moved one column across, to the lighter tan that
+            suits a bun anyway, and the vacated column became strawberry glaze. Five
+            pieces, five colour families now.</p>
+            <p>All of it happens before the build, in the palette image and the GLB's
+            UVs, which is what keeps the pair honest: the 2D sprites are re-rendered
+            from the same recoloured models, so both units still ship identical art.
+            The first attempt at the frosting was mint, and it was worse &mdash; a
+            green dome with a red cherry on top is indistinguishable from the cherry
+            piece at a glance, which is the one mistake a match-3 cannot make.</p>
+          </article>
+          <article>
+            <p class="t">Light</p><h3>A glow that is only pretending</h3>
+            <p>Every piece now sits in a halo of its own colour, and it is not
+            lighting: real bloom is a post-process nobody should pay for in an ad, and
+            it would not have fixed the actual problem anyway. The pack's food is pale
+            and, worse, all in the same narrow band of cream and brown, so the five
+            types were hard to tell apart at a glance. A coloured halo does both jobs
+            at once &mdash; the piece looks lit, and the board finally reads as five
+            colours: gold banana, pink cupcake, red cherry. The player identifies the
+            type before recognising the model.</p>
+            <p>Two details earned their keep. The halo is <em>weakest at the centre</em>
+            and brightest just outside the model's edge, because an additive glow
+            centred on the piece burns its own form away &mdash; the bananas came back
+            as white smears. And the 3D build gets roughly twice the dose the 2D one
+            does: the sprites were pre-rendered with their lighting baked in, while the
+            models are lit in the scene and have further to go. Same recipe, measured
+            doses &mdash; the 2D board lost nine points of saturation before the second
+            dial existed.</p>
+          </article>
+          <article>
+            <p class="t">Depth</p><h3>Four in a row has to mean something</h3>
+            <p>Every match cleared the same way, so there was no reason to look for a
+            longer one. Now four in a line detonates a rocket down that row or column,
+            and five &mdash; or the L and T shapes where a horizontal run crosses a
+            vertical one &mdash; drops a bomb on the three-by-three around it. The run
+            length was already known inside the matcher and thrown away; keeping it was
+            most of the work. The rockets fire immediately rather than sitting on the
+            board waiting to be matched again: a twenty-second ad has no room to teach
+            a second mechanic, and what needs showing is the reward, not the storage.</p>
+          </article>
+          <article>
+            <p class="t">Structure</p><h3>Two orders, so finishing is not the end</h3>
+            <p>One goal meant the ad ended exactly when the player found the rhythm.
+            There are two orders now: fill the first and a second arrives with a
+            different piece, a higher target and a fresh move budget. It costs nothing
+            in playtime and changes what the player leaves with &mdash; they know the
+            game continues. The counters had to catch up: the goal used to be a chip
+            and the moves a small grey line under the bar, so one of the two numbers
+            the player must track was nearly invisible. Both now sit in one plate,
+            both large, with a divider and an ORDER 1/2 above it.</p>
+            <p>Measured before shipping: following the hints wins order two with two
+            moves left, which is too tight for someone actually reading the board, so
+            the second target came down from nine to eight. An ad has to be winnable.</p>
+          </article>
+          <article>
+            <p class="t">Feel</p><h3>Three pieces should fuse, not vanish</h3>
+            <p>A cleared match used to grow slightly and fade in place: the board told
+            you it had happened, but it never felt like a reward. Now the matched
+            pieces pull toward the centre of their own line, swell, and go off as one
+            flash &mdash; three things becoming one, which is what a match actually is.
+            Cascades finally show too: the chain depth was in the state all along and
+            nothing on screen used it, so a second clear now shakes the board, throws a
+            wider burst and calls it &mdash; SWEET, TASTY, DELICIOUS. The first clear
+            stays quiet, because a game that shouts on every move stops being heard.</p>
+            <p>All of it lives in the files both units share, so the 2D build got the
+            same fusion, the same cascade and the same tray for free. That is the point
+            of the pair: the fair comparison is only fair if improving one improves
+            both.</p>
+          </article>
+        </div>
+        <p>
+          <b>Choosing 3D is not an art decision, it is a 608 KB decision.</b> The art
+          barely moves — 31 KB either way on a 5 MB budget. What you are buying is the
+          renderer, and what it buys back is depth, rotation and lighting that a sprite
+          cannot fake. Worth it for a game whose pitch is its 3D-ness; hard to justify
+          for a grid of icons.
+        </p>
+        <p>
+          Rendering the sprites was its own small lesson. The pack ships preview PNGs,
+          but they are 64px thumbnails — fine for picking assets, not for a 3× screen.
+          Rendering them from the models gives any resolution and the same lighting as
+          the 3D unit, so the two really do look like one game.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">What a client's assets actually cost</span>
+        <span class="s">the number I had wrong</span>
+      </summary>
+      <div class="body">
+        <p>
+          The pipeline that matters is the one where art arrives from someone else, so
+          the question is not whether to load models but how much they cost once loaded.
+          I had that number badly wrong, and it pointed the earlier units in the wrong
+          direction.
+        </p>
+        <div class="ledger">
+          <div><div class="n bad">≈400 KB</div><div class="c">What I reported the glTF loader costs. It was the difference between two builds — and one of them also embedded a 235 KB sprite atlas</div></div>
+          <div><div class="n good">80 KB</div><div class="c">What it actually costs, isolated on a unit with no sprite atlas in the way</div></div>
+          <div><div class="n">1.2 KB</div><div class="c">Unexplained remainder once the arithmetic is redone. It closes</div></div>
+        </div>
+        <p>
+          At 80 KB the loader is not an entry fee worth avoiding, it is a rounding error
+          on a 5 MB budget. Which means the interesting question is the opposite of the
+          one I was answering: not <em>should we load models</em>, but <em>how many fit</em>.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Handover step</th><th>Size</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td>7 car models, as supplied</td><td class="num">1271.4 KB</td><td>Kenney Car Kit, CC0 — the pack's 50 models total 5.5 MB, over the cap on their own</td></tr>
+              <tr><td>Cleanup: dedup, prune, weld</td><td class="num">−60%</td><td>Mostly unwelded duplicate vertices</td></tr>
+              <tr><td>Texture → 256px WebP</td><td class="num">−15%</td><td>All 50 models share one 12 KB palette swatch; texture was never the cost</td></tr>
+              <tr><td>Quantise (KHR_mesh_quantization)</td><td class="num">−30%</td><td>Built into the loader, no decoder to inline</td></tr>
+              <tr><td>Merge into one GLB</td><td class="num">212.1 KB</td><td>Saves a further 87 KB over seven separate files: one header, one buffer, one texture</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <b>1271 KB in, 212 KB out — 83% off, and the models still look like the ones
+          that arrived.</b> Base64 puts 283 KB of that in the package: 5.5% of the cap.
+        </p>
+        <div class="ledger">
+          <div><div class="n">644 KB</div><div class="c">Fixed code cost of a 3D unit: Three.js 514, loader 80, game ~50</div></div>
+          <div><div class="n good">≈110</div><div class="c">Optimised models that then fit a 5 MB creative, at 30 KB each</div></div>
+          <div><div class="n">≈34</div><div class="c">Models that fit Meta's stricter 2 MB index cap</div></div>
+        </div>
+        <p>
+          That is the number worth having in a conversation with a client: not "send
+          less", but "send me up to thirty-odd models and Meta will still take it."
+        </p>
+        <p>
+          One thing the handover taught that no measurement would: the supplied GLBs were
+          <em>not self-contained</em>. They referenced <span class="mono">Textures/colormap.png</span>
+          on disk, so the pipeline failed on the first run until the texture folder came
+          with them. Worth checking before quoting a timeline.
+        </p>
+      </div>
+    </details>
+
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">What the third unit had to solve</span>
+        <span class="s">Valet Panic</span>
+      </summary>
+      <div class="body">
+        <p>
+          Valet Panic shares nothing with the runners or the match pair — a different
+          mechanic, a tilted camera and a scene built out of geometry rather than
+          sprites. Three problems had no answer in the existing code.
+        </p>
+        <div class="notes">
+          <article>
+            <p class="t">Framing</p><h3>A camera angle is a screen-space decision</h3>
+            <p>The lot used to sit in the middle of the frame at about half width, with
+            sky filling the rest. The cause was the camera: at 38&deg; of yaw a square
+            of side S projects to S&nbsp;&times;&nbsp;(sin&nbsp;38 + cos&nbsp;38) =
+            1.40&nbsp;S across the screen, and since the fit is width-constrained, forty
+            percent of the frame was going to the diagonal. Turning the camera nearly
+            square to the grid gives that back &mdash; and gives something better, since
+            rows and columns now stay rows and columns on screen, which is how a player
+            reads which car is blocking which. Nearly every parking puzzle uses that
+            angle for exactly this reason. A small yaw remains so the scene is not a
+            flat diagram.</p>
+          </article>
+          <article>
+            <p class="t">Feedback</p><h3>Two numbers, and a car that leaves loudly</h3>
+            <p>The chip said CLEAR THE LOT &mdash; a title, not information &mdash; while
+            the two numbers a player actually tracks sat under the bar as small grey
+            text. Both are now in the plate and large: cars left, seconds left, with the
+            count jumping when a car goes. And the exit burst takes the colour of the car
+            that left rather than a generic white puff, so the flash on the board and the
+            drop in the counter read as one event instead of two.</p>
+          </article>
+        </div>
+
+        <div class="notes">
+          <article>
+            <p class="t">Camera</p><h3>Orthographic, so the fit is exact</h3>
+            <p>The merge 3D unit uses a perspective camera aligned so the play plane is
+            pixel-exact. Tilt the scene and that trick dies: fitting a rotated box into a
+            given screen rectangle under perspective needs an iterative search.
+            Orthographic projection is linear, so the same fit solves in closed form —
+            and it is the toy look the scene wanted anyway.</p>
+          </article>
+          <article>
+            <p class="t">Input</p><h3>Pick the car, not the tile under it</h3>
+            <p>In a tilted scene a car's roof sits visibly off its own footprint. Casting
+            a ray at the ground and reading the grid would select a different car from
+            the one the player is looking at. The ray goes at the car meshes instead.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>The counter belongs where the mistake is</h3>
+            <p>Order Up counts moves, because a wrong swap there is a decision. This
+            unit counts seconds. Tapping a blocked car is not an error — it is how the player
+            reads which car locks which. A move budget would have charged them for
+            learning the puzzle, so the pressure comes from the clock. Charging a player for
+            exploring is how a creative loses them in the first ten seconds, and a viewer
+            who leaves early never sees the call to action at all.</p>
+          </article>
+        </div>
+        <div class="ledger">
+          <div><div class="n good">951.3 KB</div><div class="c">Single file, 18.6% of the 5 MB cap, with seven supplied car models inside it</div></div>
+          <div><div class="n">7</div><div class="c">Cars, one fixed opening. No randomness: a run that differs per impression measures nothing</div></div>
+          <div><div class="n good">2D</div><div class="c">Fallback renderer, same state and same call to action, for containers without WebGL</div></div>
+        </div>
+        <p>
+          The cars are Kenney's Car Kit, CC0 — the same handover shape a client sends.
+          Only the island, trees and cones are still generated in code, and they stay
+          that way because nobody supplies them. The procedural vehicles that shipped
+          first are now the fallback: if the models fail to parse, the unit builds its
+          own boxes and keeps playing.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">How one build becomes ten packages</span>
+        <span class="s">MRAID · size budget</span>
+      </summary>
+      <div class="body">
+        <p>
+          The target network is compiled in as a constant, so each package carries only its own
+          install path — a Meta build contains no <span class="mono">ExitApi</span>, a Google
+          build contains no <span class="mono">mraid</span>. Everything is inlined into one HTML
+          file with no external requests, and base64 inflates payloads by a third, so the budget
+          is spent against the encoded size rather than the file on disk.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Network</th><th>Install call</th><th>Package</th></tr></thead>
+            <tbody>
+              <tr><td>Meta</td><td><code>FbPlayableAd.onCTAClick()</code></td><td>single .html, index ≤ 2 MB</td></tr>
+              <tr><td>Google App campaigns</td><td><code>ExitApi.exit()</code></td><td>ZIP + <span class="mono">ad.size</span> meta</td></tr>
+              <tr><td>TikTok / Pangle</td><td><code>window.openAppStore()</code></td><td>ZIP + <span class="mono">config.json</span></td></tr>
+              <tr><td>Unity Ads</td><td><code>mraid.open(url)</code></td><td>single index.html</td></tr>
+              <tr><td>AppLovin</td><td><code>mraid.open(url)</code></td><td>inline .html</td></tr>
+              <tr><td>ironSource</td><td><code>mraid.open(url)</code></td><td>ZIP</td></tr>
+              <tr><td>Mintegral</td><td><code>mraid.open(url)</code></td><td>ZIP</td></tr>
+              <tr><td>Moloco</td><td><code>mraid.open(url)</code></td><td>inline .html</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="meters">
+          <div class="meter">
+            <div class="top"><span class="label">2D unit</span>
+              <span class="val"><b>50.4 KB</b> of the 5 MB cap · 0.98%</span></div>
+            <div class="track"><div class="ticks"><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="fill" style="--pct:0.98%"></div></div>
+            <div class="scale"><span>0</span><span>1 MB</span><span>2 MB</span><span>3 MB</span><span>4 MB</span><span>5 MB</span></div>
+          </div>
+          <div class="meter">
+            <div class="top"><span class="label">3D unit</span>
+              <span class="val"><b>697.7 KB</b> of the 5 MB cap · 13.6%</span></div>
+            <div class="track"><div class="ticks"><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="fill" style="--pct:13.6%"></div></div>
+            <div class="scale"><span>0</span><span>1 MB</span><span>2 MB</span><span>3 MB</span><span>4 MB</span><span>5 MB</span></div>
+          </div>
+          <div class="meter">
+            <div class="top"><span class="label">3D unit against Meta's 2 MB index cap</span>
+              <span class="val"><b>697.7 KB</b> of 2 MB · 34.1%</span></div>
+            <div class="track"><div class="ticks"><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="fill warn" style="--pct:34.1%"></div></div>
+            <div class="scale"><span>0</span><span>0.4</span><span>0.8</span><span>1.2</span><span>1.6</span><span>2 MB</span></div>
+          </div>
+        </div>
+        <p>
+          Three.js, tree-shaken and minified, measures 514 KB on its own. Phaser's runtime alone
+          is 1.5 MB, which is why neither unit uses a game framework.
+        </p>
+        <p>
+          Every unit ships twice: once from supplied art, once from art generated in
+          code. The four above are the supplied-art builds, because that is what a
+          client hands over. The generated build is the fallback — for when assets have
+          not arrived yet, or when a network's cap leaves no room for them.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Unit</th><th>From supplied art</th><th>Generated in code</th><th>Difference</th></tr></thead>
+            <tbody>
+              <tr><td>escape-3d</td><td class="num">945.9 KB</td><td class="num">583.1 KB</td><td class="num">+363 KB</td></tr>
+              <tr><td>match-2d</td><td class="num">50.4 KB</td><td>—</td><td>art only, no procedural fallback</td></tr>
+              <tr><td>match-3d</td><td class="num">697.7 KB</td><td>—</td><td>art only, no procedural fallback</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The heaviest supplied-art build is 19% of the 5 MB cap. There is no version of
+          this project where the assets are the problem.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">What 27× the bytes actually costs</span>
+        <span class="s">measured on a phone</span>
+      </summary>
+      <div class="body">
+        <p>
+          Samsung Android phone, Chrome, 60 Hz panel, served over LAN. The 3D unit is 27 times
+          the size of the 2D one and reaches its first painted frame 3.7 times later — nothing
+          like linear, because parse and init sit on top of fixed costs. The sizes in this table
+          are the ones measured against; the units have gained audio and a two-beat ending since,
+          so the current build is a few KB heavier and due a re-measure.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Metric</th><th>2D</th><th>3D</th><th>Ratio</th></tr></thead>
+            <tbody>
+              <tr><td>Package size <span class="mono" style="color:var(--muted)">(at measurement)</span></td><td class="num">21.4 KB</td><td class="num">570.2 KB</td><td class="num">27×</td></tr>
+              <tr><td>Script start</td><td class="num">31 ms</td><td class="num">106 ms</td><td class="num">3.4×</td></tr>
+              <tr><td>First painted frame</td><td class="num">49 ms</td><td class="num">180 ms</td><td class="num">3.7×</td></tr>
+              <tr><td>Init + first render</td><td class="num">18 ms</td><td class="num">74 ms</td><td class="num">4.1×</td></tr>
+              <tr><td>Frame rate</td><td class="num">60 fps</td><td class="num">60 fps</td><td class="num">—</td></tr>
+              <tr><td>Minimum frame rate</td><td class="num">60 fps</td><td class="num">58 fps</td><td class="num">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          At runtime the 3D unit is effectively free; its cost is entirely in loading — which
+          is the half that matters, because a viewer who leaves during the load was never
+          reached by the hook, and the impression is paid for either way. The
+          overlay that produced these figures lives only in the development build — the units
+          embedded above, and every package that ships to a network, are compiled without it.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Will it survive the platform?</span>
+        <span class="s">preflight</span>
+      </summary>
+      <div class="body">
+        <p>
+          The networks' own validators need accounts, so they stay the last step before
+          upload. But most rejections come from documented, statically checkable rules,
+          and a preflight tool scans every package against them: size caps, outbound
+          requests, the right install call, required meta and config files, and browser
+          APIs that ad containers reject.
+        </p>
+        <div class="ledger">
+          <div><div class="n good">24</div><div class="c">packages scanned across four build variants</div></div>
+          <div><div class="n good">0</div><div class="c">rejection-level findings</div></div>
+          <div><div class="n">2</div><div class="c">warnings — <span class="mono">fetch</span> code reachable only through an unused GLTFLoader path</div></div>
+        </div>
+        <p>
+          Two of the tool's own false readings were worth more than the passes. It first
+          flagged every 3D package for “external resources”: an XML namespace inside
+          Three.js and an academic citation in a comment. A URL in the source is not a
+          request — the check now looks only at positions that actually load something.
+          It also reported that WebGL failures were handled, because it matched a listener
+          Three.js registers internally rather than anything this project wrote.
+        </p>
+        <p>
+          Fixing that second one exposed a real gap. Some ad containers still run with
+          WebGL unavailable, where a 3D creative goes blank and the impression burns with
+          the call to action never shown. That impression was still bought: it costs the
+          same as one that converts and returns nothing, which is the most expensive kind
+          of bug this format has — it does not surface as a crash, it surfaces as a worse
+          cost per install. The 3D unit now detects that and falls back to
+          the 2D renderer: the game stays playable, the CTA stays live. It costs 4.4 KB.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Draco and KTX2 lose money in a playable</span>
+        <span class="s">finding</span>
+      </summary>
+      <div class="body">
+        <p>
+          On the open web the decoders load from a CDN and cost the page nothing. A playable
+          cannot make network requests, so the decoder has to be inlined too — and inlining is
+          where the arithmetic turns over. I exported the dragon to GLB at three densities and
+          ran real Draco compression against it.
+        </p>
+        <div class="ledger">
+          <div><div class="n good">416 KB</div><div class="c">Best Draco saving measured, on a 15k-triangle mesh — 86% of the geometry</div></div>
+          <div><div class="n bad">448 KB</div><div class="c">Draco decoder, base64-inlined: wasm plus wrapper</div></div>
+          <div><div class="n bad">−32 KB</div><div class="c">Net result in the best case. Every smaller model loses by more</div></div>
+          <div><div class="n">≈390 KB</div><div class="c">Raw GLB geometry needed before Draco breaks even — past what a playable can afford</div></div>
+        </div>
+        <p>
+          KTX2 is worse: its transcoder inlines at 761 KB and needs roughly 715 KB of raw texture
+          before it pays for itself. What wins is having less data — a decimated mesh ships at
+          56 KB against 514 KB for the high-poly-plus-Draco route, and WebP encodes a 512²
+          texture at 41 KB where PNG needs 373 KB, with no decoder at all.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        <span class="sig"></span>
+        <span class="t">Things that only surface when you ship</span>
+        <span class="s">build log</span>
+      </summary>
+      <div class="body">
+        <div class="notes">
+          <article>
+            <p class="t">Dead code</p><h3>Constant folding is literal</h3>
+            <p>Assigning the build constant to an intermediate variable stopped esbuild folding it,
+            and every package silently shipped all four networks' CTA code. Comparing the constant
+            directly cleared it.</p>
+          </article>
+          <article>
+            <p class="t">Inlining</p><h3>The bundle can close its own tag</h3>
+            <p>A <span class="mono">&lt;/script&gt;</span> sequence anywhere inside the bundle ends
+            the script element early once it is inlined. It has to be escaped on the way in.</p>
+          </article>
+          <article>
+            <p class="t">Input</p><h3>Pointer capture throws</h3>
+            <p>Ad containers still run old webviews, where <span class="mono">setPointerCapture</span>
+            can throw and abort the handler mid-way. It needs a try/catch, not an assumption.</p>
+          </article>
+          <article>
+            <p class="t">Instrumentation</p><h3>Identical numbers mean a broken probe</h3>
+            <p>My first load-time counter read the clock at module init, not at first paint. A 21 KB
+            build and a 570 KB build both reported 99 ms. Two very different builds agreeing exactly
+            is a bug, never a finding.</p>
+          </article>
+          <article>
+            <p class="t">3D</p><h3>Silent geometry mistakes</h3>
+            <p>An argument order slip put one creature's eyes inside its head — no error, no warning,
+            just a blank face. Wings sat behind the body and vanished. Nothing in 3D is done until
+            it has been looked at.</p>
+          </article>
+          <article>
+            <p class="t">Research</p><h3>Reference ads decide the format</h3>
+            <p>Teardowns of three live campaign creatives changed the design: in the
+            match unit a move budget replaced a countdown, and everywhere the
+            celebration was split from the call to action —
+            none of the references crushed the reward moment and the CTA into one frame.
+            The two beats do different jobs: the reward is what makes the player want the
+            game, the CTA is what turns wanting it into a tap. Put them in one frame and
+            the reward is still landing while the button is already asking.</p>
+          </article>
+          <article>
+            <p class="t">Design</p><h3>Randomness is the enemy</h3>
+            <p>Every opening is fixed — the same board, the same track, the same
+            refill order — so every viewer gets the same run. If it
+            differs per impression, the click-through rate measures nothing — you are no longer
+            comparing two creatives, you are comparing two different games, and the A/B test
+            that is supposed to pick a winner has nothing to pick between.</p>
+          </article>
+        </div>
+      </div>
+    </details>
+  </div>
+</section><div class="wrap" style="padding-top:26px"><a class="morelink back" href="../"><span class="ar" aria-hidden="true">&larr;</span><span class="k">Back to the units</span></a></div>
+</body>
+</html>

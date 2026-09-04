@@ -231,7 +231,7 @@ vars['%%DOWNLOADS%%'] =
   '    <p class="eyebrow">Packages</p>\n' +
   '    <p style="font-size:14px;color:var(--muted);max-width:62ch;margin-bottom:14px">\n' +
   '      What actually ships to a network: one HTML file, zipped where the network wants a zip.\n' +
-  '      Every unit is packaged for eight networks; four of them are here to download.\n' +
+  '      Every unit is packaged for ten networks; four of them are here to download.\n' +
   '    </p>\n' +
   '    <div class="tablewrap"><table>\n' +
   '      <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>\n' +
@@ -256,6 +256,22 @@ const shared = {
   '%%PCT_META_M3%%': ((statSync(join(DIST, 'match-3d', 'showcase', 'index.html')).size /
     (2 * 1024 * 1024)) * 100).toFixed(1) + '%',
   '%%BUILD%%': 'build ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
+  /**
+   * SİTEDE NOTLAR AYRI SAYFADA.
+   *
+   * Ana sayfanın işi işi göstermek; sekiz bin kelimelik mühendislik yazısı
+   * onu bir makaleye çeviriyordu. Sitede o içerik `/notes/` altına iniyor
+   * ve ana sayfada yerinde tek bir bağlantı kalıyor. Artifact tek dosya
+   * olduğu için orada aynı içerik sayfanın altına gömülü kalıyor —
+   * gidecek bir sayfa yok.
+   */
+  '%%NOTES%%':
+    '<section class="more"><div class="wrap">' +
+    '<a class="morelink" href="notes/">' +
+    '<span class="k">Build notes</span>' +
+    '<span class="d">How each unit is put together, what it cost, and what went wrong on the way</span>' +
+    '<span class="ar" aria-hidden="true">&rarr;</span>' +
+    '</a></div></section>',
 };
 
 let body = readFileSync(TEMPLATE, 'utf8');
@@ -272,16 +288,40 @@ const html =
   '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
   '<title>Playable Ads Lab — five units, one pipeline</title>\n' +
-  '<meta name="description" content="Eight playable ad units built from supplied art: two 3D runners, a block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">\n' +
+  '<meta name="description" content="Five playable ad units built from supplied art: two 3D runners, a block puzzle and a match-3 in both renderers. Each one a single HTML file with no network requests.">\n' +
   '<meta property="og:type" content="website">\n' +
   '<meta property="og:title" content="Playable Ads Lab — five units, one pipeline">\n' +
-  '<meta property="og:description" content="Six mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">\n' +
+  '<meta property="og:description" content="Four mechanics, ten ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">\n' +
   '<meta property="og:image" content="' + ogUrl + '">\n' +
   (BASE ? '<meta property="og:url" content="' + BASE + '/">\n' : '') +
   '<meta name="twitter:card" content="summary_large_image">\n' +
   '<style>html,body{margin:0}img{max-width:100%}</style>\n' +
   '</head>\n<body>\n' + body + '\n</body>\n</html>\n';
 writeFileSync(join(OUT, 'index.html'), html);
+
+// --- notlar sayfasi: ayni kabuk, govdesi notes.html
+{
+  // Kabuk ana sayfanın kendisinden çıkıyor: font bağlantıları, stil bloğu
+  // ve künye şeridi. İkinci bir kopya tutmak iki sayfanın zamanla
+  // ayrışması demek olurdu.
+  const head = body.slice(0, body.indexOf('<main'));
+  let notes = readFileSync(join(ROOT, 'showcase', 'notes.html'), 'utf8');
+  for (const [k, v] of Object.entries({ ...vars, ...shared })) notes = notes.split(k).join(v);
+  const back =
+    '<div class="wrap" style="padding-top:26px">' +
+    '<a class="morelink back" href="../"><span class="ar" aria-hidden="true">&larr;</span>' +
+    '<span class="k">Back to the units</span></a></div>';
+  const notesHtml =
+    '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
+    '<title>Build notes — Playable Ads Lab</title>\n' +
+    '<meta name="description" content="How each playable ad unit is put together: rendering, asset pipeline, size budget and the mistakes found on the way.">\n' +
+    '<style>html,body{margin:0}img{max-width:100%}</style>\n' +
+    '</head>\n<body>\n' + head + back + notes + back + '\n</body>\n</html>\n';
+  mkdirSync(join(OUT, 'notes'), { recursive: true });
+  writeFileSync(join(OUT, 'notes', 'index.html'), notesHtml);
+  console.log('    notes/            ' + kb(Buffer.byteLength(notesHtml)));
+}
 
 console.log('\n  site uretildi -> ' + OUT);
 console.log('    index.html        ' + kb(Buffer.byteLength(html)) + '  (kapaklar dahil degil)');

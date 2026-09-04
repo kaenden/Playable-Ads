@@ -157,6 +157,11 @@ const vars = {
   '%%HREF_M3%%': '#',
   '%%HREF_M2%%': '#',
   '%%DOWNLOADS%%': '',
+  // ARTIFACT TEK DOSYA. Sitede notlar ayrı bir sayfaya iniyor; burada
+  // gidecek bir sayfa yok, o yüzden aynı içerik sayfanın altına, birim
+  // kartlarının çok aşağısına gömülüyor. Üst taraf iki çıktıda da aynı
+  // kalıyor: önce iş, sonra yazı.
+  '%%NOTES%%': readFileSync(join(OUT_DIR, 'notes.html'), 'utf8'),
   '%%DELTA_RS%%': kb(Math.abs(ustr.bytes - urun.bytes)),
   '%%RATIO_M%%': (um3.bytes / um2.bytes).toFixed(1) + '×',
   '%%PCT_META_M3%%': pctStr(um3.bytes, META_LIMIT),
