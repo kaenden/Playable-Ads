@@ -2,7 +2,7 @@
  * Logo anahtarlama — macenta zemini söküp saydam WebP üretir.
  *
  *   node build/logo-key.mjs                 seçilen varyantları işler
- *   node build/logo-key.mjs --crowd 2 --blade 3   başka varyant seç
+ *   node build/logo-key.mjs --crowd 2 --blade 3 --order 2   başka varyant
  *
  * NEDEN ANAHTARLAMA. Flux saydam arka plan üretemiyor; her zaman dolu bir
  * zemin veriyor. Klasik çözüm yeşil perde ama logonun kendisi yeşil
@@ -46,8 +46,30 @@ const argS = (k, d) => (argv.indexOf(k) >= 0 ? argv[argv.indexOf(k) + 1] : d);
  * yazı olmadan kuruyor.
  */
 const PICK = {
-  'gate-crashers': +argS('--crowd', 1),
-  'blade-rush': +argS('--blade', 1),
+  'gate-crashers': { pick: +argS('--crowd', 1), key: 'magenta' },
+  'blade-rush': { pick: +argS('--blade', 1), key: 'magenta' },
+  // Order Up YEŞİL perdede üretildi: harfleri pembe ve altın, yani macenta
+  // perde logonun yarısını silerdi. Bkz. build/logo-gen.mjs.
+  'order-up': { pick: +argS('--order', 4), key: 'green' },
+};
+
+/**
+ * Perde ölçütleri.
+ *
+ * Her ikisi de "bu piksel ne kadar perde rengi" sorusuna tek sayıyla cevap
+ * veriyor ve logonun kendi renklerinde eksiye düşüyor:
+ *
+ *   macenta  m = min(R,B) - G   altın -120, turkuaz -90, beyaz 0, zemin 80-120
+ *   yeşil    m = G - max(R,B)   pembe -129, altın -48, bordo -58, zemin ~75
+ *
+ * Eşikler ayrı, çünkü modelin verdiği zeminlerin doygunluğu farklı: macenta
+ * zemin 80'in üstünde çıkıyor, yeşil zemin 75 civarında. Yeşilde eşik daha
+ * dar, ve bedeli logonun yeşil şekerleri: onlar da siliniyor. Prompt bu
+ * yüzden "yeşil öge yok" diyor.
+ */
+const KEYS = {
+  magenta: { m: (r, g, b) => Math.min(r, b) - g, hard: 44, soft: 12 },
+  green: { m: (r, g, b) => g - Math.max(r, b), hard: 44, soft: 10 },
 };
 
 /**
@@ -64,7 +86,7 @@ const SOFT = 12;
 /** Çıkış genişliği. Kapak 500 px, logo onun içine oturuyor. */
 const WIDTH = 720;
 
-function keyOut(data, info) {
+function keyOut(data, info, K) {
   const { width, height, channels } = info;
   const out = Buffer.alloc(width * height * 4);
   let minX = width, minY = height, maxX = -1, maxY = -1;
@@ -72,15 +94,23 @@ function keyOut(data, info) {
     let r = data[p];
     let g = data[p + 1];
     let b = data[p + 2];
-    const m = Math.min(r, b) - g;
+    const m = K.m(r, g, b);
     let a = 255;
-    if (m >= HARD) a = 0;
-    else if (m > SOFT) {
-      a = Math.round(255 * (1 - (m - SOFT) / (HARD - SOFT)));
-      // Saçak giderme: kalan pikseldeki mor katkıyı G'ye doğru çek.
-      const pull = (m - SOFT) * 0.9;
-      r = Math.max(g, r - pull);
-      b = Math.max(g, b - pull);
+    if (m >= K.hard) a = 0;
+    else if (m > K.soft) {
+      a = Math.round(255 * (1 - (m - K.soft) / (K.hard - K.soft)));
+      // Saçak giderme: kenar pikselindeki perde katkısını geri çek. Macentada
+      // kırmızı ve maviyi yeşile, yeşilde yeşili diğer ikisine doğru.
+      // Daha sert geri çekme: ilk ayarda çöreğin deliğinde yeşilimsi bir
+      // halka kalıyordu — delik saydam olmalı ama kenarındaki pikseller
+      // perdeden yeşil kapmıştı ve açık bir kartın üstünde görünüyordu.
+      const pull = (m - K.soft) * 1.15;
+      if (K === KEYS.green) {
+        g = Math.max(Math.max(r, b), g - pull);
+      } else {
+        r = Math.max(g, r - pull);
+        b = Math.max(g, b - pull);
+      }
     }
     const o = i * 4;
     out[o] = r;
@@ -100,11 +130,13 @@ function keyOut(data, info) {
   return { out, box: { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 } };
 }
 
-async function run(name, pick) {
+async function run(name, cfg) {
+  const pick = cfg.pick;
+  const K = KEYS[cfg.key] || KEYS.magenta;
   const src = join(IN, name + '-' + pick + '.png');
   if (!existsSync(src)) throw new Error('yok: ' + src);
   const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const { out, box } = keyOut(data, info);
+  const { out, box } = keyOut(data, info, K);
   const dest = join(OUT, name + '.webp');
   const meta = await sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
     // 8 piksel pay: kontur ve gölge kırpılmasın.
@@ -119,7 +151,7 @@ async function run(name, pick) {
     .toFile(dest);
   const kb = (n) => (n / 1024).toFixed(1) + ' KB';
   console.log(
-    '  ' + name.padEnd(12) + ' varyant ' + pick +
+    '  ' + name.padEnd(14) + ' varyant ' + pick + ' (' + cfg.key + ')' +
     '  ' + meta.width + 'x' + meta.height + '  ' + kb(meta.size)
   );
 }
@@ -131,7 +163,7 @@ async function main() {
   }
   if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
   console.log('');
-  for (const [name, pick] of Object.entries(PICK)) await run(name, pick);
+  for (const [name, cfg] of Object.entries(PICK)) await run(name, cfg);
   console.log('');
 }
 
