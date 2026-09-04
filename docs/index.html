@@ -151,14 +151,31 @@ p{margin:0}
   filter:brightness(.52) saturate(.85) blur(3px);transform:scale(1.05);
   transition:filter .24s ease, transform .24s ease;
 }
-.branded:hover > img,.branded:focus-visible > img{filter:none;transform:none}
+ /* Üstüne gelince ekran TAMAMEN açılmıyor. Logo yerinde kaldığı için
+    arkasının netleşmesi ikisini birbirine karıştırıyordu; bu kadarı
+    "arkada bir oyun var" demeye yetiyor ve logoyu okunur bırakıyor. */
+.branded:hover > img,.branded:focus-visible > img{
+  filter:brightness(.66) saturate(.95) blur(1.4px);transform:scale(1.07);
+}
 .brand{
   position:absolute;inset:0;display:grid;place-items:center;padding:9% 8%;
   pointer-events:none;transition:opacity .22s ease, transform .22s ease;
 }
 .brand img{width:100%;height:auto;object-fit:contain;
   filter:drop-shadow(0 10px 22px rgba(6,10,22,.55))}
-.branded:hover .brand,.branded:focus-visible .brand{opacity:0;transform:scale(.93)}
+ /* LOGO GİTMİYOR. Önce üstüne gelince siliniyordu ve kart bir anda kimliğini
+    kaybediyordu; kapağın markası tam da orada durmalı. Sadece biraz yukarı
+    çekiliyor, altındaki çağrıya yer açmak için. */
+.branded:hover .brand,.branded:focus-visible .brand{transform:translateY(-7%) scale(1.03)}
+
+/* Çağrı logonun ALTINDA. Tam ekran perde yerine sadece alta inen bir
+   gradyan: yazı okunuyor, logo açıkta kalıyor. */
+.branded .hover{
+  justify-content:flex-end;padding-bottom:9%;gap:9px;
+  background:linear-gradient(to top,rgba(8,11,20,.84) 0%,rgba(8,11,20,.5) 24%,
+    rgba(8,11,20,0) 48%);
+}
+.branded .hover .disc{width:40px;height:40px;font-size:14px}
 .hover .disc{
   width:46px;height:46px;border-radius:50%;background:#fff;color:#0E1424;
   display:grid;place-items:center;font-size:16px;
@@ -525,7 +542,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 20:22 UTC</p>
+    <p class="stamp mono">build 2026-09-04 20:34 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
