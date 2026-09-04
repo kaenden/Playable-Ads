@@ -72,16 +72,18 @@ const PLAYABLES = {
     title: 'Crowd Rush — Playable',
     glb: ['out-3d-run', 'run.glb'],
   },
-  // AYNI GLB, BAŞKA OYUN. Blade Rush, Crowd Rush'ın koridorunu, karakterini
-  // ve asset paketini birebir paylaşıyor; değişen tek şey mekanik. Sayaç
-  // kalabalık değil SİLAH GÜCÜ, ve karşıda aynı karakterden düşmanlar var.
+  // AYNI PAKET, BAŞKA SEÇİM. Blade Rush, Crowd Rush'ın koridorunu, kamerasını,
+  // instancing düzenini ve derlemesini paylaşıyor; değişen şey mekanik ve
+  // AYNI KİTTEN YAPILAN SEÇİM. Aynı Kenney paketlerinden farklı modeller
+  // çekiliyor: çam yerine palmiye, çiçek yerine küp ve oberlisk, ve
+  // karakterlerden göz bantlı olanı.
   //
   // İkisini yan yana koymak bu vitrinin ikinci kontrollü karşılaştırması:
-  // ilki "aynı oyun, iki renderer", bu "aynı renderer ve aynı asset, iki oyun".
+  // ilki "aynı oyun, iki renderer", bu "aynı hat ve aynı kit, iki oyun".
   'strike-3d': {
     entry: 'playables/strike-3d/main.ts',
     title: 'Blade Rush — Playable',
-    glb: ['out-3d-run', 'run.glb'],
+    glb: ['out-3d-isle', 'isle.glb'],
   },
 };
 

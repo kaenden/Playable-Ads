@@ -6,9 +6,15 @@
  * iki sayacından biri SİLAH GÜCÜ, ama silahın kendisi görünmüyordu, sadece
  * sayısı vardı.
  *
- * Çözüm dört kademe: bıçak, balta, kılıç, çift ağızlı balta. Her yükseltmede
- * havada uçan cisim DEĞİŞİYOR ve büyüyor — yani "silahım güçlendi" bilgisi
- * sayıyı okumadan da geliyor.
+ * Çözüm dört kademe: hançer, balta, pala, çift ağızlı balta — hepsi korsan
+ * temasına oturan takım. Her yükseltmede havada uçan cisim DEĞİŞİYOR ve
+ * büyüyor, yani "silahım güçlendi" bilgisi sayıyı okumadan da geliyor.
+ *
+ * BOYLAR SONRADAN BÜYÜTÜLDÜ. İlk kademe 0.58 birimdi ve karakterin elinde
+ * neredeyse görünmüyordu: uzaktan bakan biri için oyun "silahsız başlıyor"
+ * gibi okunuyordu, oysa oyunun bütün mantığı elindeki silahın değişmesi.
+ * Alt uç yukarı çekildi, üst uç ise kalabalıkta çelik duvarına dönmesin
+ * diye ölçülü bırakıldı.
  *
  * MODEL YOK, TARİF VAR. Her silah birkaç kutunun listesi. Bu listeden hem
  * three.js geometrisi hem 2D ikon üretiliyor: kartta gördüğün şekil ile
@@ -61,8 +67,8 @@ export interface WeaponDef {
 const DEFS: Array<Omit<WeaponDef, 'half'>> = [
   {
     dmg: 2,
-    name: 'KNIFE',
-    len: 0.58,
+    name: 'DAGGER',
+    len: 0.74,
     parts: [
       { w: 0.16, h: 0.3, d: 0.13, y: -0.3, color: WOOD_DARK },
       { w: 0.34, h: 0.08, d: 0.16, y: -0.12, color: GOLD },
@@ -74,7 +80,7 @@ const DEFS: Array<Omit<WeaponDef, 'half'>> = [
   {
     dmg: 3,
     name: 'HATCHET',
-    len: 0.76,
+    len: 0.88,
     parts: [
       { w: 0.12, h: 1.0, d: 0.12, y: -0.05, color: WOOD },
       { w: 0.17, h: 0.09, d: 0.17, y: -0.57, color: GOLD },
@@ -86,8 +92,8 @@ const DEFS: Array<Omit<WeaponDef, 'half'>> = [
   },
   {
     dmg: 5,
-    name: 'SWORD',
-    len: 0.94,
+    name: 'CUTLASS',
+    len: 1.02,
     parts: [
       { w: 0.12, h: 0.26, d: 0.12, y: -0.4, color: LEATHER },
       { w: 0.19, h: 0.14, d: 0.17, y: -0.58, color: GOLD },
@@ -100,7 +106,7 @@ const DEFS: Array<Omit<WeaponDef, 'half'>> = [
   {
     dmg: 9,
     name: 'GREAT AXE',
-    len: 1.1,
+    len: 1.2,
     parts: [
       // Sap KOYU DEĞİL. İlk denemede koyu ahşaptı ve silah kartının koyu
       // zemininde sadece iki çelik ağız görünüyordu — silahın gövdesi yoktu.

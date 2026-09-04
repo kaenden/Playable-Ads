@@ -2,9 +2,10 @@
  * HUD — 3D sahnenin ÜSTÜNDEKİ 2D katman.
  *
  * ARAYÜZ DE BU OYUNA AİT. Crowd Rush'tan devralındığında krem çipler ve
- * turuncu bir CTA taşıyordu; sahne soğuk kara taşınınca arayüz hâlâ öteki
- * oyunun arayüzüydü ve ikisi ekranda aynı ürün gibi duruyordu. Bu birimin
- * kendi düzeni: koyu çelik levhalar, buz mavisi ilerleme, kırmızı CTA.
+ * turuncu bir CTA taşıyordu; sahne adaya taşınınca arayüz hâlâ öteki oyunun
+ * arayüzüydü ve ikisi ekranda aynı ürün gibi duruyordu. Bu birimin kendi
+ * düzeni: koyu levhalar, turkuaz ilerleme, kırmızı CTA — ve altın SADECE
+ * silaha ayrılmış durumda, çünkü bu oyunda kazanılan şey o.
  * Aynı kod, aynı yerleşim, farklı kimlik.
  *
  * Projedeki alışkanlık: arayüz hiçbir zaman 3D'de çizilmiyor. Yazı, buton ve
@@ -153,7 +154,7 @@ export class Hud {
     const p = Math.min(1, s.z / TRACK_LEN);
     const fg = g.createLinearGradient(m, 0, m + w, 0);
     fg.addColorStop(0, '#FFFFFF');
-    fg.addColorStop(1, '#68B6F0');
+    fg.addColorStop(1, '#2CC8C0');
     g.fillStyle = fg;
     roundRect(g, m, y, Math.max(h, w * p), h, h / 2);
     g.fill();
@@ -238,7 +239,7 @@ export class Hud {
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.font = '900 ' + Math.round(size) + 'px ' + FONT;
-    outlinedText(g, String(n), L.w / 2, L.h * 0.53, size, '#ffffff', '#68B6F0', 'rgba(10,20,34,.85)');
+    outlinedText(g, String(n), L.w / 2, L.h * 0.53, size, '#ffffff', '#2CC8C0', 'rgba(10,20,34,.85)');
     g.restore();
   }
 
@@ -504,11 +505,11 @@ export class Hud {
     const numSize = Math.min(L.w * 0.16, 76);
     fitFont(g, String(s.crowd), L.w * 0.5, '900', numSize, FONT);
     outlinedText(g, String(s.crowd), L.w / 2, cy + size * 1.06, numSize,
-      won ? '#CFEEFF' : '#FF8A8A', won ? '#4C9BE0' : '#E5484D', 'rgba(8,16,28,.9)');
+      won ? '#B6F5EE' : '#FF8A8A', won ? '#22A9A2' : '#E5484D', 'rgba(8,16,28,.9)');
 
     const title = won ? COPY.win : COPY.lose;
     fitFont(g, title, L.w * 0.88, '900', Math.min(L.w * 0.085, 40), FONT);
-    g.fillStyle = won ? '#CFEEFF' : '#ffffff';
+    g.fillStyle = won ? '#B6F5EE' : '#ffffff';
     g.fillText(title, L.w / 2, cy + size * 1.06 + Math.min(L.w * 0.12, 58));
 
     g.fillStyle = 'rgba(255,255,255,.72)';
@@ -523,7 +524,7 @@ export class Hud {
     g.globalAlpha = fade;
     const by = L.h * 0.63;
     fitFont(g, COPY.brand, L.w * 0.84, '900', Math.min(L.w * 0.075, 34), FONT);
-    g.fillStyle = '#CFEEFF';
+    g.fillStyle = '#B6F5EE';
     g.fillText(COPY.brand, L.w / 2, by);
     fitFont(g, COPY.tagline, L.w * 0.84, '500', Math.min(L.w * 0.04, 17), FONT);
     g.fillStyle = 'rgba(255,255,255,.6)';

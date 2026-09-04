@@ -1,9 +1,14 @@
 /**
  * Sahnenin bütün malzemesi tek dosyadan geliyor.
  *
- * `run.glb` = 15 model tek GLB'de (105.5 KB): 1 animasyonlu karakter
- * (Kenney "Blocky Characters") + 14 doğa parçası (Kenney "Nature Kit").
- * İkisi de CC0. Yanında 5.2 KB'lık karakter dokusu ayrı taşınıyor.
+ * `isle.glb` = 16 model tek GLB'de (123.4 KB): 1 animasyonlu karakter
+ * (Kenney "Blocky Characters" — göz bantlı olanı) + 15 ada parçası (Kenney
+ * "Nature Kit": palmiye, kaya, oberlisk, küp, kano, kütük). İkisi de CC0.
+ * Yanında 4.8 KB'lık karakter dokusu ayrı taşınıyor.
+ *
+ * KARDEŞ BİRİM AYNI KİTTEN BAŞKA MODELLER ÇEKİYOR. Crowd Rush'ın `run.glb`i
+ * çam ve çiçek taşıyor, bu palmiye ve harabe. Paket ortak, SEÇİM ayrı —
+ * gerçek işte de bir stüdyodan gelen kit tek, ondan çıkarılan kreatif çok.
  *
  * İKİ AYRI MALZEME DÜNYASI aynı sahnede:
  *
@@ -112,7 +117,7 @@ export function loadModels(): Promise<void> {
 }
 
 export function ready(): boolean {
-  return !!models['character-a'];
+  return !!models['character-p'];
 }
 
 export function clipNamed(name: string): AnimationClip | null {
@@ -126,7 +131,7 @@ export function clipNamed(name: string): AnimationClip | null {
  * yazıyor, oraya ölçek koymak animasyonun ilk karesinde siliniyordu.
  */
 export function charClone(h: number): Group | null {
-  const e = models['character-a'];
+  const e = models['character-p'];
   if (!e) return null;
   const g = new Group();
   const inner = e.node.clone(true);

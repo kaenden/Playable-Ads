@@ -1,13 +1,21 @@
 /**
  * 3D görünüm — koridor, kalabalık, kapılar, duvar.
  *
- * KARDEŞ BİRİMDEN AYRIŞMAK. Crowd Rush ile paket, karakter, koridor ve
- * derleme ortak; ilk sürümde RENK de ortaktı ve ikisi ekranda aynı oyun gibi
- * duruyordu. İzleyici bir oyunu mekaniğinden değil renginden tanıyor, o yüzden
- * bu birim soğuk bir kar yaylasına taşındı: mavi gökyüzü, kar zemin, soğuk
- * anahtar ışık, sıcak dolgu. Yeni asset yok — sadece malzeme, gradyan ve ışık.
- * Kalabalığın dokusu neredeyse siyah, ve karın üstünde siluetler en net
- * okunduğu yerde duruyor.
+ * KARDEŞ BİRİMDEN AYRIŞMAK. Crowd Rush ile hat, koridor, kamera ve instancing
+ * düzeni ortak; ilk sürümde ASSET SEÇİMİ ve RENK de ortaktı ve ikisi ekranda
+ * aynı oyun gibi duruyordu. İzleyici bir oyunu mekaniğinden değil görüntüsünden
+ * tanıyor.
+ *
+ * Bu birim bir KORSAN ADASINA taşındı ve ayrım iki katmanda kuruldu:
+ *
+ *   MODEL SEÇİMİ  Aynı Kenney kitlerinden başka parçalar: çam yerine palmiye,
+ *                 çiçek ve mantar yerine küp, oberlisk, kano ve kütük;
+ *                 karakterlerden de göz bantlı olanı. Paket ortak, seçim ayrı.
+ *   RENK          Yeşil çayır yerine kumsal, ve koridorun iki yanında DENİZ —
+ *                 tek ek düzlem, dokusu koddan.
+ *
+ * Deniz düzlemi bu sahnenin en ucuz kazancı: iki üçgen ve bir gradyan, ama
+ * "ada" bilgisini tek başına o veriyor.
  *
  * SİS RENGİ = GÖKYÜZÜNÜN DİBİ. Arka plan CSS gradyanı, sahne şeffaf. Uzaktaki
  * nesneler sise karışıyor ve sis rengi gradyanın alt rengiyle AYNI; ufuk
@@ -60,30 +68,34 @@ import { propClone, propSize } from './models';
 import { RunView } from './view';
 import { Grade } from './grade';
 
-const SKY = '#DCEBF7';
-// AYRI BİR OYUN AYRI BİR SAAT.
+const SKY = '#C2E7F0';
+// KUMSAL, İZ VE DENİZ — üç ayrı değer, üçü de bilerek ayrık.
 //
-// Bu birim Crowd Rush ile aynı paketi, aynı karakteri, aynı koridoru ve aynı
-// derlemeyi paylaşıyor. Ekranda AYNI OYUN görünmesinin sebebi de buydu:
-// mekanik değişmişti ama renk değişmemişti, ve izleyici oyunu mekaniğinden
-// değil renginden tanıyor.
+// Zeminin kendi rengi ışıktan SONRA istenen sonuca göre seçiliyor: zemin
+// yatay, yani anahtar ışığın neredeyse tamamını alıyor ve açık seçilen her
+// malzeme ekranda beyaza patlıyor.
 //
-// O yüzden ikisi zıt uçlara ayrıldı: Crowd Rush altın saatte sıcak yeşil bir
-// çayır, bu ise soğuk bir kar yaylası. Tek bayt yeni asset yok — değişen şey
-// zemin malzemesi, gökyüzü gradyanı ve ışık düzeni. Bir stüdyonun tek paketten
-// altı kreatif çıkarırken yaptığı işin aynısı.
-//
-// Zeminin kendi değeri KASTEN kardan koyu: zemin yatay, yani anahtar ışığın
-// neredeyse tamamını alıyor. Malzemeyi beyaz seçmek ekranda patlamış bir
-// düzlem veriyordu; #A9C0D2 ışıktan sonra kar oluyor.
-// PATİKA ZEMİNDEN AÇIK, TERSİ DEĞİL. İlk kar denemesinde ikisi de aynı
-// gri değerdeydi ve koridorun kenarı kayboldu — koşu oyununda okunması
-// gereken ilk şey nerede koşulacağı. Şimdi tarla mavi gölgede, patika ise
-// çiğnenmiş parlak kar: sınır tek bakışta belli, ve koyu siluetler en
-// parlak yüzeyin üstünde duruyor.
-const GROUND = '#8FB4D8';
-const GRASS_DARK = '#6D93BC';
-const SAND = '#F0F7FD';
+// İZ KUMSALDAN AÇIK, tersi değil. Bir koşu oyununda okunması gereken ilk şey
+// nerede koşulacağı; iki yüzey aynı değere düşerse koridorun kenarı kayboluyor.
+const GROUND = '#D9BE86';
+const GRASS_DARK = '#B08F55';
+/** İzin kenarındaki ıslak kum şeridi — koridorun sınırını çizen çizgi. */
+const TRAIL_RIM = '#A87F41';
+const SAND = '#F2E2B8';
+/** Deniz: kıyıya yakın sığ turkuaz, açıkta koyu mavi. */
+const SEA_SHALLOW = '#4FCBC6';
+const SEA_DEEP = '#0E6389';
+/** Kıyı çizgisindeki köpük — kumu denizden ayıran ince şerit. */
+const FOAM = '#EAFBFA';
+/**
+ * Kumsalın yarı genişliği. Ötesi deniz.
+ *
+ * İlk denemede 13'tü ve deniz neredeyse görünmüyordu: 38 derecelik dikey
+ * açıyla ve 0.6 en-boy oranıyla kamera 30 birim ileride sadece ±6 birim
+ * yanı görüyor, yani su ancak ufukta beliriyordu. 8'e indirilince kıyı
+ * koridorun hemen yanına geliyor ve sahne bir ADA gibi okunuyor.
+ */
+const BEACH_HALF = 8;
 const CHAR_H = 1.15;
 
 /**
@@ -131,7 +143,7 @@ function grassTexture(): CanvasTexture {
     const grd = g.createRadialGradient(x, y, 0, x, y, r);
     // SADECE KOYULTAN leke. Açık leke eklemek yeşili griye çekiyordu:
     // beyaza doğru her katkı doygunluğu düşürür, koyuya doğru katkı düşürmez.
-    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(96,132,172,.24)' : 'rgba(74,110,152,.15)');
+    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(150,118,58,.22)' : 'rgba(120,92,40,.14)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grd;
     g.beginPath();
@@ -144,7 +156,7 @@ function grassTexture(): CanvasTexture {
   return t;
 }
 
-/** Patika dokusu: ezilmiş kar + ileri bakan açık şeritler (hız hissi). */
+/** İz dokusu: basıla basıla açılmış kum + ileri bakan şeritler (hız hissi). */
 function pathTexture(): CanvasTexture {
   const cv = document.createElement('canvas');
   cv.width = 128;
@@ -158,25 +170,66 @@ function pathTexture(): CanvasTexture {
   // patikayı zemine gömüyor; ortayı açmak da çiğnene çiğnene parlamış bir iz
   // izlenimi veriyor. Düz tek renk bir şeritte ikisi de yoktu.
   const cross = g.createLinearGradient(0, 0, 128, 0);
-  cross.addColorStop(0, 'rgba(38,58,84,.42)');
-  cross.addColorStop(0.08, 'rgba(84,110,142,.18)');
-  cross.addColorStop(0.36, 'rgba(246,251,255,.2)');
-  cross.addColorStop(0.64, 'rgba(246,251,255,.2)');
-  cross.addColorStop(0.92, 'rgba(84,110,142,.18)');
-  cross.addColorStop(1, 'rgba(38,58,84,.42)');
+  cross.addColorStop(0, 'rgba(112,80,30,.4)');
+  cross.addColorStop(0.08, 'rgba(168,132,66,.18)');
+  cross.addColorStop(0.36, 'rgba(255,248,224,.22)');
+  cross.addColorStop(0.64, 'rgba(255,248,224,.22)');
+  cross.addColorStop(0.92, 'rgba(168,132,66,.18)');
+  cross.addColorStop(1, 'rgba(112,80,30,.4)');
   g.fillStyle = cross;
   g.fillRect(0, 0, 128, 128);
 
-  // Buz kırığı ve donmuş çamur beneği.
+  // Çakıl taşı ve deniz kabuğu beneği.
   const rnd = lcg(1291);
   for (let i = 0; i < 46; i++) {
     const x = rnd() * 128;
     const y = rnd() * 128;
     const r = 1.2 + rnd() * 2.6;
-    g.fillStyle = rnd() < 0.5 ? 'rgba(120,142,168,.34)' : 'rgba(250,253,255,.34)';
+    g.fillStyle = rnd() < 0.5 ? 'rgba(150,118,58,.3)' : 'rgba(255,252,238,.36)';
     g.beginPath();
     g.arc(x, y, r, 0, Math.PI * 2);
     g.fill();
+  }
+  const t = new CanvasTexture(cv);
+  t.wrapS = RepeatWrapping;
+  t.wrapT = RepeatWrapping;
+  return t;
+}
+
+/**
+ * Deniz dokusu — enine derinlik gradyanı.
+ *
+ * Karo sadece Z'de tekrar ediyor, yani U ekseni suyun KESİTİ. Kıyıya yakın
+ * (ortaya yakın) sığ turkuaz, kenarlara doğru koyu mavi. Simetrik, çünkü
+ * kumsal ortada ve deniz iki yanda.
+ *
+ * Ayrıca ince açık şeritler: hareket etmeyen su ölü duruyordu, birkaç dalga
+ * çizgisi yüzeye yön veriyor.
+ */
+function seaTexture(): CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 64;
+  const g = cv.getContext('2d') as CanvasRenderingContext2D;
+  const grd = g.createLinearGradient(0, 0, 256, 0);
+  grd.addColorStop(0, SEA_DEEP);
+  grd.addColorStop(0.34, SEA_SHALLOW);
+  grd.addColorStop(0.5, SEA_SHALLOW);
+  grd.addColorStop(0.66, SEA_SHALLOW);
+  grd.addColorStop(1, SEA_DEEP);
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 256, 64);
+  const rnd = lcg(90210);
+  g.strokeStyle = 'rgba(255,255,255,.16)';
+  g.lineWidth = 2;
+  for (let i = 0; i < 22; i++) {
+    const y = rnd() * 64;
+    const x = rnd() * 256;
+    const w = 12 + rnd() * 40;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + w, y);
+    g.stroke();
   }
   const t = new CanvasTexture(cv);
   t.wrapS = RepeatWrapping;
@@ -291,7 +344,7 @@ export class View3D implements RunView {
       // Gökyüzü ufuk çizgisine gelmeden sis rengine oturuyor. Kameranın
       // eğimi ekran oranına göre değiştiği için ufuk yukarı aşağı kayıyor;
       // gradyan geç bitseydi bazı telefonlarda ufukta bant görünürdü.
-      'linear-gradient(180deg,#1F4E86 0%,#4C86BE 8%,#93BEE0 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
+      'linear-gradient(180deg,#1478B0 0%,#3F9ECE 8%,#84C8E0 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true, alpha: true });
     // Sis SADECE ufukta. Yakın başlayan sis orta planı da soldurüyordu.
@@ -309,22 +362,19 @@ export class View3D implements RunView {
     //             yeşil, ağaçların altına doğal bir yansıma bırakıyor.
     // Anahtar ışık SOĞUK ve biraz daha zayıf: kar zaten çok geri veriyor,
     // sıcak bir anahtar burada eriyik gibi duruyordu.
-    // Kar için ışık YÜKSELDİ. İlk denemede Crowd Rush'ın şiddetleri
-    // kalmıştı ve kar ekranda beton griye düşüyordu: malzeme ne kadar açık
-    // seçilirse seçilsin, ışıktan sonraki değer tavanı aşamıyor.
-    const key = new DirectionalLight(0xeaf4ff, 1.34);
+    // Tropik öğle: anahtar sıcak ve yüksek.
+    const key = new DirectionalLight(0xfff4d8, 1.28);
     key.position.set(-5, 7, -3);
     this.scene.add(key);
     // Dolgu KASTEN zayıf. Güçlü dolgu gölge tarafını da aydınlatıyor ve
     // formun yönü kayboluyor; sahne yine düz görünüyordu.
-    // Dolgu bu sefer SICAK: soğuk bir sahnede tek renk her yeri mavi bir
-    // yığın yapıyor. Karşı taraftan gelen zayıf bir şeftali, siluetlerin
-    // gölge yüzünü ısıtıp formu geri getiriyor — Crowd Rush'ta bu ilişki
-    // tam tersiydi.
-    const fill = new DirectionalLight(0xFFC9A0, 0.4);
+    // Dolgu DENİZDEN geliyor: turkuaz bir yansıma. Gölgede kalan yüzler
+    // siyah değil deniz mavisi oluyor ve sahne tek bir kum yığını olmaktan
+    // çıkıyor.
+    const fill = new DirectionalLight(0x6FE0E8, 0.34);
     fill.position.set(5.5, 2.5, 4);
     this.scene.add(fill);
-    this.scene.add(new HemisphereLight(0xd8ecff, new Color(GROUND).getHex(), 0.5));
+    this.scene.add(new HemisphereLight(0xcdeeff, new Color(GROUND).getHex(), 0.42));
 
     this.buildGround();
     this.buildScenery();
@@ -365,12 +415,63 @@ export class View3D implements RunView {
 
   private buildGround(): void {
     const len = TRACK_LEN + 80;
+
+    // DENİZ — bu sahneyi ada yapan tek şey, ve maliyeti iki üçgen.
+    //
+    // Dokusu enine bir gradyan: kıyıya yakın sığ turkuaz, açıkta koyu mavi.
+    // Düz tek renk bir mavi düzlem "zemin başka renk" gibi duruyordu; derinlik
+    // geçişi olmadan su okunmuyor. Kum düzleminin ALTINDA duruyor, aradaki
+    // 22 santimlik fark da kıyı bankını veriyor.
+    const st = seaTexture();
+    st.repeat.set(1, len / 60);
+    const sea = new Mesh(
+      new PlaneGeometry(240, len),
+      // Unlit: deniz ışıktan etkilenmiyor. Lambert'te anahtar ışık turkuazı
+      // beyaza patlatıyordu ve ufukta gökyüzünden ayrılmıyordu.
+      new MeshBasicMaterial({ map: st })
+    );
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.set(0, -0.22, len / 2 - 30);
+    this.scene.add(sea);
+
     const gt = grassTexture();
-    gt.repeat.set(90 / 18, len / 18);
-    const ground = new Mesh(new PlaneGeometry(90, len), new MeshLambertMaterial({ map: gt }));
+    gt.repeat.set((BEACH_HALF * 2) / 18, len / 18);
+    const ground = new Mesh(
+      new PlaneGeometry(BEACH_HALF * 2, len),
+      new MeshLambertMaterial({ map: gt })
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, 0, len / 2 - 30);
     this.scene.add(ground);
+
+    // KORİDORUN KENARI. Kıyı bankı kumsalın sınırını çiziyor ama izin
+    // sınırını çizmiyor; kum ile iz birbirine yakın değerde olduğu için
+    // koşulacak şeridin nerede bittiği kayboluyordu. İnce koyu bir şerit
+    // o sınırı geri getiriyor.
+    for (const d of [-1, 1]) {
+      const rim = new Mesh(
+        new BoxGeometry(0.22, 0.12, len),
+        new MeshLambertMaterial({ color: new Color(TRAIL_RIM) })
+      );
+      rim.position.set(d * (STRIKE.halfW + 0.35), 0.06, len / 2 - 30);
+      this.scene.add(rim);
+    }
+
+    // Kıyı bankı ve köpük şeridi: kumun bittiği yeri çizen iki ince kutu.
+    for (const d of [-1, 1]) {
+      const bank = new Mesh(
+        new BoxGeometry(0.5, 0.26, len),
+        new MeshLambertMaterial({ color: new Color(GRASS_DARK) })
+      );
+      bank.position.set(d * BEACH_HALF, 0.0, len / 2 - 30);
+      this.scene.add(bank);
+      const foam = new Mesh(
+        new BoxGeometry(1.1, 0.06, len),
+        new MeshBasicMaterial({ color: new Color(FOAM) })
+      );
+      foam.position.set(d * (BEACH_HALF + 0.7), -0.14, len / 2 - 30);
+      this.scene.add(foam);
+    }
 
     const pt = pathTexture();
     pt.repeat.set(1, len / 7);
@@ -403,11 +504,16 @@ export class View3D implements RunView {
     // Ağaç ve kaya AYNI ölçek aralığını paylaşamıyor: ilk denemede ikisi de
     // 2.6-5.0 birim yüksekliğe ölçeklendi ve kayalar koridoru kapatan devlere
     // dönüştü. Paketteki modelin kendi ölçüsü değil, sahnedeki ROLÜ belirliyor.
-    const trees = ['tree_pineRoundA', 'tree_pineTallA', 'tree_default'];
+    const trees = ['tree_palmTall', 'tree_palmShort', 'tree_palmBend'];
     const rocks = ['rock_tallB', 'rock_largeA'];
-    // Karda çiçek ve mantar olmaz: aynı paketten SEÇİM değişiyor, model
-    // değil. Kuru ot, kütük ve taş kalıyor.
-    const small = ['grass_leafs', 'stump_round', 'rock_smallA', 'rock_tallB'];
+    // Adada çam ve mantar olmaz: aynı paketten SEÇİM değişiyor. Kumsal otu,
+    // tropik çalı, küçük kaya ve kıyıya bırakılmış küpler.
+    const small = ['grass_leafs', 'plant_bushLarge', 'rock_smallA', 'pot_large'];
+    // Seyrek "hikâye" parçaları: kıyıya çekilmiş kano, sönmüş ateş yeri,
+    // harabeden kalan oberlisk ve sürüklenmiş kütük. Hepsi statik yığına
+    // gittiği için çizim çağrısına hiçbir şey eklemiyorlar; işleri ADANIN
+    // burada birinin yaşadığı bir yer olduğunu söylemek.
+    const story = ['canoe', 'campfire_stones', 'statue_obelisk', 'log'];
     // Bitişin ÖTESİ de dolu olmalı: kazanınca kalabalık duvarın arkasına
     // koşuyor ve orada boş yeşillik görürse dünya bitmiş gibi duruyor.
     for (let z = -16; z < TRACK_LEN + 60; z += 5.4) {
@@ -427,7 +533,7 @@ export class View3D implements RunView {
         }
         const g = propClone(name, h);
         if (!g) continue;
-        const px = d * (STRIKE.halfW + 1.5 + rnd() * 5);
+        const px = d * (STRIKE.halfW + 1.0 + rnd() * 3.2);
         const pz = z + rnd() * 3;
         g.position.set(px, 0, pz);
         g.rotation.y = rnd() * Math.PI * 2;
@@ -437,18 +543,17 @@ export class View3D implements RunView {
         const sz = propSize(name);
         this.spots.push([px, pz, sz ? (sz.x / (sz.y || 1)) * h * 1.5 : h]);
       }
-      // ARKA SIRA AĞAÇLAR. Yakın plandaki tek sıra ağaç koridoru sarmıyordu;
-      // yanlar boş yeşillik olarak kalıyor ve sahne derinliksiz duruyordu.
-      // Uzağa daha İRİ ağaçlar koymak katman hissi veriyor. Hepsi aynı
-      // malzemeleri paylaştığı için birleştirmeden sonra çizim çağrısına
-      // hiçbir şey eklemiyorlar.
+      // RESİF TAŞLARI. Crowd Rush'ta bu döngü uzağa iri ağaçlar koyuyordu;
+      // burada kumsal bitiyor, o yüzden aynı bütçe SUYUN İÇİNE gidiyor.
+      // Sudan çıkan birkaç taş, düz turkuaz bir düzlemi denize çeviriyor —
+      // ve gölge lekesi almadıkları için yüzüyormuş gibi de durmuyorlar.
       for (const d of [-1, 1]) {
-        if (rnd() > 0.82) continue;
-        const far = propClone(trees[(rnd() * trees.length) | 0], 5.2 + rnd() * 3.4);
-        if (!far) continue;
-        far.position.set(d * (STRIKE.halfW + 7 + rnd() * 8), 0, z + rnd() * 5);
-        far.rotation.y = rnd() * Math.PI * 2;
-        this.statics.add(far);
+        if (rnd() > 0.62) continue;
+        const reef = propClone('rock_smallA', 0.4 + rnd() * 0.7);
+        if (!reef) continue;
+        reef.position.set(d * (BEACH_HALF + 1.2 + rnd() * 7), -0.24, z + rnd() * 5);
+        reef.rotation.y = rnd() * Math.PI * 2;
+        this.statics.add(reef);
       }
 
       // KENAR DETAYI. Uzun ve boş bir patika kenarı ekranda "yapılmamış"
@@ -466,11 +571,27 @@ export class View3D implements RunView {
         }
       }
 
+      // Ara sıra hikâye parçası: kıyıya çekilmiş kano, ateş yeri, oberlisk.
+      if (rnd() < 0.3) {
+        const d = rnd() < 0.5 ? -1 : 1;
+        const name = story[(rnd() * story.length) | 0];
+        const h = name === 'statue_obelisk' ? 2.6 : name === 'canoe' ? 0.62 : 0.5;
+        const g = propClone(name, h);
+        if (g) {
+          const px = d * (STRIKE.halfW + 2.2 + rnd() * 3.4);
+          const pz = z + rnd() * 4;
+          g.position.set(px, 0, pz);
+          g.rotation.y = rnd() * Math.PI * 2;
+          this.statics.add(g);
+          this.spots.push([px, pz, h * (name === 'canoe' ? 4.2 : 1.4)]);
+        }
+      }
+
       // Ara sıra çit kümesi: koridorun kenarını vurguluyor.
       if (rnd() < 0.24) {
         for (const d of [-1, 1]) {
           for (let k = 0; k < 3; k++) {
-            const f = propClone('fence_simple', 0.85);
+            const f = propClone('fence_planks', 0.85);
             if (!f) continue;
             f.position.set(d * (STRIKE.halfW + 0.75), 0, z + k * 1.0);
             f.rotation.y = Math.PI / 2;

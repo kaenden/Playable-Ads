@@ -71,12 +71,12 @@ export function blobTexture(): CanvasTexture {
   cv.height = 64;
   const g = cv.getContext('2d') as CanvasRenderingContext2D;
   const grd = g.createRadialGradient(32, 32, 2, 32, 32, 31);
-  // Gölge rengi ZEMİNDEN geliyor. Crowd Rush'ta zemin sıcak yeşildi ve leke
-  // de yeşile çalıyordu; burada zemin kar, yani gölge MAVİ. Yeşil leke karın
-  // üstünde kir gibi duruyordu.
-  grd.addColorStop(0, 'rgba(34,62,98,.44)');
-  grd.addColorStop(0.55, 'rgba(34,62,98,.23)');
-  grd.addColorStop(1, 'rgba(34,62,98,0)');
+  // Gölge rengi ZEMİNDEN geliyor. Crowd Rush'ta zemin yeşildi ve leke de
+  // yeşile çalıyordu; burada zemin kum ve dolgu ışığı denizden geliyor, yani
+  // gölge MOR-MAVİ. Kahverengi bir leke kumun üstünde kir gibi duruyordu.
+  grd.addColorStop(0, 'rgba(58,74,110,.42)');
+  grd.addColorStop(0.55, 'rgba(58,74,110,.22)');
+  grd.addColorStop(1, 'rgba(58,74,110,0)');
   g.fillStyle = grd;
   g.fillRect(0, 0, 64, 64);
   return new CanvasTexture(cv);
@@ -114,11 +114,19 @@ export interface SquadOpts {
  * Ölçek 1'in altında: silah havadakiyle aynı model ama elde birebir boyda
  * durunca çift ağızlı balta karakter kadar oluyor ve gövdeye giriyor.
  */
-const HAND_OUT = -0.1;
-const HAND_DROP = 0.26;
-const HAND_FWD = 0.0;
-const GRIP_TILT = -0.18;
-const GRIP_ROLL = -0.3;
+/**
+ * OMUZDAN İNDİR, YANA AÇ. İlk ayarda silah neredeyse dik duruyordu ve
+ * karakterin omzuna saplanmış gibi görünüyordu: namlusu gövdenin önünden
+ * geçiyor, kavrayan bir el okunmuyordu. Üç değişiklik birlikte çözdü —
+ * el daha DIŞA (HAND_OUT), daha AŞAĞI (HAND_DROP), ve silah gövdeden
+ * belirgin biçimde YANA DEVRİK (GRIP_ROLL). Artık siluetin dışında,
+ * elin ucunda, aşağı bakan bir silah var.
+ */
+const HAND_OUT = -0.24;
+const HAND_DROP = 0.32;
+const HAND_FWD = 0.02;
+const GRIP_TILT = -0.12;
+const GRIP_ROLL = -0.72;
 const HELD_SCALE = 0.85;
 /**
  * Kolun dönüşü ne kadar geçiyor. 0 = silah kolun her savruluşunu izliyor,
@@ -234,7 +242,7 @@ export class Squad {
         dgeo,
         new MeshBasicMaterial({
           map: blobTexture(),
-          color: 0xeaf3ff,
+          color: 0xf2e2b8,
           transparent: true,
           opacity: 0.55,
           depthWrite: false,
@@ -286,7 +294,9 @@ export class Squad {
     // Kavrama: silahı ölçekle, sonra kendi boyunun üçte biri kadar yukarı
     // kaydır ki AVUÇTA sapı dursun, ortası değil. Yön ve el konumu her karede
     // koldan geliyor, burada değil.
-    this.grip.makeTranslation(0, len * HELD_SCALE * 0.34, 0);
+    // 0.34 -> 0.26: silahın merkezi elden daha AZ yukarıda, yani sap avuçta
+    // kalırken ağırlık aşağı iniyor.
+    this.grip.makeTranslation(0, len * HELD_SCALE * 0.26, 0);
     this.m.makeScale(HELD_SCALE, HELD_SCALE, HELD_SCALE);
     this.grip.multiply(this.m);
   }
