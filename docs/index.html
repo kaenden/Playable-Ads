@@ -354,7 +354,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="info">
           <h3>Blade Rush</h3>
           <p class="genre">3D action runner &middot; Three.js</p>
-          <p class="num">892.8 KB</p>
+          <p class="num">892.9 KB</p>
         </div>
       </article>
       <article class="work">
@@ -558,7 +558,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     <details>
       <summary>
         <span class="sig"></span>
-        <span class="t">Two games, 91.8 KB apart</span>
+        <span class="t">Two games, 91.9 KB apart</span>
         <span class="s">Crowd Rush &middot; Blade Rush</span>
       </summary>
       <div class="body">
@@ -570,10 +570,10 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           stones, a beached canoe, the one character in the pack with an eye patch and
           the green one for the enemies &mdash; running two counters at once: gates change how many men you have,
           breakable targets change what each thrown blade is worth. Finished packages:
-          801.0 KB and 892.8 KB.
+          801.0 KB and 892.9 KB.
         </p>
         <div class="ledger">
-          <div><div class="n good">91.8 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.8% of the 5&nbsp;MB budget</div></div>
+          <div><div class="n good">91.9 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.8% of the 5&nbsp;MB budget</div></div>
           <div><div class="n">0</div><div class="c">Models authored. Every mesh is a different pick from the same two CC0 kits; the enemies are the player's own character, tinted, and the weapons are geometry drawn in code</div></div>
           <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
         </div>
@@ -676,6 +676,24 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             light was washing it, since everything added toward white costs saturation.
             Turning that light down took it to 71%. No new assets, no textures, no draw
             calls; the whole fix is nine hex values and one light intensity.</p>
+          </article>
+          <article>
+            <p class="t">Atmosphere</p><h3>One saturated colour is still one colour</h3>
+            <p>Even corrected, the frame came back at 44% brightness and 51% saturation
+            &mdash; dark and flat for a genre whose whole look is clean, bright and
+            loud. The first instinct, more light, made it worse: raising the key
+            pushed the sand's red channel into clipping, which <em>costs</em>
+            saturation, and the frame went brighter and duller at once. What worked was
+            three different things. The ambient light changed colour rather than
+            intensity, from pale blue to warm, so it lifts the gold by deepening it
+            instead of washing it. The transparent layers all came down &mdash;
+            vignette, fog start, shadow blobs, the near-white speckles in the trail
+            &mdash; because every semi-transparent overlay is paint over colour and
+            paint over colour always dulls it. And the ground stopped being one
+            surface: three quarters of the screen was a single golden plane, and no
+            amount of saturation reads as lively across an area that size, so it became
+            a gold trail, a yellow-green band, a sand shore and turquoise water.
+            Measured after: 51% brightness, 57% saturation.</p>
           </article>
           <article>
             <p class="t">Pipeline</p><h3>Three characters meant three textures</h3>
@@ -1182,7 +1200,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Blade Rush</td><td class="num">892.8 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">892.9 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1212,7 +1230,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 09:18 UTC</p>
+    <p class="stamp mono">build 2026-09-04 09:44 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1245,7 +1263,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
-    'str': ['Blade Rush',       '3D action runner · Three.js · 892.8 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 892.9 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],

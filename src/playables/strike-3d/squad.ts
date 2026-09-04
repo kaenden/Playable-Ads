@@ -74,9 +74,13 @@ export function blobTexture(): CanvasTexture {
   // Gölge rengi ZEMİNDEN geliyor. Crowd Rush'ta zemin yeşildi ve leke de
   // yeşile çalıyordu; burada zemin kum ve dolgu ışığı denizden geliyor, yani
   // gölge MOR-MAVİ. Kahverengi bir leke kumun üstünde kir gibi duruyordu.
-  grd.addColorStop(0, 'rgba(58,74,110,.42)');
-  grd.addColorStop(0.55, 'rgba(58,74,110,.22)');
-  grd.addColorStop(1, 'rgba(58,74,110,0)');
+  // Gölge SAYDAM BOYA, ve saydam boya doygunluk düşürür. Kalabalık artı
+  // süsler ekranda yüzlerce leke demek; mor-mavi ve %42'de bunlar altın
+  // zemini tek başına soldurüyordu. Daha açık ve zeminin kendi ailesine
+  // yakın bir gölge hem gölge kalıyor hem rengi yemiyor.
+  grd.addColorStop(0, 'rgba(92,78,52,.34)');
+  grd.addColorStop(0.55, 'rgba(92,78,52,.18)');
+  grd.addColorStop(1, 'rgba(92,78,52,0)');
   g.fillStyle = grd;
   g.fillRect(0, 0, 64, 64);
   return new CanvasTexture(cv);
@@ -225,7 +229,10 @@ export class Squad {
       const mat = new MeshLambertMaterial({
         map: src.map || null,
         color: base,
-        emissive: tint ? new Color(0x666666).multiply(tint) : new Color(0x666666),
+        // Işıyan taban 0x666666 -> 0x7d7d7d: figürler gölgede fazla
+        // kararıyordu. Doku zaten neredeyse siyah, tabanı yükseltmek
+        // siluetin canlı kalmasını sağlıyor.
+        emissive: tint ? new Color(0x7d7d7d).multiply(tint) : new Color(0x7d7d7d),
         emissiveMap: src.map || null,
       });
       mat.name = src.name;

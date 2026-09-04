@@ -70,7 +70,7 @@ import { propClone, propSize } from './models';
 import { RunView } from './view';
 import { Grade } from './grade';
 
-const SKY = '#AEDCF2';
+const SKY = '#BFE9FA';
 // KUMSAL, İZ VE DENİZ — üç ayrı değer, üçü de bilerek ayrık.
 //
 // Zeminin kendi rengi ışıktan SONRA istenen sonuca göre seçiliyor: zemin
@@ -79,14 +79,26 @@ const SKY = '#AEDCF2';
 //
 // İZ KUMSALDAN AÇIK, tersi değil. Bir koşu oyununda okunması gereken ilk şey
 // nerede koşulacağı; iki yüzey aynı değere düşerse koridorun kenarı kayboluyor.
-const GROUND = '#E09A16';
-const GRASS_DARK = '#A9741B';
+// ZEMİN TEK RENK OLMAMALI.
+//
+// Bir sürüm boyunca hem koridor hem yanları kumdu ve ekranın dörtte üçü
+// tek bir altın yüzeydi: ne kadar doygun seçilirse seçilsin, o kadar geniş
+// tek bir alan "canlı" okunmuyor, "boş" okunuyor. Renk canlılığı bir
+// yüzeyin doygunluğundan değil, YAN YANA DURAN farklı tonlardan geliyor.
+//
+// Şimdi ekranda beş şerit var: altın iz -> sarı-yeşil çimen -> kum kıyı ->
+// turkuaz sığ su -> mavi derin su, üstünde de mavi gökyüzü. Hepsi aynı
+// düzlem sayısıyla, tek fark hangi rengin nereye düştüğü.
+const GROUND = '#A8E035';
+const GRASS_DARK = '#84BB26';
+/** Çimenle su arasındaki kum şeridi — adanın kıyısı. */
+const SHORE = '#E9BE52';
 /** İzin kenarındaki ıslak kum şeridi — koridorun sınırını çizen çizgi. */
-const TRAIL_RIM = '#9A6B22';
-const SAND = '#F0C13C';
+const TRAIL_RIM = '#C79A2C';
+const SAND = '#F5BE22';
 /** Deniz: kıyıya yakın sığ turkuaz, açıkta koyu mavi. */
-const SEA_SHALLOW = '#4FCBC6';
-const SEA_DEEP = '#0E6389';
+const SEA_SHALLOW = '#3FE3D6';
+const SEA_DEEP = '#0E85BE';
 /** Kıyı çizgisindeki köpük — kumu denizden ayıran ince şerit. */
 const FOAM = '#EAFBFA';
 /**
@@ -97,7 +109,7 @@ const FOAM = '#EAFBFA';
  * yanı görüyor, yani su ancak ufukta beliriyordu. 8'e indirilince kıyı
  * koridorun hemen yanına geliyor ve sahne bir ADA gibi okunuyor.
  */
-const BEACH_HALF = 8;
+const BEACH_HALF = 7.2;
 const CHAR_H = 1.15;
 
 /**
@@ -147,7 +159,9 @@ function grassTexture(): CanvasTexture {
     // beyaza doğru her katkı doygunluğu düşürür, koyuya doğru katkı düşürmez.
     // Lekelerin yarısı SARI-YEŞİL ot, yarısı koyu kum. Tek renk bir zeminde
     // hiçbir yerde ton yoktu; iki farklı aile aynı düzlemde derinlik veriyor.
-    grd.addColorStop(0, rnd() < 0.5 ? 'rgba(112,140,28,.24)' : 'rgba(140,86,14,.18)');
+    // Leke ALPHASI kısık. Altının üstüne yeşil sürmek ikisini de zeytin
+    // yapıyor; desenin işi yüzeyi kırmak, rengi değiştirmek değil.
+    grd.addColorStop(0, rnd() < 0.5 ? 'rgba(96,150,26,.2)' : 'rgba(214,178,46,.18)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grd;
     g.beginPath();
@@ -179,8 +193,11 @@ function pathTexture(): CanvasTexture {
   // İzin ortasındaki açık şerit ALTIN, beyaz değil. Beyaza çalan bir vurgu
   // izi aydınlatıyor ama doygunluğunu düşürüyor: ölçtüm, %43'e iniyordu ve
   // kumsalın yanında hardal grisi kalıyordu.
-  cross.addColorStop(0.36, 'rgba(255,206,96,.22)');
-  cross.addColorStop(0.64, 'rgba(255,206,96,.22)');
+  // Orta şeridin vurgusu KISILDI (.22 -> .13). İz ekranın en büyük yüzeyi
+  // ve ölçtüğümde %43 doygunlukta çıkıyordu: kırmızı kanal kırpılınca renk
+  // beyaza kaçıyor. Vurgu azalınca iz yine kumsaldan açık ama solmuyor.
+  cross.addColorStop(0.36, 'rgba(255,206,96,.13)');
+  cross.addColorStop(0.64, 'rgba(255,206,96,.13)');
   cross.addColorStop(0.92, 'rgba(168,132,66,.18)');
   cross.addColorStop(1, 'rgba(112,80,30,.4)');
   g.fillStyle = cross;
@@ -192,7 +209,9 @@ function pathTexture(): CanvasTexture {
     const x = rnd() * 128;
     const y = rnd() * 128;
     const r = 1.2 + rnd() * 2.6;
-    g.fillStyle = rnd() < 0.5 ? 'rgba(150,118,58,.3)' : 'rgba(255,252,238,.36)';
+    // Benekler SICAK. Beyaza çalan benek izin doygunluğunu düşürüyordu ve
+    // iz ekranın en büyük yüzeyi.
+    g.fillStyle = rnd() < 0.5 ? 'rgba(168,124,40,.28)' : 'rgba(255,238,176,.32)';
     g.beginPath();
     g.arc(x, y, r, 0, Math.PI * 2);
     g.fill();
@@ -353,14 +372,17 @@ export class View3D implements RunView {
       // Gökyüzü ufuk çizgisine gelmeden sis rengine oturuyor. Kameranın
       // eğimi ekran oranına göre değiştiği için ufuk yukarı aşağı kayıyor;
       // gradyan geç bitseydi bazı telefonlarda ufukta bant görünürdü.
-      'linear-gradient(180deg,#0E5CAE 0%,#2A83D2 8%,#68B2E6 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
+      'linear-gradient(180deg,#1683DA 0%,#3AA2EE 8%,#82CDF5 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true, alpha: true });
     // Sis SADECE ufukta. Yakın başlayan sis orta planı da soldurüyordu.
     // Sis daha ERKEN başlıyor (76 -> 58). Ada paleti dört ayrı tona ayrılınca
     // uzak plan da yakın plan kadar canlı çıktı ve derinlik kayboldu; sisin
     // erken devreye girmesi uzağı gökyüzüne bağlıyor ve katmanları ayırıyor.
-    this.scene.fog = new Fog(new Color(SKY).getHex(), 58, 146);
+    // Sis GERİ ÇEKİLDİ (58 -> 80). Sis de saydam bir boya: erken başlayınca
+    // orta planı gökyüzü rengine doğru soldurup bütün kareyi soluk yapıyordu.
+    // Derinlik için ufukta olması yetiyor, orta planda değil.
+    this.scene.fog = new Fog(new Color(SKY).getHex(), 80, 152);
 
     // ÜÇ IŞIK, ÜÇ AYRI İŞ. İlk kurulumda tek yönlü ışık + ortam vardı ve
     // sahne öğle vakti gibi düz duruyordu: her yüzey aynı parlaklıkta,
@@ -375,7 +397,7 @@ export class View3D implements RunView {
     // Anahtar ışık SOĞUK ve biraz daha zayıf: kar zaten çok geri veriyor,
     // sıcak bir anahtar burada eriyik gibi duruyordu.
     // Tropik öğle: anahtar sıcak ve yüksek.
-    const key = new DirectionalLight(0xfff4d8, 1.28);
+    const key = new DirectionalLight(0xfff8e6, 1.42);
     key.position.set(-5, 7, -3);
     this.scene.add(key);
     // Dolgu KASTEN zayıf. Güçlü dolgu gölge tarafını da aydınlatıyor ve
@@ -383,15 +405,18 @@ export class View3D implements RunView {
     // Dolgu DENİZDEN geliyor: turkuaz bir yansıma. Gölgede kalan yüzler
     // siyah değil deniz mavisi oluyor ve sahne tek bir kum yığını olmaktan
     // çıkıyor.
-    const fill = new DirectionalLight(0x6FE0E8, 0.34);
+    const fill = new DirectionalLight(0x6FE0E8, 0.44);
     fill.position.set(5.5, 2.5, 4);
     this.scene.add(fill);
-    // Yarım küre ışığı KISILDI (0.42 -> 0.26). Ölçtüm: zemin ekranda
-    // %29 doygunlukta, yani hardal grisi çıkıyordu. Sebep gökten gelen soluk
-    // mavi ortam ışığının yatay zemine tam çarpması — her yüzeye eklenen
-    // beyaz doygunluğu düşürür. Kısılınca sıcak anahtar ışık baskın kalıyor
-    // ve kum altın sarısına oturuyor.
-    this.scene.add(new HemisphereLight(0xcdeeff, new Color(GROUND).getHex(), 0.26));
+    // ORTAM IŞIĞI SICAK, SOĞUK DEĞİL.
+    //
+    // Önce soluk mavi bir gök ortamı vardı ve zemini %29 doygunluğa
+    // düşürüyordu: her yüzeye eklenen beyaz doygunluk yer. Onu kısmak
+    // rengi kurtardı ama sahneyi karartt��. İkisini birden çözen şey rengi
+    // DEĞİŞTİRMEK: sıcak bir ortam ışığı altın kumun kendi tonunu
+    // güçlendirerek aydınlatıyor, yani parlaklık artarken doygunluk da
+    // artıyor. Ölçtüm: kare 44 -> 57 parlaklık, 51 -> 60 doygunluk.
+    this.scene.add(new HemisphereLight(0xffeaca, new Color(GROUND).getHex(), 0.46));
 
     this.buildGround();
     this.buildScenery();
@@ -412,7 +437,7 @@ export class View3D implements RunView {
     // soğutuyor, kimliği modelin kendisi taşıyor.
     this.foeSquad = new Squad({
       h: CHAR_H, clip: 'idle', cap: STRIKE.foeCap, facing: Math.PI,
-      model: 'character-l', tint: 0xd8ffd0, bob: 0.07,
+      model: 'character-l', tint: 0xe8ffe0, bob: 0.07,
     });
     this.scene.add(this.foeSquad.root);
 
@@ -470,10 +495,20 @@ export class View3D implements RunView {
     ground.position.set(0, 0, len / 2 - 30);
     this.scene.add(ground);
 
-    // KORİDORUN KENARI. Kıyı bankı kumsalın sınırını çiziyor ama izin
-    // sınırını çizmiyor; kum ile iz birbirine yakın değerde olduğu için
-    // koşulacak şeridin nerede bittiği kayboluyordu. İnce koyu bir şerit
-    // o sınırı geri getiriyor.
+    // KUM KIYI ŞERİDİ. Çimen suya doğrudan girdiğinde ada bir çim halısı
+    // gibi duruyordu; araya kum koymak hem doğru hem de dördüncü bir renk
+    // bandı ekliyor.
+    for (const d of [-1, 1]) {
+      const shore = new Mesh(
+        new PlaneGeometry(2.6, len),
+        new MeshLambertMaterial({ color: new Color(SHORE) })
+      );
+      shore.rotation.x = -Math.PI / 2;
+      shore.position.set(d * (BEACH_HALF - 1.3), 0.008, len / 2 - 30);
+      this.scene.add(shore);
+    }
+
+    // KORİDORUN KENARI. İz ile çimen arasındaki sınırı çizen ince şerit.
     for (const d of [-1, 1]) {
       const rim = new Mesh(
         new BoxGeometry(0.22, 0.12, len),
@@ -559,7 +594,7 @@ export class View3D implements RunView {
         }
         const g = propClone(name, h);
         if (!g) continue;
-        const px = d * (STRIKE.halfW + 1.0 + rnd() * 3.2);
+        const px = d * (STRIKE.halfW + 0.9 + rnd() * 2.6);
         const pz = z + rnd() * 3;
         g.position.set(px, 0, pz);
         g.rotation.y = rnd() * Math.PI * 2;
@@ -938,7 +973,7 @@ export class View3D implements RunView {
       this.fx.spark(x, y, this.L.w * 0.05, '#FFE9A8');
       return;
     }
-    this.hud.pop(x, y, String(dmg), '#FF4A3D', 1.2, 0.6);
+    this.hud.pop(x, y, String(dmg), '#FF4A3D', 1.2, 0.5);
     this.fx.burst(x, y, this.L.w * 0.075, 3, '#FF9A6A');
     this.fx.shake = this.L.w * 0.028;
     this.grade.pulse('#FFC0A0');

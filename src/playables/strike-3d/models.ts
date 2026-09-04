@@ -80,15 +80,15 @@ interface MaybeColored extends Material {
  * Adı burada geçmeyen malzeme kendi rengiyle kalıyor.
  */
 const TINT: Record<string, number> = {
-  leafsGreen: 0x3f8f33,
-  leafsFall: 0xc8892c,
-  grass: 0x9cb53a,
-  stone: 0x8a6236,
-  stoneDark: 0x664728,
-  wood: 0xb5763f,
-  woodBark: 0x8a5a32,
-  woodBarkDark: 0x5f3d22,
-  woodInner: 0xd8b27a,
+  leafsGreen: 0x6ce34c,
+  leafsFall: 0xefa72e,
+  grass: 0xcbec4a,
+  stone: 0xb5813f,
+  stoneDark: 0x8b5c2f,
+  wood: 0xd5924a,
+  woodBark: 0xac713c,
+  woodBarkDark: 0x7d4d2b,
+  woodInner: 0xf0cd92,
 };
 
 function toLambert(root: Object3D): void {

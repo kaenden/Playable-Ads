@@ -66,9 +66,12 @@ export class Grade {
     //    karartırken doygunluğu koruyor.
     const r = Math.hypot(w, h) * 0.66;
     const vig = g.createRadialGradient(w / 2, h * 0.5, r * 0.5, w / 2, h * 0.5, r);
-    vig.addColorStop(0, 'rgba(10,44,52,0)');
-    vig.addColorStop(0.74, 'rgba(10,44,52,.05)');
-    vig.addColorStop(1, 'rgba(10,44,52,.26)');
+    // VİNYET HAFİFLEDİ (.26 -> .13) ve ısındı. Koyu bir teal köşe, altın
+    // kumlu bir sahnede sadece karartmıyor, rengi de çekiştiriyordu; bu
+    // kadarı bakışı ortada tutmaya yetiyor ve atmosferi kapatmıyor.
+    vig.addColorStop(0, 'rgba(24,38,44,0)');
+    vig.addColorStop(0.78, 'rgba(24,38,44,.02)');
+    vig.addColorStop(1, 'rgba(24,38,44,.08)');
     g.fillStyle = vig;
     g.fillRect(0, 0, w, h);
 
@@ -76,7 +79,7 @@ export class Grade {
     //    üstüne taşmıyor: en alttaki %16'da başlıyor.
     const scrim = g.createLinearGradient(0, h * 0.84, 0, h);
     scrim.addColorStop(0, 'rgba(12,30,34,0)');
-    scrim.addColorStop(1, 'rgba(12,30,34,.30)');
+    scrim.addColorStop(1, 'rgba(12,30,34,.2)');
     g.fillStyle = scrim;
     g.fillRect(0, h * 0.84, w, h * 0.16);
 
