@@ -35,7 +35,7 @@ const PLAYABLES = {
   'merge-3d': { entry: 'playables/merge-3d/main.ts', title: 'Merge Dragons 3D — Playable' },
   'escape-3d': {
     entry: 'playables/escape-3d/main.ts',
-    title: 'Traffic Escape — Playable',
+    title: 'Valet Panic — Playable',
     // `--art atlas` ile derlenince prosedürel araçların yerine müşteri
     // modelleri (Kenney Car Kit, CC0) geliyor. `glbVariant` = sadece o
     // bayrakla gömülür; `glb` ise her zaman.

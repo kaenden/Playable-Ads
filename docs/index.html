@@ -379,12 +379,13 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         </div>
       </article>
       <article class="work">
-        <a class="tile" href="u/traffic-escape/" data-play="esc" aria-label="Play Traffic Escape">
-          <img src="covers/traffic-escape.webp" alt="Traffic Escape playable, opening screen" loading="lazy" width="500" height="828">
+        <a class="tile branded" href="u/valet-panic/" data-play="esc" aria-label="Play Valet Panic">
+          <img src="covers/valet-panic.webp" alt="Valet Panic playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="brand"><img src="logos/valet-panic.webp" alt="" loading="lazy"></span>
           <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
         </a>
         <div class="info">
-          <h3>Traffic Escape</h3>
+          <h3>Valet Panic</h3>
           <p class="genre">Block puzzle &middot; Three.js</p>
           <p class="num">951.3 KB</p>
         </div>
@@ -1048,14 +1049,39 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <summary>
         <span class="sig"></span>
         <span class="t">What the third unit had to solve</span>
-        <span class="s">Traffic Escape</span>
+        <span class="s">Valet Panic</span>
       </summary>
       <div class="body">
         <p>
-          The merge units share a core. Traffic Escape does not — a different mechanic,
+          The merge units share a core. Valet Panic does not — a different mechanic,
           a tilted camera and a scene built out of geometry rather than sprites. Three
           problems had no answer in the existing code.
         </p>
+        <div class="notes">
+          <article>
+            <p class="t">Framing</p><h3>A camera angle is a screen-space decision</h3>
+            <p>The lot used to sit in the middle of the frame at about half width, with
+            sky filling the rest. The cause was the camera: at 38&deg; of yaw a square
+            of side S projects to S&nbsp;&times;&nbsp;(sin&nbsp;38 + cos&nbsp;38) =
+            1.40&nbsp;S across the screen, and since the fit is width-constrained, forty
+            percent of the frame was going to the diagonal. Turning the camera nearly
+            square to the grid gives that back &mdash; and gives something better, since
+            rows and columns now stay rows and columns on screen, which is how a player
+            reads which car is blocking which. Nearly every parking puzzle uses that
+            angle for exactly this reason. A small yaw remains so the scene is not a
+            flat diagram.</p>
+          </article>
+          <article>
+            <p class="t">Feedback</p><h3>Two numbers, and a car that leaves loudly</h3>
+            <p>The chip said CLEAR THE LOT &mdash; a title, not information &mdash; while
+            the two numbers a player actually tracks sat under the bar as small grey
+            text. Both are now in the plate and large: cars left, seconds left, with the
+            count jumping when a car goes. And the exit burst takes the colour of the car
+            that left rather than a generic white puff, so the flash on the board and the
+            drop in the counter read as one event instead of two.</p>
+          </article>
+        </div>
+
         <div class="notes">
           <article>
             <p class="t">Camera</p><h3>Orthographic, so the fit is exact</h3>
@@ -1350,7 +1376,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <tbody>
       <tr><td>Gate Crashers</td><td class="num">794.3 KB</td><td class="dl"><a href="dl/gate-crashers-google.zip" download>google</a> <a href="dl/gate-crashers-ironsource.zip" download>ironsource</a> <a href="dl/gate-crashers-mintegral.zip" download>mintegral</a> <a href="dl/gate-crashers-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Blade Rush</td><td class="num">892.9 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Valet Panic</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/valet-panic-google.zip" download>google</a> <a href="dl/valet-panic-ironsource.zip" download>ironsource</a> <a href="dl/valet-panic-mintegral.zip" download>mintegral</a> <a href="dl/valet-panic-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Order Up 3D</td><td class="num">697.7 KB</td><td class="dl"><a href="dl/order-up-3d-google.zip" download>google</a> <a href="dl/order-up-3d-ironsource.zip" download>ironsource</a> <a href="dl/order-up-3d-mintegral.zip" download>mintegral</a> <a href="dl/order-up-3d-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Order Up</td><td class="num">50.4 KB</td><td class="dl"><a href="dl/order-up-google.zip" download>google</a> <a href="dl/order-up-ironsource.zip" download>ironsource</a> <a href="dl/order-up-mintegral.zip" download>mintegral</a> <a href="dl/order-up-tiktok.zip" download>tiktok</a></td></tr>
@@ -1379,7 +1405,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 18:39 UTC</p>
+    <p class="stamp mono">build 2026-09-04 18:58 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1413,7 +1439,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   var UNITS = {
     'run': ['Gate Crashers',    '3D runner · Three.js · 794.3 KB'],
     'str': ['Blade Rush',       '3D action runner · Three.js · 892.9 KB'],
-    'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
+    'esc': ['Valet Panic',      'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Order Up 3D',      'Match-3 · Three.js · 697.7 KB'],
     'm2':  ['Order Up',         'Match-3 · Canvas 2D · 50.4 KB'],
@@ -1422,7 +1448,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   };
 
   var HREFS = {
-    'run': 'u/gate-crashers/', 'str': 'u/blade-rush/', 'esc': 'u/traffic-escape/', 'td': 'u/tower-rush/',
+    'run': 'u/gate-crashers/', 'str': 'u/blade-rush/', 'esc': 'u/valet-panic/', 'td': 'u/tower-rush/',
     'm3': 'u/order-up-3d/', 'm2': 'u/order-up/', '3d': 'u/merge-dragons-3d/', '2d': 'u/merge-dragons/'
   };
 

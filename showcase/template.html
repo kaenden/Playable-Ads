@@ -352,12 +352,13 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         </div>
       </article>
       <article class="work">
-        <a class="tile" href="%%HREF_ESC%%" data-play="esc" aria-label="Play Traffic Escape">
-          <img src="%%POSTER_ESC%%" alt="Traffic Escape playable, opening screen" loading="lazy" width="500" height="828">
+        <a class="tile branded" href="%%HREF_ESC%%" data-play="esc" aria-label="Play Valet Panic">
+          <img src="%%POSTER_ESC%%" alt="Valet Panic playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="brand"><img src="%%LOGO_ESC%%" alt="" loading="lazy"></span>
           <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
         </a>
         <div class="info">
-          <h3>Traffic Escape</h3>
+          <h3>Valet Panic</h3>
           <p class="genre">Block puzzle &middot; Three.js</p>
           <p class="num">%%SIZE_ESC%%</p>
         </div>
@@ -1021,14 +1022,39 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <summary>
         <span class="sig"></span>
         <span class="t">What the third unit had to solve</span>
-        <span class="s">Traffic Escape</span>
+        <span class="s">Valet Panic</span>
       </summary>
       <div class="body">
         <p>
-          The merge units share a core. Traffic Escape does not — a different mechanic,
+          The merge units share a core. Valet Panic does not — a different mechanic,
           a tilted camera and a scene built out of geometry rather than sprites. Three
           problems had no answer in the existing code.
         </p>
+        <div class="notes">
+          <article>
+            <p class="t">Framing</p><h3>A camera angle is a screen-space decision</h3>
+            <p>The lot used to sit in the middle of the frame at about half width, with
+            sky filling the rest. The cause was the camera: at 38&deg; of yaw a square
+            of side S projects to S&nbsp;&times;&nbsp;(sin&nbsp;38 + cos&nbsp;38) =
+            1.40&nbsp;S across the screen, and since the fit is width-constrained, forty
+            percent of the frame was going to the diagonal. Turning the camera nearly
+            square to the grid gives that back &mdash; and gives something better, since
+            rows and columns now stay rows and columns on screen, which is how a player
+            reads which car is blocking which. Nearly every parking puzzle uses that
+            angle for exactly this reason. A small yaw remains so the scene is not a
+            flat diagram.</p>
+          </article>
+          <article>
+            <p class="t">Feedback</p><h3>Two numbers, and a car that leaves loudly</h3>
+            <p>The chip said CLEAR THE LOT &mdash; a title, not information &mdash; while
+            the two numbers a player actually tracks sat under the bar as small grey
+            text. Both are now in the plate and large: cars left, seconds left, with the
+            count jumping when a car goes. And the exit burst takes the colour of the car
+            that left rather than a generic white puff, so the flash on the board and the
+            drop in the counter read as one event instead of two.</p>
+          </article>
+        </div>
+
         <div class="notes">
           <article>
             <p class="t">Camera</p><h3>Orthographic, so the fit is exact</h3>
@@ -1349,7 +1375,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
   var UNITS = {
     'run': ['Gate Crashers',    '3D runner · Three.js · %%SIZE_RUN%%'],
     'str': ['Blade Rush',       '3D action runner · Three.js · %%SIZE_STR%%'],
-    'esc': ['Traffic Escape',   'Block puzzle · Three.js · %%SIZE_ESC%%'],
+    'esc': ['Valet Panic',      'Block puzzle · Three.js · %%SIZE_ESC%%'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · %%SIZE_TD%%'],
     'm3':  ['Order Up 3D',      'Match-3 · Three.js · %%SIZE_M3%%'],
     'm2':  ['Order Up',         'Match-3 · Canvas 2D · %%SIZE_M2%%'],

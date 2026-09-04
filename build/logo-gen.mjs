@@ -81,6 +81,24 @@ const LOGOS = {
       'composition, isolated on a solid flat pure green background, no scenery, ' +
       'no photo, casual hyper-casual mobile game branding, high contrast, crisp',
   },
+  /**
+   * Perde MACENTA: logonun renkleri sarı, kırmızı, lacivert ve beyaz —
+   * hiçbiri macenta testinde zemine yaklaşmıyor. Yeşil perde olmazdı,
+   * çünkü otopark logosunun içinde yeşil bir ada var.
+   */
+  'escape-3d': {
+    file: 'valet-panic',
+    key: 'magenta',
+    prompt:
+      'mobile game logo wordmark, the words "VALET PANIC" in two stacked lines, ' +
+      'bold chunky rounded 3D beveled letters, glossy finish, thick white outline ' +
+      'and deep navy drop shadow, sunny yellow to warm orange gradient on the ' +
+      'letters, a small cartoon car and a red traffic cone tucked behind the ' +
+      'wordmark, a tiny alarm clock accent, clean flat vector illustration, ' +
+      'sharp edges, centered composition, isolated on a solid flat magenta ' +
+      'background, no scenery, no photo, casual hyper-casual mobile game ' +
+      'branding, high contrast, crisp',
+  },
   'strike-3d': {
     file: 'blade-rush',
     prompt:

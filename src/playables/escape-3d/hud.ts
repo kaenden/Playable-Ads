@@ -88,11 +88,15 @@ export function shade(hex: string, k: number): string {
 
 export class Hud {
   t = 0;
+  /** Kalan araç sayısı değişince kısa bir büyüme. */
+  private carPunch = 0;
+  private lastCars = -1;
 
   constructor(private g: CanvasRenderingContext2D, private L: Layout) {}
 
   draw(s: State, ui: UiState, dt: number, hintPos: [number, number] | null): void {
     this.t += dt;
+    this.carPunch = Math.max(0, this.carPunch - dt * 2.6);
     this.header(s);
     if (hintPos && ui.hint && s.status === 'playing') this.hand(hintPos);
     if (s.status === 'playing') this.ctaButton(this.L.cta, 1 + Math.sin(this.t * 3) * 0.02);
@@ -126,19 +130,65 @@ export class Hud {
     roundRect(g, cx, top, chipW, chipH, chipH / 2);
     g.stroke();
 
-    const md = chipH - 8;
-    const mcx = cx + 4 + md / 2;
+    // TEK ÇİP, İKİ SAYAÇ.
+    //
+    // Önce çipin içinde sadece "CLEAR THE LOT" yazıyordu — bir hedef değil
+    // bir başlık — ve oyuncunun izlemesi gereken iki sayı (kalan araç ve
+    // kalan süre) barın altında minik gri yazılardaydı. Şimdi ikisi de
+    // çipte ve büyük: soldaki KAÇ araç kaldığı, sağdaki KAÇ saniyen olduğu.
+    const md = chipH - 10;
     const mcy = top + chipH / 2;
+    const split = cx + chipW * 0.56;
     g.fillStyle = '#1B2A44';
     g.beginPath();
-    g.arc(mcx, mcy, md / 2, 0, Math.PI * 2);
+    g.arc(cx + 5 + md / 2, mcy, md / 2, 0, Math.PI * 2);
     g.fill();
-    carIcon(g, mcx, mcy, md * 0.74, '#F5B62B');
+    carIcon(g, cx + 5 + md / 2, mcy, md * 0.74, '#F5B62B');
 
+    // Sayı DEĞİŞİNCE büyüyor: araç çıktığında sayacın da tepki vermesi
+    // gerekiyor, yoksa olay sadece tahtada oluyor.
+    if (s.cars.length !== this.lastCars) {
+      this.lastCars = s.cars.length;
+      this.carPunch = 1;
+    }
     g.textAlign = 'left';
     g.textBaseline = 'middle';
-    fitFont(g, COPY.goal, chipW - chipH - 18, '800', chipH * 0.34, FONT);
-    outlinedText(g, COPY.goal, cx + chipH + 4, mcy, chipH * 0.34, '#1B2A44', '#3E5476', 'rgba(255,255,255,.9)');
+    const left = String(s.cars.length);
+    const lfs = chipH * 0.5 * (1 + this.carPunch * 0.24);
+    fitFont(g, left, chipW * 0.2, '900', lfs, FONT);
+    outlinedText(g, left, cx + chipH + 2, mcy, lfs,
+      this.carPunch > 0.02 ? '#0E7A3C' : '#16243C',
+      this.carPunch > 0.02 ? '#31C46F' : '#3E5476', 'rgba(255,255,255,.9)');
+    g.fillStyle = 'rgba(27,42,68,.6)';
+    g.font = '800 ' + Math.round(chipH * 0.2) + 'px ' + FONT;
+    g.fillText(COPY.left, cx + chipH + 2 + lfs * 0.72, mcy + 1);
+
+    g.strokeStyle = 'rgba(38,60,96,.22)';
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(split, top + chipH * 0.22);
+    g.lineTo(split, top + chipH * 0.78);
+    g.stroke();
+
+    const low = s.time <= 5 && s.status === 'playing';
+    const secs = Math.max(0, Math.ceil(s.time));
+    g.textAlign = 'center';
+    const tvx = split + (cx + chipW - split) * 0.42;
+    fitFont(g, String(secs), chipW * 0.2, '900', chipH * 0.5, FONT);
+    outlinedText(g, String(secs), tvx, mcy, chipH * 0.5,
+      low ? '#C21D1D' : '#16243C', low ? '#FF6A4A' : '#3E5476', 'rgba(255,255,255,.9)');
+    g.fillStyle = 'rgba(27,42,68,.6)';
+    g.font = '800 ' + Math.round(chipH * 0.2) + 'px ' + FONT;
+    g.textAlign = 'left';
+    g.fillText(COPY.secs, tvx + chipH * 0.26, mcy + 1);
+
+    // Hedef yazısı çipin ÜSTÜNE, küçük: başlık bilgi değil bağlam.
+    g.textAlign = 'center';
+    g.textBaseline = 'bottom';
+    g.fillStyle = 'rgba(255,255,255,.82)';
+    g.font = '800 ' + Math.round(chipH * 0.24) + 'px ' + FONT;
+    g.fillText(COPY.goal, this.L.w / 2, top - Math.max(2, chipH * 0.08));
+    g.textBaseline = 'middle';
 
     this.timerBar(s, top + chipH + Math.max(9, this.L.h * 0.015));
     this.soundBtn();
@@ -183,16 +233,8 @@ export class Hud {
       g.globalAlpha = 1;
     }
 
-    const fs = Math.round(Math.max(11, hgt * 1.15));
-    g.font = '700 ' + fs + 'px ' + FONT;
-    g.textBaseline = 'top';
-    const ty = y + hgt + Math.max(4, hgt * 0.42);
-    g.textAlign = 'left';
-    g.fillStyle = 'rgba(27,42,68,.62)';
-    g.fillText(COPY.left + '  ' + s.cars.length, x, ty);
-    g.textAlign = 'right';
-    g.fillStyle = low ? '#D92F2F' : 'rgba(27,42,68,.62)';
-    g.fillText(s.time.toFixed(1) + 's', x + barW, ty);
+    // Barın altındaki yazılar KALDIRILDI: iki sayı da artık çipin içinde,
+    // büyük. Bar sadece kalan sürenin görsel karşılığı.
   }
 
   private soundBtn(): void {

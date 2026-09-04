@@ -118,6 +118,7 @@ const logos = {
   // Match-3 çifti TEK logoyu paylaşıyor: aynı oyunun iki çizicisi.
   M3: await logo('order-up'),
   M2: await logo('order-up'),
+  ESC: await logo('valet-panic'),
 };
 
 // Kunye tek kaynaktan: showcase/identity.json. Artifact calisma kopyasi
@@ -157,6 +158,7 @@ const vars = {
   '%%LOGO_STR%%': logos.STR ? logos.STR.uri : '',
   '%%LOGO_M3%%': logos.M3 ? logos.M3.uri : '',
   '%%LOGO_M2%%': logos.M2 ? logos.M2.uri : '',
+  '%%LOGO_ESC%%': logos.ESC ? logos.ESC.uri : '',
   '%%POSTER_RUN%%': posters.RUN.uri,
   '%%POSTER_STR%%': posters.STR.uri,
   '%%POSTER_ESC%%': posters.ESC.uri,

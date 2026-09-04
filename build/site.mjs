@@ -57,7 +57,7 @@ const pctStr = (n) => {
 const UNITS = [
   { key: 'run', slug: 'gate-crashers', was: ['crowd-rush'], dist: 'run-3d', poster: 'run-3d', name: 'Gate Crashers', genre: '3D runner', engine: 'Three.js' },
   { key: 'str', slug: 'blade-rush', dist: 'strike-3d', poster: 'strike-3d', name: 'Blade Rush', genre: '3D action runner', engine: 'Three.js' },
-  { key: 'esc', slug: 'traffic-escape', dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Traffic Escape', genre: 'Block puzzle', engine: 'Three.js' },
+  { key: 'esc', slug: 'valet-panic', was: ['traffic-escape'], dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Valet Panic', genre: 'Block puzzle', engine: 'Three.js' },
   { key: 'td', slug: 'tower-rush', dist: 'defense-2d', poster: 'defense-2d', name: 'Tower Rush', genre: 'Tower defense', engine: 'Canvas 2D' },
   { key: 'm3', slug: 'order-up-3d', was: ['sweet-match-3d'], logo: 'order-up', dist: 'match-3d', poster: 'match-3d', name: 'Order Up 3D', genre: 'Match-3', engine: 'Three.js' },
   { key: 'm2', slug: 'order-up', was: ['sweet-match'], dist: 'match-2d', poster: 'match-2d', name: 'Order Up', genre: 'Match-3', engine: 'Canvas 2D' },

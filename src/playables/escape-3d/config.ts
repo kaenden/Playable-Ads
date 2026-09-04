@@ -28,7 +28,7 @@ export const LOT = {
 };
 
 export const COPY = {
-  title: 'Traffic Escape — Playable',
+  title: 'Valet Panic — Playable',
   goal: 'CLEAR THE LOT',
   tutorial: 'TAP A CAR TO DRIVE OUT',
   cta: 'PLAY NOW',
@@ -36,8 +36,13 @@ export const COPY = {
   winSub: 'with',
   lose: "TIME'S UP!",
   loseSub: 'The lot is still jammed',
-  brand: 'TRAFFIC ESCAPE',
-  tagline: 'Tap. Unjam. Escape.',
+  // ADI OYUNCUNUN ROLÜNDEN GELİYOR. "Traffic Escape" mağazada onlarca
+  // benzeriyle aynı rafta; oysa burada oyuncu trafikten kaçmıyor, tıkalı
+  // bir otoparkı saat işlerken boşaltıyor. Yani vale. Geri sayım da o
+  // zaman bir oyun kuralı olmaktan çıkıp işin kendisi oluyor.
+  brand: 'VALET PANIC',
+  tagline: 'Clear the lot before the clock.',
   again: 'TRY AGAIN',
-  left: 'CARS LEFT',
+  left: 'LEFT',
+  secs: 'SEC',
 };

@@ -51,6 +51,9 @@ const PICK = {
   // Order Up YEŞİL perdede üretildi: harfleri pembe ve altın, yani macenta
   // perde logonun yarısını silerdi. Bkz. build/logo-gen.mjs.
   'order-up': { pick: +argS('--order', 4), key: 'green' },
+  // Valet Panic macentada güvende: sarı -144, lacivert -15, kırmızı koni
+  // -10, beyaz 0. Yeşil perde olmazdı, logoda yeşil ada var.
+  'valet-panic': { pick: +argS('--valet', 1), key: 'magenta' },
 };
 
 /**

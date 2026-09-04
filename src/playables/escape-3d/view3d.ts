@@ -43,8 +43,22 @@ import { modelFor } from './models';
 import { EscapeView } from './view';
 
 /** Kamera yönü — klasik 3/4 izometrik. */
-const YAW = (38 * Math.PI) / 180;
-const PITCH = (43 * Math.PI) / 180;
+/**
+ * KAMERA AÇISI EKRANI DA BELİRLİYOR.
+ *
+ * İlk kurulum 38 derece yaw ile klasik izometrikti ve güzeldi, ama pahalıydı:
+ * kenarı S olan bir kare ekranda S·(sin38 + cos38) = 1.40·S genişlik
+ * kaplıyor. Kamera otoparkı ekrana genişlikten sığdırdığı için otopark
+ * kadrajın yarısında kalıyor, geri kalanı boş gökyüzü oluyordu.
+ *
+ * Ekseneceye yakın bir yaw hem o %40'ı geri veriyor hem de bulmacayı
+ * okunur yapıyor: satır ve sütunlar ekranda da satır ve sütun kalıyor,
+ * yani "hangi araç kimi kilitliyor" bakışla çözülüyor. Park bulmacalarının
+ * neredeyse hepsi bu yüzden eksene hizalı bakar. Küçük bir yaw kalıyor,
+ * sahne tamamen düz bir şema gibi durmasın diye.
+ */
+const YAW = (9 * Math.PI) / 180;
+const PITCH = (50 * Math.PI) / 180;
 const DIR = new Vector3(
   Math.sin(YAW) * Math.cos(PITCH),
   Math.sin(PITCH),
@@ -100,7 +114,7 @@ export class View3D implements EscapeView {
     document.body.appendChild(hud);
     this.cv = hud;
     this.hudCtx = hud.getContext('2d') as CanvasRenderingContext2D;
-    document.body.style.background = '#BFE6FF';
+    document.body.style.background = '#0F72D2';
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true });
     this.renderer.shadowMap.enabled = true;
@@ -121,9 +135,9 @@ export class View3D implements EscapeView {
   // ------------------------------------------------------------------ sahne
 
   private lights(): void {
-    this.scene.add(new AmbientLight(0xbcd6ff, 0.62));
+    this.scene.add(new AmbientLight(0xbcd6ff, 0.54));
 
-    const key = new DirectionalLight(0xfff4e0, 1.45);
+    const key = new DirectionalLight(0xfff4e0, 1.62);
     key.position.set(LOT.cols * 0.5 - 5, 9, LOT.rows * 0.5 - 3.5);
     key.target.position.set(LOT.cols / 2, 0, LOT.rows / 2);
     key.castShadow = true;
@@ -154,7 +168,7 @@ export class View3D implements EscapeView {
     // Çim taban
     const grass = new Mesh(
       roundedBox(LOT.cols + 2.3, LOT.rows + 2.3, 0.62, 0.6, 0.12),
-      new MeshLambertMaterial({ color: 0x63c168 })
+      new MeshLambertMaterial({ color: 0x54cc5f })
     );
     grass.position.set(cx, -0.62, cz);
     grass.receiveShadow = true;
@@ -163,7 +177,7 @@ export class View3D implements EscapeView {
     // Toprak katman — adaya kalınlık veriyor
     const soil = new Mesh(
       roundedBox(LOT.cols + 2.0, LOT.rows + 2.0, 0.9, 0.55, 0.1),
-      new MeshLambertMaterial({ color: 0x9a6b47 })
+      new MeshLambertMaterial({ color: 0xa9713f })
     );
     soil.position.set(cx, -1.5, cz);
     this.world.add(soil);
@@ -171,7 +185,9 @@ export class View3D implements EscapeView {
     // Asfalt
     const deck = new Mesh(
       roundedBox(LOT.cols + 0.5, LOT.rows + 0.5, 0.09, 0.28, 0.03),
-      new MeshLambertMaterial({ color: 0x394051 })
+      // Asfalt biraz daha koyu ve mavimsi: araçların rengi onun üstünde
+      // en yüksek kontrastı burada buluyor.
+      new MeshLambertMaterial({ color: 0x2F3648 })
     );
     deck.position.set(cx, 0, cz);
     deck.receiveShadow = true;
@@ -232,9 +248,12 @@ export class View3D implements EscapeView {
     // Kamera bu kutuyu ekrandaki `board` dikdörtgenine oturtacak.
     // Bulutlar KASITLI olarak kutunun dışında: onları da sığdırmak sahneyi
     // gereksiz küçültürdü. Kadraja girip çıkmaları serbest.
+    // Kutu DARALDI (1.35 -> 1.0). Kamera sahneyi genişlikten sığdırıyor,
+    // yani çimen payı ne kadar genişse otopark o kadar küçülüyordu; oysa
+    // oyuncunun bakması gereken şey asfaltın kendisi.
     this.bounds.set(
-      new Vector3(-1.35, -2.1, -1.35),
-      new Vector3(LOT.cols + 1.35, 1.5, LOT.rows + 1.35)
+      new Vector3(-1.0, -2.0, -1.0),
+      new Vector3(LOT.cols + 1.0, 1.5, LOT.rows + 1.0)
     );
   }
 
@@ -359,8 +378,17 @@ export class View3D implements EscapeView {
     if (!slot) return;
     delete this.slots[car.id];
     this.leaving.push({ car, g: slot.g, t: 0 });
+    // Patlama ARACIN KENDİ RENGİNDE. Beyaz bir puf "bir şey oldu" diyordu;
+    // renkli olanı "O araç çıktı" diyor, ve sayaçtaki düşüşle aynı rengi
+    // paylaştığı için ikisi tek olay olarak okunuyor.
     const p = this.carScreenPos(car);
-    if (p) this.fx.burst(p[0], p[1], Math.max(22, this.L.w * 0.05), 2, '#ffffff');
+    if (p) {
+      this.fx.burst(p[0], p[1], Math.max(26, this.L.w * 0.062), 4, car.color);
+      // Işın SICAK BEYAZ ve kalın: sahne zaten aydınlık, soğuk beyaz ince
+      // bir şerit asfaltın üstünde kayboluyordu.
+      this.fx.beam(p[0], p[1], this.L.w * 0.55, this.L.w * 0.075, '#FFF3C8');
+      this.fx.shake = Math.max(this.fx.shake, this.L.h * 0.004);
+    }
   }
 
   bump(car: Car, blocker: Car): void {
@@ -494,9 +522,12 @@ function skyTexture(): CanvasTexture {
   cv.height = 256;
   const g = cv.getContext('2d') as CanvasRenderingContext2D;
   const grd = g.createLinearGradient(0, 0, 0, 256);
-  grd.addColorStop(0, '#4FA8E8');
-  grd.addColorStop(0.55, '#A8DCFA');
-  grd.addColorStop(1, '#F6E7C2');
+  // Gökyüzü DAHA DOYGUN. İlki soluk mavi-krem bir geçişti ve ada onun
+  // üstünde yüzen soluk bir lekeydi; ekranın dörtte üçü gökyüzü olduğu
+  // için karenin tonunu tek başına o belirliyor.
+  grd.addColorStop(0, '#0F72D2');
+  grd.addColorStop(0.5, '#5FBCF0');
+  grd.addColorStop(1, '#CFEFFF');
   g.fillStyle = grd;
   g.fillRect(0, 0, 4, 256);
   return new CanvasTexture(cv);
