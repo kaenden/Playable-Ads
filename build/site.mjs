@@ -59,8 +59,8 @@ const UNITS = [
   { key: 'str', slug: 'blade-rush', dist: 'strike-3d', poster: 'strike-3d', name: 'Blade Rush', genre: '3D action runner', engine: 'Three.js' },
   { key: 'esc', slug: 'traffic-escape', dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Traffic Escape', genre: 'Block puzzle', engine: 'Three.js' },
   { key: 'td', slug: 'tower-rush', dist: 'defense-2d', poster: 'defense-2d', name: 'Tower Rush', genre: 'Tower defense', engine: 'Canvas 2D' },
-  { key: 'm3', slug: 'sweet-match-3d', dist: 'match-3d', poster: 'match-3d', name: 'Sweet Match 3D', genre: 'Match-3', engine: 'Three.js' },
-  { key: 'm2', slug: 'sweet-match', dist: 'match-2d', poster: 'match-2d', name: 'Sweet Match', genre: 'Match-3', engine: 'Canvas 2D' },
+  { key: 'm3', slug: 'order-up-3d', was: ['sweet-match-3d'], dist: 'match-3d', poster: 'match-3d', name: 'Order Up 3D', genre: 'Match-3', engine: 'Three.js' },
+  { key: 'm2', slug: 'order-up', was: ['sweet-match'], dist: 'match-2d', poster: 'match-2d', name: 'Order Up', genre: 'Match-3', engine: 'Canvas 2D' },
   { key: '3d', slug: 'merge-dragons-3d', dist: 'merge-3d-atlas', poster: 'merge-3d', name: 'Merge Dragons 3D', genre: 'Merge', engine: 'Three.js' },
   { key: '2d', slug: 'merge-dragons', dist: 'merge-2d-atlas', poster: 'merge-2d', name: 'Merge Dragons', genre: 'Merge', engine: 'Canvas 2D' },
 ];

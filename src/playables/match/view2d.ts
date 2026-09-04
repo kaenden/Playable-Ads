@@ -163,7 +163,7 @@ export class View2D {
     // ekranın durgun görünmemesi.
     for (let i = 0; i < M.cols * M.rows; i++) {
       if (s.cells[i] < 0) continue;
-      const ph = (this.t * 0.9 + i * 0.37) % 3;
+      const ph = (this.t * 0.62 + i * 0.41) % 5.2;
       if (ph > 0.55) continue;
       const k = Math.sin((ph / 0.55) * Math.PI);
       const [sx2, sy2] = L.center(i % M.cols, (i / M.cols) | 0);

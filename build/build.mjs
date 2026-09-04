@@ -53,12 +53,12 @@ const PLAYABLES = {
   // modelleri, 2D sürüm o modellerin offline render'ı olan sprite'ları.
   'match-2d': {
     entry: 'playables/match/main2d.ts',
-    title: 'Sweet Match — Playable',
+    title: 'Order Up — Playable',
     atlas: 'out-2d-food',
   },
   'match-3d': {
     entry: 'playables/match/main3d.ts',
-    title: 'Sweet Match 3D — Playable',
+    title: 'Order Up 3D — Playable',
     // HUD ikonu 2D canvas'ta çiziliyor, o yüzden 3D sürüm de küçük atlası
     // gömüyor (11 KB). Modeli HUD için ayrıca render etmek pahalı olurdu.
     atlas: 'out-2d-food',

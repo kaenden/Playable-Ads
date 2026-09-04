@@ -40,7 +40,12 @@ export const BACKDROP = [
   'radial-gradient(circle at 6% 54%, rgba(255,255,255,.5) 0 3px, transparent 4px)',
   'radial-gradient(circle at 78% 94%, rgba(255,224,130,.6) 0 4px, transparent 5px)',
   'radial-gradient(circle at 40% 70%, rgba(120,240,255,.5) 0 3px, transparent 4px)',
-  'radial-gradient(126% 86% at 50% 20%, #FF5FC4 0%, #C42FA8 26%, #7A1E9E 54%, #3E1070 80%, #21063E 100%)',
+  // GRADYAN İKİ UÇTA DA PEMBE. Tek yönlü geçişte ekranın alt yarısı koyu
+  // bir bloğa dönüşüyordu ve CTA'nın oturduğu şerit ölü kalıyordu. Aynı
+  // pembe aşağıda da belirince kare bir bütün oluyor, tahta da ortada
+  // en koyu yer olarak kalmaya devam ediyor.
+  'radial-gradient(120% 55% at 50% 112%, #E24FB4 0%, #8A2394 34%, rgba(62,16,112,0) 72%)',
+  'radial-gradient(126% 86% at 50% 16%, #FF5FC4 0%, #C42FA8 26%, #7A1E9E 54%, #3E1070 82%, #2A0846 100%)',
 ].join(',');
 
 export const LOOK = {
@@ -234,10 +239,13 @@ export function glossSweep(
   h: number,
   t: number
 ): void {
-  const period = 4.6;
+  // Daha SEYREK ve daha ince. İlk ayarda dört buçuk saniyede bir geçiyordu
+  // ve pırıltılarla birlikte ekranda sürekli bir şeyler parlıyordu;
+  // kullanıcının "ışık patlamaları çok fazla" dediği yer burasıydı.
+  const period = 7.5;
   const p = (t % period) / period;
-  if (p > 0.34) return;
-  const k = p / 0.34;
+  if (p > 0.22) return;
+  const k = p / 0.22;
   const cx = x - w * 0.4 + k * w * 1.8;
   g.save();
   g.beginPath();
@@ -246,7 +254,7 @@ export function glossSweep(
   g.globalCompositeOperation = 'lighter';
   const grd = g.createLinearGradient(cx - w * 0.22, y, cx + w * 0.22, y + h);
   grd.addColorStop(0, 'rgba(255,255,255,0)');
-  grd.addColorStop(0.5, 'rgba(255,236,255,.16)');
+  grd.addColorStop(0.5, 'rgba(255,236,255,.1)');
   grd.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = grd;
   g.fillRect(x, y, w, h);

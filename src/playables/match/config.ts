@@ -95,18 +95,25 @@ export interface Blast {
 }
 
 export const COPY = {
-  title: 'Sweet Match — Playable',
+  title: 'Order Up — Playable',
   goal: 'COLLECT',
   order: 'ORDER',
   nextOrder: 'NEW ORDER!',
-  tutorial: 'SWAP TO MATCH 3',
+  // "SWAP TO MATCH 3" bir cümle değil, bir kural özetiydi ve öyle de
+  // okunuyordu. Öğreticinin işi kuralı anlatmak değil, İLK HAREKETİ
+  // söylemek: parmağın ne yapacağı.
+  tutorial: 'DRAG TO SWAP',
   cta: 'PLAY NOW',
   win: 'ORDER COMPLETE!',
   winSub: 'moves to spare',
   lose: 'OUT OF MOVES!',
   loseSub: 'So close to the order',
-  brand: 'SWEET MATCH',
-  tagline: 'Swap. Match. Serve.',
+  // ADI OYUNUN KENDİSİNDEN GELİYOR. "Sweet Match" tür adıydı, oyunun adı
+  // değil; ve mağazada yüzlerce "... Match" var. Bu birimde oyuncu SİPARİŞ
+  // dolduruyor — iki sipariş, kapanışta "ORDER COMPLETE!". Mutfakta tabak
+  // hazır olunca bağırılan söz de bu.
+  brand: 'ORDER UP!',
+  tagline: 'Fill the order. Serve it hot.',
   again: 'TRY AGAIN',
   moves: 'MOVES',
 };

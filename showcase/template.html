@@ -389,23 +389,23 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           <div class="pairtop"><h2>Match-3</h2><span class="delta">3D is %%RATIO_M%% the size</span></div>
           <div class="two">
           <article class="work">
-            <a class="tile" href="%%HREF_M3%%" data-play="m3" aria-label="Play Sweet Match 3D">
-              <img src="%%POSTER_M3%%" alt="Sweet Match 3D playable, opening screen" loading="lazy" width="500" height="828">
+            <a class="tile" href="%%HREF_M3%%" data-play="m3" aria-label="Play Order Up 3D">
+              <img src="%%POSTER_M3%%" alt="Order Up 3D playable, opening screen" loading="lazy" width="500" height="828">
               <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
             </a>
             <div class="info">
-              <h3>Sweet Match 3D</h3>
+              <h3>Order Up 3D</h3>
               <p class="genre">Three.js</p>
               <p class="num">%%SIZE_M3%%</p>
             </div>
           </article>
           <article class="work">
-            <a class="tile" href="%%HREF_M2%%" data-play="m2" aria-label="Play Sweet Match">
-              <img src="%%POSTER_M2%%" alt="Sweet Match playable, opening screen" loading="lazy" width="500" height="828">
+            <a class="tile" href="%%HREF_M2%%" data-play="m2" aria-label="Play Order Up">
+              <img src="%%POSTER_M2%%" alt="Order Up playable, opening screen" loading="lazy" width="500" height="828">
               <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
             </a>
             <div class="info">
-              <h3>Sweet Match</h3>
+              <h3>Order Up</h3>
               <p class="genre">Canvas 2D</p>
               <p class="num">%%SIZE_M2%%</p>
             </div>
@@ -795,6 +795,28 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             One catch cost half an hour &mdash; a hand-built canvas texture defaults to
             linear colour in three.js, so the near-black tray came back mid-purple until
             it was told it was already sRGB.</p>
+          </article>
+          <article>
+            <p class="t">Art</p><h3>Recolouring a kit that has no colours</h3>
+            <p>The pieces read as one brown mass &mdash; a cupcake whose frosting was
+            nearly black, a doughnut the same tan as the burger bun. Kenney's food
+            models carry no colour of their own: all five sample a single 512px
+            <em>palette chart</em>, and every surface's UV points at one swatch on it.
+            So "the frosting is too dark" is not a modelling problem, it is a question of
+            which square that triangle looks at.</p>
+            <p>Two swatches got repainted &mdash; the frosting to a light caramel, the
+            dark browns to warm chocolate. The doughnut was harder: it shares its
+            swatch with the burger bun, so turning it pink would have turned the bun
+            pink too. The fix was to free the square rather than fight over it. The
+            burger's triangles were moved one column across, to the lighter tan that
+            suits a bun anyway, and the vacated column became strawberry glaze. Five
+            pieces, five colour families now.</p>
+            <p>All of it happens before the build, in the palette image and the GLB's
+            UVs, which is what keeps the pair honest: the 2D sprites are re-rendered
+            from the same recoloured models, so both units still ship identical art.
+            The first attempt at the frosting was mint, and it was worse &mdash; a
+            green dome with a red cherry on top is indistinguishable from the cherry
+            piece at a glance, which is the one mistake a match-3 cannot make.</p>
           </article>
           <article>
             <p class="t">Light</p><h3>A glow that is only pretending</h3>
@@ -1320,8 +1342,8 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     'str': ['Blade Rush',       '3D action runner · Three.js · %%SIZE_STR%%'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · %%SIZE_ESC%%'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · %%SIZE_TD%%'],
-    'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · %%SIZE_M3%%'],
-    'm2':  ['Sweet Match',      'Match-3 · Canvas 2D · %%SIZE_M2%%'],
+    'm3':  ['Order Up 3D',      'Match-3 · Three.js · %%SIZE_M3%%'],
+    'm2':  ['Order Up',         'Match-3 · Canvas 2D · %%SIZE_M2%%'],
     '3d':  ['Merge Dragons 3D', 'Merge · Three.js · %%SIZE_3D%%'],
     '2d':  ['Merge Dragons',    'Merge · Canvas 2D · %%SIZE_2D%%']
   };

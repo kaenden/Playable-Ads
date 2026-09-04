@@ -59,6 +59,28 @@ const LOGOS = {
       'solid flat magenta background, no scenery, no photo, casual hyper-casual ' +
       'mobile game branding, high contrast, crisp',
   },
+  /**
+   * Match-3 çifti tek logoyu paylaşıyor: aynı oyunun iki çizicisi.
+   *
+   * PERDE BURADA YEŞİL, MACENTA DEĞİL. Anahtarlama ölçütü "macentalık"
+   * (kırmızı ve mavi yüksek, yeşil düşük) ve bu logonun kendi harfleri
+   * pembe — yani macenta perdede logonun yarısı silinirdi. Yeşil perde
+   * tam tersini ölçüyor ve pembe, altın, beyazın hepsi güvende kalıyor.
+   * Prompt bu yüzden "yeşil öge yok" diyor.
+   */
+  'match-3d': {
+    file: 'order-up',
+    key: 'green',
+    prompt:
+      'mobile game logo wordmark, the words "ORDER UP" in two stacked lines, ' +
+      'bold chunky rounded 3D beveled letters, glossy candy finish, thick white ' +
+      'outline and deep raspberry drop shadow, hot pink to golden yellow gradient ' +
+      'on the letters, a pink frosted donut and a cupcake with a cherry tucked ' +
+      'behind the wordmark, colourful sprinkles scattered around, no green ' +
+      'elements, clean flat vector illustration, sharp edges, centered ' +
+      'composition, isolated on a solid flat pure green background, no scenery, ' +
+      'no photo, casual hyper-casual mobile game branding, high contrast, crisp',
+  },
   'strike-3d': {
     file: 'blade-rush',
     prompt:

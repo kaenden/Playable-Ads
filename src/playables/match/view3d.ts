@@ -318,8 +318,16 @@ export class View3D {
       if (this.glows) {
         // Hale KAMERAYA bakıyor: yere yatık bir ışık havuzu tepside
         // eziliyor ve "parlama" değil "leke" okunuyor.
+        // HALE MODELİN ARKASINA ÇEKİLİYOR.
+        //
+        // Kameraya bakan kare taşın TAM ÜSTÜNDEYKEN modelin içinden
+        // geçiyordu: karenin bir yarısı modelin önünde, yarısı arkasında
+        // kalıyor ve taş ikiye bölünmüş gibi iki farklı tonda görünüyordu.
+        // Muzda ve çörekte en belirgindi. Kamera yönünde geriye itmek
+        // kesişmeyi tamamen bitiriyor; hale artık sadece arkadan taşan
+        // bir ışık.
         const gk = 1.5 * v.scale * (v.alpha > 0.05 ? 1 : 0);
-        this.gp.set(v.col + 0.5, 0.42 * v.scale, v.row + 0.5);
+        this.gp.set(v.col + 0.5, 0.42 * v.scale, v.row + 0.5).addScaledVector(DIR, -1.1);
         this.gs.set(gk, gk, gk);
         this.sm.compose(this.gp, this.gq, this.gs);
         this.glows.setMatrixAt(i, this.sm);
@@ -376,7 +384,7 @@ export class View3D {
     const pad2 = L.cell * 0.14;
     for (let i = 0; i < M.cols * M.rows; i++) {
       if (s.cells[i] === undefined || s.cells[i] < 0) continue;
-      const ph = (this.t * 0.9 + i * 0.37) % 3;
+      const ph = (this.t * 0.62 + i * 0.41) % 5.2;
       if (ph > 0.55) continue;
       const k = Math.sin((ph / 0.55) * Math.PI);
       const [px2, py2] = L.center(i % M.cols, (i / M.cols) | 0);
