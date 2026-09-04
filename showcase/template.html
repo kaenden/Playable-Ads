@@ -535,12 +535,12 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       </summary>
       <div class="body">
         <p>
-          The two runners share a corridor, a camera, a light rig, a character, an
-          asset pack and a build. What differs is the mechanic. One grows a crowd
-          through gates and pays for mistakes in runners. The other runs two counters
-          at once: gates change how many men you have, and breakable targets change
-          what each thrown blade is worth. Finished packages: %%SIZE_RUN%% and
-          %%SIZE_STR%%.
+          The two runners share a corridor, a camera, a character, an asset pack and
+          a build. What differs is the mechanic &mdash; and the hour of the day. One
+          grows a crowd through a warm green meadow and pays for mistakes in runners.
+          The other runs two counters across a cold snow field: gates change how many
+          men you have, and breakable targets change what each thrown blade is worth.
+          Finished packages: %%SIZE_RUN%% and %%SIZE_STR%%.
         </p>
         <div class="ledger">
           <div><div class="n good">%%DELTA_RS%%</div><div class="c">The whole size difference between two different games</div></div>
@@ -558,12 +558,12 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="notes">
           <article>
             <p class="t">Reuse</p><h3>What survived, and what did not</h3>
-            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor, the
-            scenery merge and the instanced character rig all carried over untouched.
-            Rewritten: the track definition, the game logic, the enemy and projectile
-            systems, and the parts of the view that draw them. The split fell almost
-            exactly where the file boundaries already were, which is the only real
-            argument for having drawn them there.</p>
+            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor geometry,
+            the scenery merge and the instanced character rig all carried over
+            untouched. Rewritten: the track definition, the game logic, the enemy and
+            projectile systems, the parts of the view that draw them, and the colour
+            grade. The split fell almost exactly where the file boundaries already
+            were, which is the only real argument for having drawn them there.</p>
           </article>
           <article>
             <p class="t">Design</p><h3>Two counters, because they buy different things</h3>
@@ -590,6 +590,20 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             readable if the figure carrying it is not behind another one.</p>
           </article>
           <article>
+            <p class="t">Identity</p><h3>A viewer knows a game by its colour</h3>
+            <p>Sharing the pack is the point; sharing the <em>look</em> was a mistake.
+            With the same green meadow, the same sky and the same cream-and-orange
+            interface, the two units read as one game with a bug in it &mdash; nobody
+            identifies a title by its mechanic in the first second, they identify it
+            by its palette. So this one moved to a cold snow field: blue shadowed
+            ground, a bright packed trail, a cool key with a warm rim against it, and
+            a steel-and-crimson interface instead of cream and orange. Not one new
+            asset &mdash; different materials, a different sky gradient, a different
+            light rig, and a narrower pick from the same prop list, because flowers
+            and mushrooms do not grow in snow. This is the re-skin job a studio
+            actually asks for, done in the file where it belongs.</p>
+          </article>
+          <article>
             <p class="t">Feedback</p><h3>The upgrade has to be visible in the air</h3>
             <p>The thrown object started as one yellow box, and the whole upgrade
             arrived as a digit changing in the corner. So the weapon became four:
@@ -598,8 +612,11 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             boxes, and that one list draws twice &mdash; as the instanced mesh flying
             down the corridor and as the flat icon on the card and above the target
             that grants it. The shape you are promised is the shape you get, because
-            there is only one description of it. Cost: one draw call per tier in
-            flight, and nothing at all in the package.</p>
+            there is only one description of it. The runners carry the current one
+            too: it hangs off the arm part's world matrix, so it swings with the run
+            without a line of animation &mdash; damped, because at full swing a great
+            axe scythes through its own owner. Cost: one draw call per tier in flight,
+            one for the crew's hands, and nothing at all in the package.</p>
           </article>
           <article>
             <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>

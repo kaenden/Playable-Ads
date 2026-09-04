@@ -353,7 +353,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="info">
           <h3>Blade Rush</h3>
           <p class="genre">3D action runner &middot; Three.js</p>
-          <p class="num">808.9 KB</p>
+          <p class="num">810.2 KB</p>
         </div>
       </article>
       <article class="work">
@@ -557,20 +557,20 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     <details>
       <summary>
         <span class="sig"></span>
-        <span class="t">Two games, 7.9 KB apart</span>
+        <span class="t">Two games, 9.2 KB apart</span>
         <span class="s">Crowd Rush &middot; Blade Rush</span>
       </summary>
       <div class="body">
         <p>
-          The two runners share a corridor, a camera, a light rig, a character, an
-          asset pack and a build. What differs is the mechanic. One grows a crowd
-          through gates and pays for mistakes in runners. The other runs two counters
-          at once: gates change how many men you have, and breakable targets change
-          what each thrown blade is worth. Finished packages: 801.0 KB and
-          808.9 KB.
+          The two runners share a corridor, a camera, a character, an asset pack and
+          a build. What differs is the mechanic &mdash; and the hour of the day. One
+          grows a crowd through a warm green meadow and pays for mistakes in runners.
+          The other runs two counters across a cold snow field: gates change how many
+          men you have, and breakable targets change what each thrown blade is worth.
+          Finished packages: 801.0 KB and 810.2 KB.
         </p>
         <div class="ledger">
-          <div><div class="n good">7.9 KB</div><div class="c">The whole size difference between two different games</div></div>
+          <div><div class="n good">9.2 KB</div><div class="c">The whole size difference between two different games</div></div>
           <div><div class="n">0</div><div class="c">New models. The enemies are the player's own character, tinted; the weapons are geometry drawn in code</div></div>
           <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
         </div>
@@ -585,12 +585,12 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="notes">
           <article>
             <p class="t">Reuse</p><h3>What survived, and what did not</h3>
-            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor, the
-            scenery merge and the instanced character rig all carried over untouched.
-            Rewritten: the track definition, the game logic, the enemy and projectile
-            systems, and the parts of the view that draw them. The split fell almost
-            exactly where the file boundaries already were, which is the only real
-            argument for having drawn them there.</p>
+            <p>State, layout, HUD, input, audio, ad lifecycle, the corridor geometry,
+            the scenery merge and the instanced character rig all carried over
+            untouched. Rewritten: the track definition, the game logic, the enemy and
+            projectile systems, the parts of the view that draw them, and the colour
+            grade. The split fell almost exactly where the file boundaries already
+            were, which is the only real argument for having drawn them there.</p>
           </article>
           <article>
             <p class="t">Design</p><h3>Two counters, because they buy different things</h3>
@@ -617,6 +617,20 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             readable if the figure carrying it is not behind another one.</p>
           </article>
           <article>
+            <p class="t">Identity</p><h3>A viewer knows a game by its colour</h3>
+            <p>Sharing the pack is the point; sharing the <em>look</em> was a mistake.
+            With the same green meadow, the same sky and the same cream-and-orange
+            interface, the two units read as one game with a bug in it &mdash; nobody
+            identifies a title by its mechanic in the first second, they identify it
+            by its palette. So this one moved to a cold snow field: blue shadowed
+            ground, a bright packed trail, a cool key with a warm rim against it, and
+            a steel-and-crimson interface instead of cream and orange. Not one new
+            asset &mdash; different materials, a different sky gradient, a different
+            light rig, and a narrower pick from the same prop list, because flowers
+            and mushrooms do not grow in snow. This is the re-skin job a studio
+            actually asks for, done in the file where it belongs.</p>
+          </article>
+          <article>
             <p class="t">Feedback</p><h3>The upgrade has to be visible in the air</h3>
             <p>The thrown object started as one yellow box, and the whole upgrade
             arrived as a digit changing in the corner. So the weapon became four:
@@ -625,8 +639,11 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             boxes, and that one list draws twice &mdash; as the instanced mesh flying
             down the corridor and as the flat icon on the card and above the target
             that grants it. The shape you are promised is the shape you get, because
-            there is only one description of it. Cost: one draw call per tier in
-            flight, and nothing at all in the package.</p>
+            there is only one description of it. The runners carry the current one
+            too: it hangs off the arm part's world matrix, so it swings with the run
+            without a line of animation &mdash; damped, because at full swing a great
+            axe scythes through its own owner. Cost: one draw call per tier in flight,
+            one for the crew's hands, and nothing at all in the package.</p>
           </article>
           <article>
             <p class="t">Balance</p><h3>Two knobs that had to be separated</h3>
@@ -1107,7 +1124,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Blade Rush</td><td class="num">808.9 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">810.2 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1137,7 +1154,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-03 23:50 UTC</p>
+    <p class="stamp mono">build 2026-09-04 07:37 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1170,7 +1187,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
-    'str': ['Blade Rush',       '3D action runner · Three.js · 808.9 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 810.2 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],

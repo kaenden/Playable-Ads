@@ -1,6 +1,12 @@
 /**
  * HUD — 3D sahnenin ÜSTÜNDEKİ 2D katman.
  *
+ * ARAYÜZ DE BU OYUNA AİT. Crowd Rush'tan devralındığında krem çipler ve
+ * turuncu bir CTA taşıyordu; sahne soğuk kara taşınınca arayüz hâlâ öteki
+ * oyunun arayüzüydü ve ikisi ekranda aynı ürün gibi duruyordu. Bu birimin
+ * kendi düzeni: koyu çelik levhalar, buz mavisi ilerleme, kırmızı CTA.
+ * Aynı kod, aynı yerleşim, farklı kimlik.
+ *
  * Projedeki alışkanlık: arayüz hiçbir zaman 3D'de çizilmiyor. Yazı, buton ve
  * efektler ekran çözünürlüğünde 2D canvas'ta duruyor; hem her cihazda net
  * çıkıyor hem de WebGL'siz yedek görünüm aynı HUD'u paylaşabiliyor.
@@ -93,12 +99,12 @@ export class Hud {
     const cx = (L.w - chipW) / 2;
 
     g.save();
-    g.shadowColor = 'rgba(80,40,10,.3)';
+    g.shadowColor = 'rgba(10,24,44,.34)';
     g.shadowBlur = chipH * 0.32;
     g.shadowOffsetY = chipH * 0.1;
     const plate = g.createLinearGradient(0, top, 0, top + chipH);
-    plate.addColorStop(0, 'rgba(255,255,255,.96)');
-    plate.addColorStop(1, 'rgba(255,238,214,.96)');
+    plate.addColorStop(0, 'rgba(30,42,60,.92)');
+    plate.addColorStop(1, 'rgba(18,26,40,.92)');
     g.fillStyle = plate;
     roundRect(g, cx, top, chipW, chipH, chipH / 2);
     g.fill();
@@ -106,7 +112,7 @@ export class Hud {
 
     // Adam ikonu — kalabalığın birimi. Yazıyla "crowd" demek yerine
     // GÖSTERMEK dil bilmeyen izleyicide de çalışıyor.
-    this.person(cx + chipH * 0.62, top + chipH / 2, chipH * 0.5, '#1E2430');
+    this.person(cx + chipH * 0.62, top + chipH / 2, chipH * 0.5, '#EAF3FF');
 
     // Sayının kendisi de tepki veriyor: artışta büyüyüp yeşile, kayıpta
     // büyüyüp kırmızıya kaçıyor. Sadece rakamın değişmesi gözden kaçıyordu.
@@ -119,11 +125,11 @@ export class Hud {
     fitFont(g, label, chipW - chipH * 1.2, '900', fs, FONT);
     const hot = this.punch > 0.02;
     outlinedText(g, label, cx + chipH * 1.05, top + chipH / 2, fs,
-      hot ? (this.punchUp ? '#1B7F4A' : '#B5231F') : '#1E2430',
-      hot ? (this.punchUp ? '#37B36C' : '#E5484D') : '#3C4657',
-      'rgba(255,255,255,.92)');
+      hot ? (this.punchUp ? '#7CF0AE' : '#FF8A86') : '#FFFFFF',
+      hot ? (this.punchUp ? '#37B36C' : '#E5484D') : '#A8C6E4',
+      'rgba(8,14,24,.92)');
 
-    g.fillStyle = 'rgba(60,40,20,.5)';
+    g.fillStyle = 'rgba(190,214,238,.6)';
     g.font = '800 ' + Math.round(chipH * 0.24) + 'px ' + FONT;
     g.textAlign = 'right';
     g.fillText(COPY.crowd, cx + chipW - chipH * 0.4, top + chipH / 2);
@@ -140,14 +146,14 @@ export class Hud {
     const w = L.w - m * 2;
     const h = Math.max(6, L.h * 0.008);
 
-    g.fillStyle = 'rgba(40,60,55,.22)';
+    g.fillStyle = 'rgba(16,28,44,.3)';
     roundRect(g, m, y, w, h, h / 2);
     g.fill();
 
     const p = Math.min(1, s.z / TRACK_LEN);
     const fg = g.createLinearGradient(m, 0, m + w, 0);
-    fg.addColorStop(0, '#FFE08A');
-    fg.addColorStop(1, '#FF9F45');
+    fg.addColorStop(0, '#FFFFFF');
+    fg.addColorStop(1, '#68B6F0');
     g.fillStyle = fg;
     roundRect(g, m, y, Math.max(h, w * p), h, h / 2);
     g.fill();
@@ -157,7 +163,7 @@ export class Hud {
       const done = s.z >= ev.z;
       g.fillStyle = (ev.type === 'target' && !!ev.boss)
         ? '#E5484D'
-        : done ? 'rgba(255,255,255,.85)' : 'rgba(40,60,55,.42)';
+        : done ? 'rgba(255,255,255,.9)' : 'rgba(16,28,44,.5)';
       const r = (ev.type === 'target' && !!ev.boss) ? h * 0.95 : h * 0.62;
       g.beginPath();
       g.arc(x, y + h / 2, r, 0, Math.PI * 2);
@@ -165,7 +171,7 @@ export class Hud {
     }
 
     g.fillStyle = '#fff';
-    g.strokeStyle = 'rgba(40,60,55,.5)';
+    g.strokeStyle = 'rgba(16,28,44,.55)';
     g.lineWidth = 1.5;
     g.beginPath();
     g.arc(m + w * p, y + h / 2, h * 1.05, 0, Math.PI * 2);
@@ -232,7 +238,7 @@ export class Hud {
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.font = '900 ' + Math.round(size) + 'px ' + FONT;
-    outlinedText(g, String(n), L.w / 2, L.h * 0.53, size, '#ffffff', '#FFC24D', 'rgba(20,26,34,.85)');
+    outlinedText(g, String(n), L.w / 2, L.h * 0.53, size, '#ffffff', '#68B6F0', 'rgba(10,20,34,.85)');
     g.restore();
   }
 
@@ -355,8 +361,8 @@ export class Hud {
     for (const d of [-1, 1]) {
       const ax = L.w / 2 + d * (amp + r * 1.9);
       g.globalAlpha = 0.35 + (d * wave > 0 ? 0.5 : 0);
-      g.fillStyle = '#ffffff';
-      g.strokeStyle = 'rgba(20,26,34,.7)';
+      g.fillStyle = '#12203A';
+      g.strokeStyle = 'rgba(255,255,255,.75)';
       g.lineWidth = 2;
       g.beginPath();
       g.moveTo(ax + d * r * 0.7, cy);
@@ -367,7 +373,7 @@ export class Hud {
       g.stroke();
     }
     g.globalAlpha = 1;
-    g.fillStyle = 'rgba(255,255,255,.3)';
+    g.fillStyle = 'rgba(18,32,58,.28)';
     g.beginPath();
     g.arc(x, cy, r, 0, Math.PI * 2);
     g.fill();
@@ -388,10 +394,10 @@ export class Hud {
     g.textBaseline = 'middle';
     const pw = g.measureText(text).width + fs * 1.4;
     const ph = fs * 1.7;
-    g.fillStyle = 'rgba(28,40,36,.72)';
+    g.fillStyle = 'rgba(14,26,42,.76)';
     roundRect(g, L.w / 2 - pw / 2, y - ph / 2, pw, ph, ph / 2);
     g.fill();
-    outlinedText(g, text, L.w / 2, y, fs, '#ffffff', '#FFE8C4', 'rgba(20,30,26,.9)');
+    outlinedText(g, text, L.w / 2, y, fs, '#ffffff', '#BEDCF6', 'rgba(8,16,28,.9)');
   }
 
   private soundBtn(): void {
@@ -399,13 +405,13 @@ export class Hud {
     const r = this.L.sound;
     const cx = r.x + r.w / 2;
     const cy = r.y + r.h / 2;
-    g.fillStyle = 'rgba(30,44,40,.2)';
+    g.fillStyle = 'rgba(20,34,52,.32)';
     g.beginPath();
     g.arc(cx, cy, r.w / 2, 0, Math.PI * 2);
     g.fill();
 
     const u = r.w * 0.13;
-    g.fillStyle = '#1E2430';
+    g.fillStyle = '#EAF3FF';
     g.beginPath();
     g.moveTo(cx - u * 1.5, cy - u * 0.6);
     g.lineTo(cx - u * 0.6, cy - u * 0.6);
@@ -416,7 +422,7 @@ export class Hud {
     g.closePath();
     g.fill();
 
-    g.strokeStyle = '#1E2430';
+    g.strokeStyle = '#EAF3FF';
     g.lineWidth = Math.max(1.5, u * 0.34);
     if (audio.on) {
       g.beginPath();
@@ -442,10 +448,10 @@ export class Hud {
     const x = r.x + (r.w - w) / 2;
     const y = r.y + (r.h - h) / 2;
     const grd = g.createLinearGradient(0, y, 0, y + h);
-    grd.addColorStop(0, '#FFC24A');
-    grd.addColorStop(1, '#F08A1E');
+    grd.addColorStop(0, '#FF6A57');
+    grd.addColorStop(1, '#D0231C');
     g.save();
-    g.shadowColor = 'rgba(120,60,10,.45)';
+    g.shadowColor = 'rgba(90,12,10,.45)';
     g.shadowBlur = 18;
     g.fillStyle = grd;
     roundRect(g, x, y, w, h, h * 0.32);
@@ -467,7 +473,7 @@ export class Hud {
       g.restore();
     }
 
-    g.fillStyle = '#3A1C00';
+    g.fillStyle = '#FFF2EE';
     g.font = '900 ' + Math.round(h * 0.42) + 'px ' + FONT;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
@@ -481,7 +487,7 @@ export class Hud {
     const et = s.endT - STRIKE.endAfter;
     const celebrating = et < STRIKE.celebrateFor;
 
-    g.fillStyle = celebrating ? 'rgba(24,34,30,.55)' : 'rgba(24,34,30,.88)';
+    g.fillStyle = celebrating ? 'rgba(12,22,38,.58)' : 'rgba(12,22,38,.9)';
     g.fillRect(0, 0, L.w, L.h);
 
     const cy = L.h * (celebrating ? 0.4 : 0.28);
@@ -498,11 +504,11 @@ export class Hud {
     const numSize = Math.min(L.w * 0.16, 76);
     fitFont(g, String(s.crowd), L.w * 0.5, '900', numSize, FONT);
     outlinedText(g, String(s.crowd), L.w / 2, cy + size * 1.06, numSize,
-      won ? '#FFD45F' : '#FF8A8A', won ? '#FF9F45' : '#E5484D', 'rgba(16,24,20,.9)');
+      won ? '#CFEEFF' : '#FF8A8A', won ? '#4C9BE0' : '#E5484D', 'rgba(8,16,28,.9)');
 
     const title = won ? COPY.win : COPY.lose;
     fitFont(g, title, L.w * 0.88, '900', Math.min(L.w * 0.085, 40), FONT);
-    g.fillStyle = won ? '#FFD45F' : '#ffffff';
+    g.fillStyle = won ? '#CFEEFF' : '#ffffff';
     g.fillText(title, L.w / 2, cy + size * 1.06 + Math.min(L.w * 0.12, 58));
 
     g.fillStyle = 'rgba(255,255,255,.72)';
@@ -517,7 +523,7 @@ export class Hud {
     g.globalAlpha = fade;
     const by = L.h * 0.63;
     fitFont(g, COPY.brand, L.w * 0.84, '900', Math.min(L.w * 0.075, 34), FONT);
-    g.fillStyle = '#FFD45F';
+    g.fillStyle = '#CFEEFF';
     g.fillText(COPY.brand, L.w / 2, by);
     fitFont(g, COPY.tagline, L.w * 0.84, '500', Math.min(L.w * 0.04, 17), FONT);
     g.fillStyle = 'rgba(255,255,255,.6)';

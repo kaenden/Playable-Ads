@@ -1,11 +1,13 @@
 /**
  * 3D görünüm — koridor, kalabalık, kapılar, duvar.
  *
- * RENK KİMLİĞİ ASSET'TEN ÇIKIYOR. Nature Kit'in kendi paleti naneye çalan
- * yeşiller, turuncu ahşap ve soluk mavi taş. Zemin ve gökyüzü ona göre
- * seçildi: sıcak şeftali bir gökyüzü, derin deniz yeşili bir zemin, kum rengi
- * bir patika. Kalabalığın dokusu neredeyse siyah — nane zeminin üstünde
- * siluetleri okunuyor, en çok ihtiyaç duyduğumuz şey de bu.
+ * KARDEŞ BİRİMDEN AYRIŞMAK. Crowd Rush ile paket, karakter, koridor ve
+ * derleme ortak; ilk sürümde RENK de ortaktı ve ikisi ekranda aynı oyun gibi
+ * duruyordu. İzleyici bir oyunu mekaniğinden değil renginden tanıyor, o yüzden
+ * bu birim soğuk bir kar yaylasına taşındı: mavi gökyüzü, kar zemin, soğuk
+ * anahtar ışık, sıcak dolgu. Yeni asset yok — sadece malzeme, gradyan ve ışık.
+ * Kalabalığın dokusu neredeyse siyah, ve karın üstünde siluetler en net
+ * okunduğu yerde duruyor.
  *
  * SİS RENGİ = GÖKYÜZÜNÜN DİBİ. Arka plan CSS gradyanı, sahne şeffaf. Uzaktaki
  * nesneler sise karışıyor ve sis rengi gradyanın alt rengiyle AYNI; ufuk
@@ -58,25 +60,30 @@ import { propClone, propSize } from './models';
 import { RunView } from './view';
 import { Grade } from './grade';
 
-const SKY = '#FFF0DA';
-// Zemin ve patika ilk sürümden daha doygun VE daha koyu.
+const SKY = '#DCEBF7';
+// AYRI BİR OYUN AYRI BİR SAAT.
 //
-// Doygunluk: solgun renkler "ucuz" okunuyor; bu görüntü türünün pahalı
-// görünme biçimi temiz ve doygun renk.
+// Bu birim Crowd Rush ile aynı paketi, aynı karakteri, aynı koridoru ve aynı
+// derlemeyi paylaşıyor. Ekranda AYNI OYUN görünmesinin sebebi de buydu:
+// mekanik değişmişti ama renk değişmemişti, ve izleyici oyunu mekaniğinden
+// değil renginden tanıyor.
 //
-// Koyuluk: zemin yatay bir düzlem, yani anahtar ışığı neredeyse tam alıyor.
-// Malzemenin kendi rengini istediğin sonuca göre değil, IŞIKTAN SONRA
-// istediğin sonuca göre seçmek gerekiyor — ilk denemede zemin ekranda
-// bembeyaz çıktı.
-// ÇİMEN AĞAÇTAN AYRILMALI. İlk sürümde çimen #1B9678 idi; palet dokusunu
-// örnekleyince ağaçların yeşilinin #309870 / #188058 olduğu çıktı — ton
-// açısı 157, çimeninki 156. Neredeyse aynı renk, o yüzden ağaçlar zeminden
-// ayrışmıyordu. Çimen sarıya doğru çekildi (ton açısı 93), parlaklığı
-// bilerek sabit tutuldu: zemin yatay olduğu için ana ışığın neredeyse
-// tamamını alıyor ve açan her değer beyaza patlıyor.
-const GROUND = '#5E9A2E';
-const GRASS_DARK = '#4A7826';
-const SAND = '#F3D9A2';
+// O yüzden ikisi zıt uçlara ayrıldı: Crowd Rush altın saatte sıcak yeşil bir
+// çayır, bu ise soğuk bir kar yaylası. Tek bayt yeni asset yok — değişen şey
+// zemin malzemesi, gökyüzü gradyanı ve ışık düzeni. Bir stüdyonun tek paketten
+// altı kreatif çıkarırken yaptığı işin aynısı.
+//
+// Zeminin kendi değeri KASTEN kardan koyu: zemin yatay, yani anahtar ışığın
+// neredeyse tamamını alıyor. Malzemeyi beyaz seçmek ekranda patlamış bir
+// düzlem veriyordu; #A9C0D2 ışıktan sonra kar oluyor.
+// PATİKA ZEMİNDEN AÇIK, TERSİ DEĞİL. İlk kar denemesinde ikisi de aynı
+// gri değerdeydi ve koridorun kenarı kayboldu — koşu oyununda okunması
+// gereken ilk şey nerede koşulacağı. Şimdi tarla mavi gölgede, patika ise
+// çiğnenmiş parlak kar: sınır tek bakışta belli, ve koyu siluetler en
+// parlak yüzeyin üstünde duruyor.
+const GROUND = '#8FB4D8';
+const GRASS_DARK = '#6D93BC';
+const SAND = '#F0F7FD';
 const CHAR_H = 1.15;
 
 /**
@@ -124,7 +131,7 @@ function grassTexture(): CanvasTexture {
     const grd = g.createRadialGradient(x, y, 0, x, y, r);
     // SADECE KOYULTAN leke. Açık leke eklemek yeşili griye çekiyordu:
     // beyaza doğru her katkı doygunluğu düşürür, koyuya doğru katkı düşürmez.
-    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(46,78,20,.22)' : 'rgba(34,58,14,.14)');
+    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(96,132,172,.24)' : 'rgba(74,110,152,.15)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grd;
     g.beginPath();
@@ -137,7 +144,7 @@ function grassTexture(): CanvasTexture {
   return t;
 }
 
-/** Patika dokusu: kum zemin + ileri bakan açık şeritler (hız hissi). */
+/** Patika dokusu: ezilmiş kar + ileri bakan açık şeritler (hız hissi). */
 function pathTexture(): CanvasTexture {
   const cv = document.createElement('canvas');
   cv.width = 128;
@@ -148,25 +155,25 @@ function pathTexture(): CanvasTexture {
 
   // ENİNE GÖLGELEME. Karo yalnızca z ekseninde tekrar ediyor, yani soldan
   // sağa olan her şey patikanın KESİTİ demek. Kenarları koyulaştırmak
-  // patikayı çime gömüyor; ortayı açmak da yıllardır basılan bir iz
-  // izlenimi veriyor. Düz kum rengi bir şeritte ikisi de yoktu.
+  // patikayı zemine gömüyor; ortayı açmak da çiğnene çiğnene parlamış bir iz
+  // izlenimi veriyor. Düz tek renk bir şeritte ikisi de yoktu.
   const cross = g.createLinearGradient(0, 0, 128, 0);
-  cross.addColorStop(0, 'rgba(96,60,26,.4)');
-  cross.addColorStop(0.08, 'rgba(168,120,62,.16)');
-  cross.addColorStop(0.36, 'rgba(255,244,214,.16)');
-  cross.addColorStop(0.64, 'rgba(255,244,214,.16)');
-  cross.addColorStop(0.92, 'rgba(168,120,62,.16)');
-  cross.addColorStop(1, 'rgba(96,60,26,.4)');
+  cross.addColorStop(0, 'rgba(38,58,84,.42)');
+  cross.addColorStop(0.08, 'rgba(84,110,142,.18)');
+  cross.addColorStop(0.36, 'rgba(246,251,255,.2)');
+  cross.addColorStop(0.64, 'rgba(246,251,255,.2)');
+  cross.addColorStop(0.92, 'rgba(84,110,142,.18)');
+  cross.addColorStop(1, 'rgba(38,58,84,.42)');
   g.fillStyle = cross;
   g.fillRect(0, 0, 128, 128);
 
-  // Çakıl ve toprak beneği.
+  // Buz kırığı ve donmuş çamur beneği.
   const rnd = lcg(1291);
   for (let i = 0; i < 46; i++) {
     const x = rnd() * 128;
     const y = rnd() * 128;
     const r = 1.2 + rnd() * 2.6;
-    g.fillStyle = rnd() < 0.5 ? 'rgba(196,158,104,.36)' : 'rgba(255,246,224,.3)';
+    g.fillStyle = rnd() < 0.5 ? 'rgba(120,142,168,.34)' : 'rgba(250,253,255,.34)';
     g.beginPath();
     g.arc(x, y, r, 0, Math.PI * 2);
     g.fill();
@@ -230,6 +237,9 @@ export class View3D implements RunView {
   /** Havadaki silahlar — kademe başına tek InstancedMesh. */
   private shotMeshes: InstancedMesh[] = [];
   private shotN: number[] = [];
+  private weaponGeos: BufferGeometry[] = [];
+  /** Elde duran silahın kademesi; değişince takıma yeni geometri veriliyor. */
+  private heldTier = -1;
   private shotM = new Matrix4();
   private tumble = new Matrix4();
   private tilt = new Matrix4();
@@ -281,7 +291,7 @@ export class View3D implements RunView {
       // Gökyüzü ufuk çizgisine gelmeden sis rengine oturuyor. Kameranın
       // eğimi ekran oranına göre değiştiği için ufuk yukarı aşağı kayıyor;
       // gradyan geç bitseydi bazı telefonlarda ufukta bant görünürdü.
-      'linear-gradient(180deg,#FF9F4D 0%,#FFBE72 8%,#FFDCA8 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
+      'linear-gradient(180deg,#1F4E86 0%,#4C86BE 8%,#93BEE0 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true, alpha: true });
     // Sis SADECE ufukta. Yakın başlayan sis orta planı da soldurüyordu.
@@ -297,15 +307,24 @@ export class View3D implements RunView {
     //             görüntüyü tek renk bir yığın olmaktan çıkarıyor.
     //  - ortam  : gökten sıcak, yerden zeminin KENDİ rengi. Zeminden gelen
     //             yeşil, ağaçların altına doğal bir yansıma bırakıyor.
-    const key = new DirectionalLight(0xfff0cc, 1.15);
+    // Anahtar ışık SOĞUK ve biraz daha zayıf: kar zaten çok geri veriyor,
+    // sıcak bir anahtar burada eriyik gibi duruyordu.
+    // Kar için ışık YÜKSELDİ. İlk denemede Crowd Rush'ın şiddetleri
+    // kalmıştı ve kar ekranda beton griye düşüyordu: malzeme ne kadar açık
+    // seçilirse seçilsin, ışıktan sonraki değer tavanı aşamıyor.
+    const key = new DirectionalLight(0xeaf4ff, 1.34);
     key.position.set(-5, 7, -3);
     this.scene.add(key);
     // Dolgu KASTEN zayıf. Güçlü dolgu gölge tarafını da aydınlatıyor ve
     // formun yönü kayboluyor; sahne yine düz görünüyordu.
-    const fill = new DirectionalLight(0x86B4FF, 0.28);
+    // Dolgu bu sefer SICAK: soğuk bir sahnede tek renk her yeri mavi bir
+    // yığın yapıyor. Karşı taraftan gelen zayıf bir şeftali, siluetlerin
+    // gölge yüzünü ısıtıp formu geri getiriyor — Crowd Rush'ta bu ilişki
+    // tam tersiydi.
+    const fill = new DirectionalLight(0xFFC9A0, 0.4);
     fill.position.set(5.5, 2.5, 4);
     this.scene.add(fill);
-    this.scene.add(new HemisphereLight(0xffe3b8, new Color(GROUND).getHex(), 0.34));
+    this.scene.add(new HemisphereLight(0xd8ecff, new Color(GROUND).getHex(), 0.5));
 
     this.buildGround();
     this.buildScenery();
@@ -313,7 +332,9 @@ export class View3D implements RunView {
     this.mergeStatic();
     this.buildSceneryShadows();
 
-    this.player = new Squad({ h: CHAR_H, clip: 'sprint', cap: STRIKE.crowdCap, dust: true });
+    this.player = new Squad({
+      h: CHAR_H, clip: 'sprint', cap: STRIKE.crowdCap, dust: true, held: true,
+    });
     this.scene.add(this.player.root);
 
     // DÜŞMANLAR OYUNCUNUN KENDİ KARAKTERİ. Konsept bu, ve bedeli sıfır:
@@ -384,7 +405,9 @@ export class View3D implements RunView {
     // dönüştü. Paketteki modelin kendi ölçüsü değil, sahnedeki ROLÜ belirliyor.
     const trees = ['tree_pineRoundA', 'tree_pineTallA', 'tree_default'];
     const rocks = ['rock_tallB', 'rock_largeA'];
-    const small = ['grass_leafs', 'flower_redA', 'mushroom_red', 'stump_round', 'rock_smallA'];
+    // Karda çiçek ve mantar olmaz: aynı paketten SEÇİM değişiyor, model
+    // değil. Kuru ot, kütük ve taş kalıyor.
+    const small = ['grass_leafs', 'stump_round', 'rock_smallA', 'rock_tallB'];
     // Bitişin ÖTESİ de dolu olmalı: kazanınca kalabalık duvarın arkasına
     // koşuyor ve orada boş yeşillik görürse dünya bitmiş gibi duruyor.
     for (let z = -16; z < TRACK_LEN + 60; z += 5.4) {
@@ -563,7 +586,9 @@ export class View3D implements RunView {
     // okunmasını sağlıyor.
     const mat = new MeshLambertMaterial({ vertexColors: true, emissive: 0x2a2a30 });
     for (let t = 0; t < WEAPONS.length; t++) {
-      const im = new InstancedMesh(weaponGeometry(t), mat, STRIKE.shotCap);
+      // Aynı geometri hem havadaki silahta hem ELDEKİ silahta kullanılıyor.
+      this.weaponGeos.push(weaponGeometry(t));
+      const im = new InstancedMesh(this.weaponGeos[t], mat, STRIKE.shotCap);
       im.frustumCulled = false;
       im.count = 0;
       im.visible = false;
@@ -891,6 +916,15 @@ export class View3D implements RunView {
     // düşüyor; durum ekran anlamını kullanıyor, çeviri burada yapılıyor.
     // ŞERİT -> DÜNYA X. Kamera +Z'ye baktığı için dünya +X ekranda SOLA
     // düşüyor; durum ekran anlamını kullanıyor, çeviri burada yapılıyor.
+    // ELDEKİ SİLAH. Karttaki sayı ile koridordaki cisim ile karakterin
+    // elindeki şey aynı olmalı; yükseltme ancak o zaman "elim değişti" diye
+    // okunuyor. Geometri kademe değişince bir kez veriliyor, her kare değil.
+    const tier = weaponTier(s.weapon);
+    if (tier !== this.heldTier) {
+      this.heldTier = tier;
+      this.player.setHeld(this.weaponGeos[tier], WEAPONS[tier].len);
+    }
+
     const crew = Math.min(s.crowd, STRIKE.crowdCap);
     for (let i = 0; i < crew; i++) {
       this.px0[i] = LANE * (s.x + offsetX(i));

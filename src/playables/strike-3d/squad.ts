@@ -26,6 +26,7 @@
 import {
   AnimationClip,
   AnimationMixer,
+  BufferGeometry,
   CanvasTexture,
   Color,
   DoubleSide,
@@ -38,6 +39,9 @@ import {
   MeshLambertMaterial,
   Object3D,
   PlaneGeometry,
+  Euler,
+  Quaternion,
+  Vector3,
 } from 'three';
 import { STRIKE } from './config';
 import { charClone, clipNamed } from './models';
@@ -67,9 +71,12 @@ export function blobTexture(): CanvasTexture {
   cv.height = 64;
   const g = cv.getContext('2d') as CanvasRenderingContext2D;
   const grd = g.createRadialGradient(32, 32, 2, 32, 32, 31);
-  grd.addColorStop(0, 'rgba(18,42,36,.5)');
-  grd.addColorStop(0.55, 'rgba(18,42,36,.26)');
-  grd.addColorStop(1, 'rgba(18,42,36,0)');
+  // Gölge rengi ZEMİNDEN geliyor. Crowd Rush'ta zemin sıcak yeşildi ve leke
+  // de yeşile çalıyordu; burada zemin kar, yani gölge MAVİ. Yeşil leke karın
+  // üstünde kir gibi duruyordu.
+  grd.addColorStop(0, 'rgba(34,62,98,.44)');
+  grd.addColorStop(0.55, 'rgba(34,62,98,.23)');
+  grd.addColorStop(1, 'rgba(34,62,98,0)');
   g.fillStyle = grd;
   g.fillRect(0, 0, 64, 64);
   return new CanvasTexture(cv);
@@ -93,7 +100,36 @@ export interface SquadOpts {
   tint?: number;
   /** Ayak tozu — sadece koşan oyuncu kaldırıyor. */
   dust?: boolean;
+  /** Elde silah taşıyabilsin mi. Sadece oyuncu takımı taşıyor. */
+  held?: boolean;
 }
+
+/**
+ * ELDEKİ SİLAHIN KAVRAMA AYARLARI.
+ *
+ * Silah, karakterin SAĞ KOL parçasına bağlanıyor: konumu koldan geliyor, yani
+ * gövde koşarken zıpladıkça silah da zıplıyor ve ayrıca animasyon yazmaya
+ * gerek kalmıyor.
+ *
+ * Ölçek 1'in altında: silah havadakiyle aynı model ama elde birebir boyda
+ * durunca çift ağızlı balta karakter kadar oluyor ve gövdeye giriyor.
+ */
+const HAND_OUT = -0.1;
+const HAND_DROP = 0.26;
+const HAND_FWD = 0.0;
+const GRIP_TILT = -0.18;
+const GRIP_ROLL = -0.3;
+const HELD_SCALE = 0.85;
+/**
+ * Kolun dönüşü ne kadar geçiyor. 0 = silah kolun her savruluşunu izliyor,
+ * 1 = taş gibi sabit.
+ *
+ * İlk sürüm 0'dı ve büyük silahlar koşu sırasında gövdenin içinden geçip
+ * yatay yatıyordu — kol koşarken neredeyse doksan derece savruluyor. 0.78,
+ * silahın elde durduğu belli olacak kadar oynamasını bırakıyor ama duruşunu
+ * kaybettirmiyor.
+ */
+const HAND_DAMP = 0.78;
 
 export class Squad {
   readonly root = new Group();
@@ -109,9 +145,23 @@ export class Squad {
   private hide = new Matrix4().makeScale(0, 0, 0);
   private cap: number;
   private ok = false;
+  /** Eldeki silah: tek InstancedMesh, geometrisi yükseltmede değişiyor. */
+  private heldMesh: InstancedMesh | null = null;
+  private wantHeld = false;
+  /** Silahın bağlandığı parçanın indeksi — adla bulunuyor, sırayla değil. */
+  private armIdx = -1;
+  private grip = new Matrix4();
+  private held = new Matrix4();
+  private p = new Vector3();
+  private q = new Quaternion();
+  private sc = new Vector3();
+  private one = new Vector3(1, 1, 1);
+  /** Silahın sabit duruşu — kolun dönüşü buna doğru sönümleniyor. */
+  private rest = new Quaternion().setFromEuler(new Euler(GRIP_TILT, 0, GRIP_ROLL));
 
   constructor(o: SquadOpts) {
     this.cap = o.cap;
+    this.wantHeld = !!o.held;
     const clip = clipNamed(o.clip);
     for (let p = 0; p < STRIKE.phases; p++) {
       const g = charClone(o.h);
@@ -126,6 +176,10 @@ export class Squad {
       this.donors.push({ group: g, meshes: meshesOf(g), mixer });
     }
     if (!this.donors.length) return;
+
+    // Kol parçasını ADLA bul, sırayla değil: paketteki parça sırası değişirse
+    // silah kafaya ya da bacağa bağlanmasın.
+    this.armIdx = this.donors[0].meshes.findIndex((m) => m.name.indexOf('arm-right') === 0);
 
     // YARI IŞIKLI MALZEME. Paket karakteri unlit geliyor — hiç ışık almıyor,
     // her yüzeyi aynı parlaklıkta, ve kalabalıkta bu tek bir koyu leke gibi
@@ -180,7 +234,7 @@ export class Squad {
         dgeo,
         new MeshBasicMaterial({
           map: blobTexture(),
-          color: 0xd8c49a,
+          color: 0xeaf3ff,
           transparent: true,
           opacity: 0.55,
           depthWrite: false,
@@ -202,6 +256,42 @@ export class Squad {
   }
 
   /**
+   * Takımın eline silah ver.
+   *
+   * Bütün takım AYNI silahı taşıyor, o yüzden tek InstancedMesh yetiyor ve
+   * yükseltmede sadece geometrisi değişiyor — kademe başına ayrı mesh tutmaya
+   * gerek yok. `len` kavrama noktasını hesaplamak için: silahın merkezi
+   * elden yukarı, kendi boyunun üçte biri kadar kaydırılıyor ki sap avuçta
+   * kalsın, ortası değil.
+   */
+  setHeld(geo: BufferGeometry | null, len: number): void {
+    if (!this.ok || !this.wantHeld || this.armIdx < 0) return;
+    if (!geo) {
+      if (this.heldMesh) this.heldMesh.visible = false;
+      return;
+    }
+    if (!this.heldMesh) {
+      const im = new InstancedMesh(
+        geo,
+        new MeshLambertMaterial({ vertexColors: true, emissive: 0x2a2a30 }),
+        this.cap
+      );
+      im.frustumCulled = false;
+      this.heldMesh = im;
+      this.root.add(im);
+    } else {
+      this.heldMesh.geometry = geo;
+    }
+    this.heldMesh.visible = true;
+    // Kavrama: silahı ölçekle, sonra kendi boyunun üçte biri kadar yukarı
+    // kaydır ki AVUÇTA sapı dursun, ortası değil. Yön ve el konumu her karede
+    // koldan geliyor, burada değil.
+    this.grip.makeTranslation(0, len * HELD_SCALE * 0.34, 0);
+    this.m.makeScale(HELD_SCALE, HELD_SCALE, HELD_SCALE);
+    this.grip.multiply(this.m);
+  }
+
+  /**
    * @param xs DÜNYA x konumları (şerit çevirisi çağıranda yapılıyor)
    * @param zs dünya z konumları
    * @param n  kaç tanesi geçerli
@@ -220,6 +310,7 @@ export class Squad {
       if (i >= live) {
         for (const im of this.parts) im.setMatrixAt(i, this.hide);
         if (this.shadows) this.shadows.setMatrixAt(i, this.hide);
+        if (this.heldMesh) this.heldMesh.setMatrixAt(i, this.hide);
         continue;
       }
       this.place.makeTranslation(xs[i], 0, zs[i]);
@@ -230,6 +321,21 @@ export class Squad {
         this.m.multiplyMatrices(this.place, src.matrixWorld);
         this.parts[k].setMatrixAt(i, this.m);
       }
+      if (this.heldMesh) {
+        // EL KOLDAN, DURUŞ SABİTTEN. Kolun matrisi ÖLÇEK de taşıyor (karakter
+        // boyu dış grupta veriliyor), o yüzden ölçek atılıyor: silah kendi
+        // dünya ölçüsünde çizilmeli. Dönüş ise kolunkine tam uymuyor,
+        // duruşa doğru sönümleniyor — sebebi HAND_DAMP'ta.
+        this.m.multiplyMatrices(this.place, d.meshes[this.armIdx].matrixWorld);
+        this.m.decompose(this.p, this.q, this.sc);
+        this.q.slerp(this.rest, HAND_DAMP);
+        this.p.x += HAND_OUT;
+        this.p.y -= HAND_DROP;
+        this.p.z += HAND_FWD;
+        this.held.compose(this.p, this.q, this.one);
+        this.held.multiply(this.grip);
+        this.heldMesh.setMatrixAt(i, this.held);
+      }
       if (this.shadows) {
         this.m.makeScale(0.62, 1, 0.62);
         this.m.setPosition(xs[i], 0.02, zs[i]);
@@ -238,6 +344,7 @@ export class Squad {
     }
     for (const im of this.parts) im.instanceMatrix.needsUpdate = true;
     if (this.shadows) this.shadows.instanceMatrix.needsUpdate = true;
+    if (this.heldMesh) this.heldMesh.instanceMatrix.needsUpdate = true;
     if (this.dust && live > 0) this.updateDust(xs[0], zs[0], dt);
   }
 
