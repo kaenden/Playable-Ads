@@ -151,6 +151,109 @@ export function blobCanvas(size: number): HTMLCanvasElement {
 }
 
 /**
+ * PARLAMA HALESİ — her taşın arkasında kendi renginde bir ışık.
+ *
+ * İki iş birden yapıyor. Birincisi taşları ışıldatıyor: gerçek bir bloom
+ * post-process bu bütçede pahalı ve gereksiz, hâlbuki arkaya konan yumuşak
+ * bir ışık aynı izlenimi bedavaya veriyor. İkincisi ve daha önemlisi RENK:
+ * Kenney'nin yemek modelleri soluk ve birbirine yakın tonlarda, ama her
+ * türün kendi halesi olunca tahta beş ayrı renge ayrılıyor — çörek altın,
+ * kek pembe, kiraz kırmızı. Oyuncu türü modelden önce RENKTEN tanıyor.
+ *
+ * Doku beyaz üretiliyor, rengi çağıran veriyor: 3D'de örnek rengi
+ * (`setColorAt`), 2D'de önceden boyanmış kopya. Tek gradyan, iki yol.
+ */
+export function glowCanvas(size: number, color?: string): HTMLCanvasElement {
+  const cv = document.createElement('canvas');
+  cv.width = size;
+  cv.height = size;
+  const g = cv.getContext('2d') as CanvasRenderingContext2D;
+  const c = size / 2;
+  const grd = g.createRadialGradient(c, c, 1, c, c, c - 1);
+  const col = color || '#ffffff';
+  // MERKEZ KASTEN ZAYIF. İlk denemede hale ortada en güçlüydü ve toplamalı
+  // karıştığı için taşın kendi formunu yakıyordu — muzlar beyaz bir leke
+  // oluyordu. Işık halkası taşın ARKASINDAN taşmalı, üstünden değil: en
+  // parlak yer modelin kenarının hemen dışı.
+  grd.addColorStop(0, alpha(col, 0.24));
+  grd.addColorStop(0.34, alpha(col, 0.42));
+  grd.addColorStop(0.62, alpha(col, 0.2));
+  grd.addColorStop(1, alpha(col, 0));
+  g.fillStyle = grd;
+  g.fillRect(0, 0, size, size);
+  return cv;
+}
+
+function alpha(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
+/**
+ * PIRILTI — taşların üstünde beliren dört uçlu yıldız.
+ *
+ * Tahta hareketsizken bile canlı kalsın diye. Konumu ve zamanı taşın
+ * indeksinden türetiliyor, yani rastgele değil ama düzenli de görünmüyor;
+ * her taş kendi ritminde parlıyor.
+ */
+export function sparkle(
+  g: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  k: number
+): void {
+  if (k <= 0) return;
+  const s = r * k;
+  g.save();
+  g.globalAlpha = k;
+  g.fillStyle = '#ffffff';
+  g.beginPath();
+  g.moveTo(cx, cy - s);
+  g.quadraticCurveTo(cx + s * 0.16, cy - s * 0.16, cx + s, cy);
+  g.quadraticCurveTo(cx + s * 0.16, cy + s * 0.16, cx, cy + s);
+  g.quadraticCurveTo(cx - s * 0.16, cy + s * 0.16, cx - s, cy);
+  g.quadraticCurveTo(cx - s * 0.16, cy - s * 0.16, cx, cy - s);
+  g.fill();
+  g.restore();
+}
+
+/**
+ * Tahtanın üstünden geçen ışık şeridi.
+ *
+ * Kart oyunlarındaki folyo parlaması. Birkaç saniyede bir soldan sağa
+ * kayıyor ve tahtayı bir an için ışıtıyor — hiçbir bilgi taşımıyor, işi
+ * sadece ekranın canlı olduğunu söylemek. `lighter` ile bindiriliyor,
+ * yani karartmıyor sadece ekliyor.
+ */
+export function glossSweep(
+  g: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  t: number
+): void {
+  const period = 4.6;
+  const p = (t % period) / period;
+  if (p > 0.34) return;
+  const k = p / 0.34;
+  const cx = x - w * 0.4 + k * w * 1.8;
+  g.save();
+  g.beginPath();
+  g.rect(x, y, w, h);
+  g.clip();
+  g.globalCompositeOperation = 'lighter';
+  const grd = g.createLinearGradient(cx - w * 0.22, y, cx + w * 0.22, y + h);
+  grd.addColorStop(0, 'rgba(255,255,255,0)');
+  grd.addColorStop(0.5, 'rgba(255,236,255,.16)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(x, y, w, h);
+  g.restore();
+}
+
+/**
  * Zincir derinliğine göre kutlama sözü.
  *
  * Zincir bilgisi zaten durumda vardı ama ekranda hiçbir karşılığı yoktu:

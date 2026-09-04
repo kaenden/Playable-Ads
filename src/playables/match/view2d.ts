@@ -11,7 +11,7 @@ import { Layout, UiState } from './layout';
 import { Hud } from './hud';
 import { visual } from './anim';
 import { Fx } from '../../core/fx';
-import { BACKDROP, LOOK, paintTray } from './look';
+import { BACKDROP, LOOK, glossSweep, glowCanvas, paintTray, sparkle } from './look';
 import { roundRect } from '../../core/draw';
 import { draw as sprite, ready } from '../../core/atlas';
 
@@ -23,6 +23,8 @@ export class View2D {
 
   private g: CanvasRenderingContext2D;
   private t = 0;
+  /** Tür başına önceden boyanmış hale — her kare gradyan doldurmamak için. */
+  private glows: HTMLCanvasElement[] = TINT.map((c) => glowCanvas(128, c));
 
   constructor(cv: HTMLCanvasElement) {
     cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none';
@@ -132,12 +134,42 @@ export class View2D {
         g.beginPath();
         g.ellipse(x, y + c * 0.34, c * 0.3 * v.scale, c * 0.11 * v.scale, 0, 0, Math.PI * 2);
         g.fill();
+
+        // Parlama halesi — taşın KENDİ renginde, arkasında, toplamalı.
+        // Kenney'nin modelleri soluk ve birbirine yakın; hale hem ışıldatıyor
+        // hem de beş türü beş ayrı renge ayırıyor.
+        // 2D'de hale DAHA KISIK. Sprite'lar zaten ışıklandırılmış hâlde
+        // render edilmiş; üstlerine 3D modellere verdiğim kadar ışık
+        // koyunca doygunluk %64'ten %55'e düşüyordu — toplamalı beyaz
+        // ışık her zaman rengi yer. Model ise sahnede aydınlatılıyor ve
+        // haleye daha çok ihtiyacı var. Aynı tarif, iki farklı doz.
+        const gl = this.glows[kind];
+        if (gl) {
+          const gs = c * 1.12 * v.scale * idle;
+          g.save();
+          g.globalCompositeOperation = 'lighter';
+          g.globalAlpha = v.alpha * 0.5;
+          g.drawImage(gl, x - gs / 2, y - gs / 2, gs, gs);
+          g.restore();
+        }
         g.globalAlpha = v.alpha;
         sprite(g, KINDS[kind], x, y, c * 0.95 * v.scale * idle);
         g.globalAlpha = 1;
       }
       g.restore();
     }
+
+    // Pırıltılar ve tahtayı yalayan ışık şeridi: bilgi taşımıyorlar, işleri
+    // ekranın durgun görünmemesi.
+    for (let i = 0; i < M.cols * M.rows; i++) {
+      if (s.cells[i] < 0) continue;
+      const ph = (this.t * 0.9 + i * 0.37) % 3;
+      if (ph > 0.55) continue;
+      const k = Math.sin((ph / 0.55) * Math.PI);
+      const [sx2, sy2] = L.center(i % M.cols, (i / M.cols) | 0);
+      sparkle(g, sx2 + c * 0.22, sy2 - c * 0.26, c * 0.2, k);
+    }
+    glossSweep(g, b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, this.t);
 
     this.fx.draw(g, dt);
     g.restore();

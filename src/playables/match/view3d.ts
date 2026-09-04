@@ -10,10 +10,12 @@
  * gibi gösteriyordu ve "3D sürüm" olmasının bir anlamı kalmıyordu.
  */
 import {
+  AdditiveBlending,
   AmbientLight,
   CanvasTexture,
   DirectionalLight,
   DoubleSide,
+  Color,
   Group,
   InstancedMesh,
   Matrix4,
@@ -21,6 +23,7 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   PlaneGeometry,
+  Quaternion,
   Scene,
   SRGBColorSpace,
   Vector3,
@@ -33,7 +36,7 @@ import { Hud } from './hud';
 import { visual } from './anim';
 import { Fx } from '../../core/fx';
 import { pieceFor } from './models';
-import { BACKDROP, LOOK, blobCanvas, paintTray } from './look';
+import { BACKDROP, LOOK, blobCanvas, glossSweep, glowCanvas, paintTray, sparkle } from './look';
 
 /** Izgara düzlemi XZ; kamera bu yönden bakıyor. */
 const YAW = (0 * Math.PI) / 180;
@@ -68,6 +71,12 @@ export class View3D {
   private world = new Group();
   private slots: Array<Slot | null> = [];
   private shadows: InstancedMesh | null = null;
+  /** Parlama haleleri — tür rengini örnek rengiyle taşıyorlar. */
+  private glows: InstancedMesh | null = null;
+  private gq = new Quaternion();
+  private gp = new Vector3();
+  private gs = new Vector3();
+  private gc = new Color();
   private sm = new Matrix4();
   private hideM = new Matrix4().makeScale(0, 0, 0);
   private t = 0;
@@ -160,6 +169,29 @@ export class View3D {
     shadows.renderOrder = -1;
     this.shadows = shadows;
     this.world.add(shadows);
+
+    // PARLAMA HALELERİ — kameraya bakan, toplamalı karıştırılan kareler.
+    //
+    // Gerçek bir bloom bu bütçede pahalı ve gereksiz. Taşın arkasına konan
+    // yumuşak bir ışık aynı izlenimi veriyor, ve daha önemlisi RENK
+    // getiriyor: paketin yemekleri soluk ve birbirine yakın, hale ise her
+    // türü kendi rengiyle işaretliyor. Renk örnek başına taşınıyor
+    // (`setColorAt`), yani beş tür tek çizim çağrısında.
+    const ggeo = new PlaneGeometry(1, 1);
+    const glows = new InstancedMesh(
+      ggeo,
+      new MeshBasicMaterial({
+        map: srgb(new CanvasTexture(glowCanvas(128))),
+        transparent: true,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+      M.cols * M.rows
+    );
+    glows.frustumCulled = false;
+    for (let i = 0; i < M.cols * M.rows; i++) glows.setColorAt(i, this.gc.set(0xffffff));
+    this.glows = glows;
+    this.world.add(glows);
   }
 
   resize(): void {
@@ -211,6 +243,8 @@ export class View3D {
     cam.top = maxY + ty / s;
     cam.bottom = cam.top - L.h / s;
     cam.updateProjectionMatrix();
+    // Haleler bu dönüşü kullanıyor; kamera sabit olduğu için bir kez yeter.
+    this.gq.copy(cam.quaternion);
   }
 
   burstAt(i: number, kind: number, chain?: number): void {
@@ -281,6 +315,17 @@ export class View3D {
       // Yavaş dönüş: modelin hacmi ancak dönerken okunuyor.
       g.rotation.y = this.t * 0.55 + i * 0.9;
       g.visible = v.alpha > 0.05;
+      if (this.glows) {
+        // Hale KAMERAYA bakıyor: yere yatık bir ışık havuzu tepside
+        // eziliyor ve "parlama" değil "leke" okunuyor.
+        const gk = 1.5 * v.scale * (v.alpha > 0.05 ? 1 : 0);
+        this.gp.set(v.col + 0.5, 0.42 * v.scale, v.row + 0.5);
+        this.gs.set(gk, gk, gk);
+        this.sm.compose(this.gp, this.gq, this.gs);
+        this.glows.setMatrixAt(i, this.sm);
+        this.gc.set(TINT[kind] || '#ffffff');
+        this.glows.setColorAt(i, this.gc);
+      }
       if (this.shadows) {
         // Gölge YERDE kalıyor ve taş büyüdükçe yayılıyor.
         const k = 0.78 * v.scale * (v.alpha > 0.05 ? 1 : 0);
@@ -296,9 +341,16 @@ export class View3D {
     }
     if (this.shadows) {
       for (let i = 0; i < M.cols * M.rows; i++) {
-        if (s.cells[i] === undefined || s.cells[i] < 0) this.shadows.setMatrixAt(i, this.hideM);
+        if (s.cells[i] === undefined || s.cells[i] < 0) {
+          this.shadows.setMatrixAt(i, this.hideM);
+          if (this.glows) this.glows.setMatrixAt(i, this.hideM);
+        }
       }
       this.shadows.instanceMatrix.needsUpdate = true;
+    }
+    if (this.glows) {
+      this.glows.instanceMatrix.needsUpdate = true;
+      if (this.glows.instanceColor) this.glows.instanceColor.needsUpdate = true;
     }
 
     const [shx, shy] = this.fx.shakeOffset(dt);
@@ -318,6 +370,20 @@ export class View3D {
       g2.arc(sx, sy, c * 0.44, 0, Math.PI * 2);
       g2.stroke();
     }
+    // Pırıltılar ve ışık şeridi 2D katmanda: 3D'de yapmanın hiçbir kazancı
+    // yok ve 2D sürümle birebir aynı kod çalışıyor.
+    const b2 = L.board;
+    const pad2 = L.cell * 0.14;
+    for (let i = 0; i < M.cols * M.rows; i++) {
+      if (s.cells[i] === undefined || s.cells[i] < 0) continue;
+      const ph = (this.t * 0.9 + i * 0.37) % 3;
+      if (ph > 0.55) continue;
+      const k = Math.sin((ph / 0.55) * Math.PI);
+      const [px2, py2] = L.center(i % M.cols, (i / M.cols) | 0);
+      sparkle(g2, px2 + L.cell * 0.22, py2 - L.cell * 0.26, L.cell * 0.2, k);
+    }
+    glossSweep(g2, b2.x - pad2, b2.y - pad2, b2.w + pad2 * 2, b2.h + pad2 * 2, this.t);
+
     this.fx.draw(g2, dt);
     this.hud.draw(s, ui, dt);
   }
