@@ -5,7 +5,7 @@
  * Yani bu sürüm "daha ucuz sanat" kullanmıyor, AYNI sanatı kullanıyor;
  * fark sadece çizim yolunda.
  */
-import { M, KINDS, TINT } from './config';
+import { M, KINDS, TINT, Blast } from './config';
 import { State } from './state';
 import { Layout, UiState } from './layout';
 import { Hud } from './hud';
@@ -46,6 +46,29 @@ export class View2D {
     const [x, y] = this.L.center(c, r);
     this.fx.burst(x, y, this.L.cell * (0.5 + Math.min(3, (chain || 1) - 1) * 0.12),
       2 + Math.min(3, (chain || 1) - 1), TINT[kind] || '#ffffff');
+  }
+
+  /**
+   * Roket ve bomba efekti.
+   *
+   * Satır roketi enine bir ışın, sütun roketi boyuna; bomba ise merkezde
+   * geniş bir patlama. Üçü de sarsıntı veriyor, çünkü bu birimde tek
+   * ödüllendirici an bu.
+   */
+  blastAt(b: Blast): void {
+    const L = this.L;
+    const col = b.at % M.cols;
+    const row = (b.at / M.cols) | 0;
+    const [x, y] = L.center(col, row);
+    if (b.kind === 'row') {
+      this.fx.beam(L.board.x + L.board.w / 2, y, L.board.w, L.cell * 0.62, LOOK.beam);
+    } else if (b.kind === 'col') {
+      this.fx.beam(x, L.board.y + L.board.h / 2, L.cell * 0.62, L.board.h, LOOK.beam);
+    } else {
+      this.fx.burst(x, y, L.cell * 1.15, 6, LOOK.beam);
+    }
+    this.fx.burst(x, y, L.cell * 0.8, 4, LOOK.spark);
+    this.fx.shake = Math.max(this.fx.shake, L.h * 0.012);
   }
 
   /** Füzyon anı: taşların birleştiği noktada beyaz bir şimşek. */
@@ -110,7 +133,7 @@ export class View2D {
         g.ellipse(x, y + c * 0.34, c * 0.3 * v.scale, c * 0.11 * v.scale, 0, 0, Math.PI * 2);
         g.fill();
         g.globalAlpha = v.alpha;
-        sprite(g, KINDS[kind], x, y, c * 0.86 * v.scale * idle);
+        sprite(g, KINDS[kind], x, y, c * 0.95 * v.scale * idle);
         g.globalAlpha = 1;
       }
       g.restore();

@@ -32,27 +32,42 @@
  * tam da üstünde durdukları yerde buluyor.
  */
 export const BACKDROP = [
-  'radial-gradient(circle at 12% 16%, rgba(255,214,120,.5) 0 5px, transparent 6px)',
-  'radial-gradient(circle at 86% 12%, rgba(120,232,255,.45) 0 4px, transparent 5px)',
-  'radial-gradient(circle at 24% 88%, rgba(255,140,210,.45) 0 6px, transparent 7px)',
-  'radial-gradient(circle at 92% 78%, rgba(180,255,170,.4) 0 4px, transparent 5px)',
-  'radial-gradient(circle at 66% 6%, rgba(255,255,255,.35) 0 3px, transparent 4px)',
-  'radial-gradient(circle at 6% 54%, rgba(255,255,255,.28) 0 3px, transparent 4px)',
-  'radial-gradient(circle at 78% 94%, rgba(255,214,120,.35) 0 4px, transparent 5px)',
-  'radial-gradient(122% 82% at 50% 24%, #C4459E 0%, #7C2286 38%, #481264 68%, #240838 100%)',
+  'radial-gradient(circle at 12% 16%, rgba(255,224,130,.85) 0 5px, transparent 6px)',
+  'radial-gradient(circle at 86% 12%, rgba(120,240,255,.8) 0 4px, transparent 5px)',
+  'radial-gradient(circle at 24% 88%, rgba(255,150,220,.8) 0 6px, transparent 7px)',
+  'radial-gradient(circle at 92% 78%, rgba(170,255,150,.75) 0 4px, transparent 5px)',
+  'radial-gradient(circle at 66% 6%, rgba(255,255,255,.6) 0 3px, transparent 4px)',
+  'radial-gradient(circle at 6% 54%, rgba(255,255,255,.5) 0 3px, transparent 4px)',
+  'radial-gradient(circle at 78% 94%, rgba(255,224,130,.6) 0 4px, transparent 5px)',
+  'radial-gradient(circle at 40% 70%, rgba(120,240,255,.5) 0 3px, transparent 4px)',
+  'radial-gradient(126% 86% at 50% 20%, #FF5FC4 0%, #C42FA8 26%, #7A1E9E 54%, #3E1070 80%, #21063E 100%)',
 ].join(',');
 
 export const LOOK = {
-  /** Tepsi gövdesi ve kenarı. Zeminin en koyu yerinden de koyu. */
-  tray: '#2A0940',
-  trayEdge: 'rgba(255,190,246,.3)',
+  /**
+   * Tepsi gövdesi ve kenarı.
+   *
+   * Koyu ama SİYAH DEĞİL: doygun bir menekşe. Neredeyse siyah bir tepsi
+   * kontrastı veriyordu ama ekranı ağırlaştırıyordu; match oyunlarının
+   * görüntüsü parlak ve doygun.
+   *
+   * Ölçüyle ayarlandı: tepsi ekranın en büyük yüzeyi, o yüzden karenin
+   * ortalama parlaklığını tek başına o belirliyor. #3A0F63 ile kare %30
+   * parlaklıkta kalıyordu — kontrast iyi, ama tür için karanlık. #511A85
+   * kareyi yükseltirken taşları hâlâ öne çıkarıyor, çünkü taşların değeri
+   * ondan yüksek.
+   */
+  tray: '#511A85',
+  trayEdge: 'rgba(255,206,255,.5)',
   /** Hücre yuvaları: dama deseni, ikisi de tepsiden AÇIK. */
-  cellA: 'rgba(255,226,252,.1)',
-  cellB: 'rgba(255,226,252,.045)',
+  cellA: 'rgba(255,236,255,.19)',
+  cellB: 'rgba(255,236,255,.09)',
   /** Seçim halkası. */
-  pick: '#FFD65F',
+  pick: '#FFE45F',
   /** Patlama halkası ve şimşek rengi. */
-  spark: '#FFF0B8',
+  spark: '#FFF6C4',
+  /** Roket ışını ve bomba halkası. */
+  beam: '#FFF6D0',
 };
 
 /**

@@ -9,17 +9,21 @@
  * Renderer sadece `phase` ve `phaseT`'ye bakıp aradeğerleme yapıyor;
  * animasyon süresi burada, animasyonun kendisi orada.
  */
-import { M } from './config';
+import { M, STAGES, Blast } from './config';
 
 export type Phase = 'idle' | 'swap' | 'back' | 'clear' | 'fall';
 
-export type EvType = 'swap' | 'reject' | 'clear' | 'land' | 'win' | 'lose';
+export type EvType = 'swap' | 'reject' | 'clear' | 'land' | 'win' | 'lose' | 'stage';
 export interface Ev {
   type: EvType;
   cells?: number[];
   kind?: number;
   /** Zincir derinliği: 1 ilk temizlik, 2+ cascade. Ses ve puan buna bakıyor. */
   chain?: number;
+  /** Bu temizlikte doğan özel füzyonlar — roket ve bombalar. */
+  blasts?: Blast[];
+  /** `stage` olayında: yeni aşamanın sırası (0 tabanlı). */
+  stage?: number;
 }
 
 export interface State {
@@ -41,6 +45,10 @@ export interface State {
 
   moves: number;
   collected: number;
+  /** Kaçıncı sipariş (0 tabanlı) ve o siparişin istediği. */
+  stage: number;
+  target: number;
+  goal: number;
   status: 'playing' | 'won' | 'lost';
   endT: number;
   started: boolean;
@@ -101,7 +109,10 @@ export function createState(): State {
     swapB: -1,
     clearing: [],
     chain: 0,
-    moves: M.moves,
+    moves: STAGES[0].moves,
+    stage: 0,
+    target: STAGES[0].target,
+    goal: STAGES[0].goal,
     collected: 0,
     status: 'playing',
     endT: 0,
@@ -124,8 +135,27 @@ export function adjacent(a: number, b: number): boolean {
 }
 
 /** Tahtadaki bütün 3+ dizileri. */
-function findMatches(cells: number[]): number[] {
+export interface Found {
+  hits: number[];
+  blasts: Blast[];
+}
+
+/**
+ * Eşleşmeleri ve ÖZEL FÜZYONLARI bul.
+ *
+ * Üç taş sadece kayboluyor. Dört taş bir roket doğuruyor — yatay dizi
+ * satırı, dikey dizi sütunu süpürüyor. Beş taş ya da bir L/T kesişimi
+ * bomba: merkezin çevresindeki üçe üçlük kare.
+ *
+ * Dizinin UZUNLUĞU zaten burada biliniyordu ve atılıyordu; tek eklenen
+ * şey onu saklamak. Kesişim de bedava çıkıyor: bir hücre hem yatay hem
+ * dikey dizide işaretlenmişse orası L ya da T demektir.
+ */
+function findMatches(cells: number[]): Found {
   const hit: boolean[] = new Array(cells.length).fill(false);
+  const inH: boolean[] = new Array(cells.length).fill(false);
+  const inV: boolean[] = new Array(cells.length).fill(false);
+  const blasts: Blast[] = [];
 
   for (let r = 0; r < M.rows; r++) {
     let run = 1;
@@ -135,7 +165,15 @@ function findMatches(cells: number[]): number[] {
       const same = c < M.cols && cells[i] >= 0 && cells[i] === cells[p];
       if (same) run++;
       else {
-        if (run >= 3) for (let k = 0; k < run; k++) hit[p - k] = true;
+        if (run >= 3) {
+          for (let k = 0; k < run; k++) {
+            hit[p - k] = true;
+            inH[p - k] = true;
+          }
+          const mid = p - ((run / 2) | 0);
+          if (run === 4) blasts.push({ kind: 'row', at: mid });
+          else if (run >= 5) blasts.push({ kind: 'area', at: mid });
+        }
         run = 1;
       }
     }
@@ -148,14 +186,61 @@ function findMatches(cells: number[]): number[] {
       const same = r < M.rows && cells[i] >= 0 && cells[i] === cells[p];
       if (same) run++;
       else {
-        if (run >= 3) for (let k = 0; k < run; k++) hit[p - k * M.cols] = true;
+        if (run >= 3) {
+          for (let k = 0; k < run; k++) {
+            hit[p - k * M.cols] = true;
+            inV[p - k * M.cols] = true;
+          }
+          const mid = p - ((run / 2) | 0) * M.cols;
+          if (run === 4) blasts.push({ kind: 'col', at: mid });
+          else if (run >= 5) blasts.push({ kind: 'area', at: mid });
+        }
         run = 1;
       }
     }
   }
 
   const out: number[] = [];
-  for (let i = 0; i < hit.length; i++) if (hit[i]) out.push(i);
+  for (let i = 0; i < hit.length; i++) {
+    if (!hit[i]) continue;
+    out.push(i);
+    // L ve T: aynı taş iki dizinin birden parçası. En değerli şekil bu,
+    // ve karşılığı bomba.
+    if (inH[i] && inV[i]) blasts.push({ kind: 'area', at: i });
+  }
+  return { hits: out, blasts };
+}
+
+/**
+ * Roket ve bombaların süpürdüğü hücreleri temizlik listesine ekler.
+ *
+ * Patlama, eşleşmenin KENDİSİNİ büyütüyor: ayrı bir tur değil, aynı
+ * temizliğin içinde. Böylece hem animasyon tek parça kalıyor hem de
+ * süpürülen hedef taşları aynı sayaçta toplanıyor — dört taş yapan
+ * oyuncu ödülünü anında görüyor.
+ */
+function expand(found: Found): number[] {
+  if (!found.blasts.length) return found.hits;
+  const on: boolean[] = new Array(M.cols * M.rows).fill(false);
+  for (const i of found.hits) on[i] = true;
+  for (const b of found.blasts) {
+    const c = b.at % M.cols;
+    const r = (b.at / M.cols) | 0;
+    if (b.kind === 'row') for (let k = 0; k < M.cols; k++) on[r * M.cols + k] = true;
+    else if (b.kind === 'col') for (let k = 0; k < M.rows; k++) on[k * M.cols + c] = true;
+    else {
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const rr2 = r + dr;
+          const cc2 = c + dc;
+          if (rr2 < 0 || rr2 >= M.rows || cc2 < 0 || cc2 >= M.cols) continue;
+          on[rr2 * M.cols + cc2] = true;
+        }
+      }
+    }
+  }
+  const out: number[] = [];
+  for (let i = 0; i < on.length; i++) if (on[i]) out.push(i);
   return out;
 }
 
@@ -165,7 +250,7 @@ function wouldMatch(cells: number[], a: number, b: number): boolean {
   const x = t[a];
   t[a] = t[b];
   t[b] = x;
-  return findMatches(t).length > 0;
+  return findMatches(t).hits.length > 0;
 }
 
 /** Oyuncuya gösterilecek geçerli hamle: hedefe en çok yaklaştıran değil, ilk bulunan. */
@@ -190,7 +275,7 @@ export function trySwap(s: State, a: number, b: number): void {
   s.cells[a] = s.cells[b];
   s.cells[b] = t;
 
-  if (findMatches(s.cells).length) {
+  if (findMatches(s.cells).hits.length) {
     s.phase = 'swap';
     s.phaseT = 0;
     s.chain = 0;
@@ -233,15 +318,16 @@ function applyGravity(s: State): boolean {
   return moved;
 }
 
-function startClear(s: State, hits: number[]): void {
+function startClear(s: State, found: Found): void {
+  const hits = expand(found);
   s.chain++;
   s.clearing = hits;
   s.phase = 'clear';
   s.phaseT = 0;
   let got = 0;
-  for (const i of hits) if (s.cells[i] === M.target) got++;
+  for (const i of hits) if (s.cells[i] === s.target) got++;
   s.collected += got;
-  s.events.push({ type: 'clear', cells: hits, chain: s.chain });
+  s.events.push({ type: 'clear', cells: hits, chain: s.chain, blasts: found.blasts });
 }
 
 function finishTurn(s: State): void {
@@ -250,7 +336,19 @@ function finishTurn(s: State): void {
   s.swapA = -1;
   s.swapB = -1;
 
-  if (s.collected >= M.goal) {
+  if (s.collected >= s.goal) {
+    // SİPARİŞ TAMAM. Sıradaki varsa oyun devam ediyor: yeni hedef, yeni
+    // hamle bütçesi, sıfırlanan sayaç. Yoksa kazanıldı.
+    if (s.stage + 1 < STAGES.length) {
+      s.stage++;
+      const st = STAGES[s.stage];
+      s.target = st.target;
+      s.goal = st.goal;
+      s.moves = st.moves;
+      s.collected = 0;
+      s.events.push({ type: 'stage', stage: s.stage });
+      return;
+    }
     s.status = 'won';
     s.events.push({ type: 'win' });
     return;
@@ -286,8 +384,7 @@ export function tick(s: State, dt: number): void {
     if (s.phaseT < M.swapFor) return;
     // Takas geçerliydi: hamle burada yanıyor, sonuç ne olursa olsun.
     s.moves--;
-    const hits = findMatches(s.cells);
-    startClear(s, hits);
+    startClear(s, findMatches(s.cells));
     return;
   }
 
@@ -303,9 +400,9 @@ export function tick(s: State, dt: number): void {
 
   if (s.phase === 'fall') {
     if (s.phaseT < M.fallFor) return;
-    const hits = findMatches(s.cells);
-    if (hits.length) {
-      startClear(s, hits);
+    const found = findMatches(s.cells);
+    if (found.hits.length) {
+      startClear(s, found);
       return;
     }
     finishTurn(s);
@@ -322,7 +419,10 @@ export function reset(s: State): void {
   s.swapB = -1;
   s.clearing = [];
   s.chain = 0;
-  s.moves = M.moves;
+  s.moves = STAGES[0].moves;
+  s.stage = 0;
+  s.target = STAGES[0].target;
+  s.goal = STAGES[0].goal;
   s.collected = 0;
   s.status = 'playing';
   s.endT = 0;

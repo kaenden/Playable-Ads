@@ -11,7 +11,7 @@ import { State } from './state';
 import { Layout, Rect, UiState } from './layout';
 import { roundRect, outlinedText, fitFont } from '../../core/draw';
 import { draw as sprite } from '../../core/atlas';
-import { KINDS } from './config';
+import { KINDS, STAGES } from './config';
 import { audio } from '../../core/audio';
 import { perf } from '../../core/perf';
 
@@ -29,20 +29,22 @@ export class Hud {
    * karşılığı yoktu: üç taş da patlasa dokuz taş da patlasa aynı
    * görünüyordu. Söz tahtanın ortasında beliriyor, büyüyor ve soluyor.
    */
-  combo(text: string): void {
+  combo(text: string, dur?: number): void {
     this.comboText = text;
     this.comboT = 0;
+    this.comboDur = dur || 0.9;
   }
 
   private comboText = '';
   private comboT = 99;
+  private comboDur = 0.9;
 
   private drawCombo(dt: number): void {
-    if (this.comboT > 0.9) return;
+    if (this.comboT > this.comboDur) return;
     this.comboT += dt;
     const g = this.g;
     const L = this.L;
-    const p = Math.min(1, this.comboT / 0.9);
+    const p = Math.min(1, this.comboT / this.comboDur);
     const grow = 1 - Math.pow(1 - Math.min(1, p * 3.4), 2);
     const size = Math.min(L.w * 0.115, 52) * (0.7 + grow * 0.42);
     g.save();
@@ -72,7 +74,8 @@ export class Hud {
     const top = Math.max(12, L.h * 0.024);
     const chipH = Math.min(Math.max(42, L.h * 0.056), 58);
     const clear = 2 * (L.sound.x - 8) - L.w;
-    const chipW = Math.max(160, Math.min(L.w * 0.66, 320, clear));
+    // Çip GENİŞLEDİ: artık iki sayaç taşıyor.
+    const chipW = Math.max(190, Math.min(L.w * 0.78, 360, clear));
     const cx = (L.w - chipW) / 2;
 
     const plate = g.createLinearGradient(0, top, 0, top + chipH);
@@ -87,27 +90,64 @@ export class Hud {
     g.fill();
     g.restore();
 
-    // Hedef: sprite + toplanan/hedef. Yazıyla "collect 10 donuts" demek
-    // yerine hedefi GÖSTERMEK, dil bilmeyen izleyicide de çalışıyor.
-    const md = chipH - 6;
-    const mcx = cx + 3 + md / 2;
+    // TEK ÇİP, İKİ SAYAÇ.
+    //
+    // Önce hedef bir çipteydi, hamle sayısı ise piplerin altında minik gri
+    // bir yazıydı — yani oyuncunun sürekli bakması gereken iki sayıdan biri
+    // neredeyse görünmüyordu. İkisi de aynı çipte, ikisi de büyük, aralarında
+    // bir ayraç: soldaki NE topladığın, sağdaki KAÇ hamlen kaldığı.
     const mcy = top + chipH / 2;
-    sprite(g, KINDS[M.target], mcx, mcy, md * 0.92);
+    const md = chipH - 8;
+    const split = cx + chipW * 0.6;
+    sprite(g, KINDS[s.target], cx + 4 + md / 2, mcy, md * 0.92);
 
     g.textAlign = 'left';
     g.textBaseline = 'middle';
-    const label = Math.min(s.collected, M.goal) + ' / ' + M.goal;
-    fitFont(g, label, chipW - chipH - 14, '800', chipH * 0.42, FONT);
-    outlinedText(g, label, cx + chipH + 2, mcy, chipH * 0.42, '#3B1B4A', '#6A3A7E', 'rgba(255,255,255,.9)');
+    const label = Math.min(s.collected, s.goal) + ' / ' + s.goal;
+    fitFont(g, label, chipW * 0.6 - chipH - 12, '900', chipH * 0.46, FONT);
+    outlinedText(g, label, cx + chipH + 2, mcy, chipH * 0.46, '#2E1140', '#6A3A7E', 'rgba(255,255,255,.9)');
+
+    g.strokeStyle = 'rgba(70,40,90,.2)';
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(split, top + chipH * 0.22);
+    g.lineTo(split, top + chipH * 0.78);
+    g.stroke();
+
+    const lowMoves = s.moves <= 3;
+    g.textAlign = 'center';
+    const mvx = split + (cx + chipW - split) * 0.4;
+    fitFont(g, String(s.moves), chipW * 0.2, '900', chipH * 0.52, FONT);
+    outlinedText(g, String(s.moves), mvx, mcy, chipH * 0.52,
+      lowMoves ? '#C21D1D' : '#2E1140', lowMoves ? '#FF6A4A' : '#6A3A7E', 'rgba(255,255,255,.9)');
+    g.fillStyle = 'rgba(70,40,90,.62)';
+    g.font = '800 ' + Math.round(chipH * 0.2) + 'px ' + FONT;
+    g.textAlign = 'left';
+    g.fillText(COPY.moves, mvx + chipH * 0.28, mcy + 1);
+
+    // Sipariş sayacı: çipin üstünde, küçük. "Bir tane daha var" bilgisi
+    // ilk saniyeden itibaren ekranda duruyor.
+    if (STAGES.length > 1) {
+      g.textAlign = 'center';
+      g.textBaseline = 'bottom';
+      g.fillStyle = 'rgba(255,226,252,.7)';
+      g.font = '800 ' + Math.round(chipH * 0.24) + 'px ' + FONT;
+      g.fillText(COPY.order + ' ' + (s.stage + 1) + ' / ' + STAGES.length,
+        L.w / 2, top - Math.max(2, chipH * 0.08));
+      g.textBaseline = 'middle';
+    }
 
     // --- hamle pipleri (merge'deki düzen)
     const rowY = top + chipH + Math.max(8, L.h * 0.013);
     const pipH = Math.max(9, L.h * 0.012);
     const b = L.board;
     const gap = Math.max(3, b.w * 0.008);
-    const pipW = (b.w - gap * (M.moves - 1)) / M.moves;
+    // Pip sayısı AŞAMANIN bütçesi kadar; ikinci siparişte bar yeniden
+    // doluyor.
+    const total = STAGES[s.stage].moves;
+    const pipW = (b.w - gap * (total - 1)) / total;
     const low = s.moves <= 3;
-    for (let i = 0; i < M.moves; i++) {
+    for (let i = 0; i < total; i++) {
       const live = i < s.moves;
       const px0 = b.x + i * (pipW + gap);
       g.globalAlpha = live ? (low ? 0.62 + Math.abs(Math.sin(this.t * 6)) * 0.38 : 1) : 1;
@@ -124,12 +164,6 @@ export class Hud {
       g.fill();
       g.globalAlpha = 1;
     }
-    g.fillStyle = 'rgba(255,226,252,.72)';
-    g.font = '700 ' + Math.round(pipH * 1.05) + 'px ' + FONT;
-    g.textAlign = 'left';
-    g.textBaseline = 'top';
-    g.fillText(COPY.moves + '  ' + s.moves, b.x, rowY + pipH + Math.max(4, pipH * 0.45));
-
     this.soundBtn();
   }
 
@@ -281,7 +315,7 @@ export class Hud {
     const size = Math.min(L.w * 0.38, L.h * 0.23);
     const pop = celebrating ? Math.min(1, s.endT / 0.35) : 1;
     const k = (0.6 + 0.4 * this.ease(pop)) * (1 + Math.sin(this.t * 2.4) * 0.04);
-    sprite(g, KINDS[M.target], L.w / 2, cy, size * k);
+    sprite(g, KINDS[s.target], L.w / 2, cy, size * k);
 
     g.textAlign = 'center';
     g.textBaseline = 'middle';

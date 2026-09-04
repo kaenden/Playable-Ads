@@ -26,7 +26,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { M, KINDS, TINT } from './config';
+import { M, KINDS, TINT, Blast } from './config';
 import { State } from './state';
 import { Layout, UiState } from './layout';
 import { Hud } from './hud';
@@ -91,7 +91,7 @@ export class View3D {
     // koyu zeminde silueti çizen şey o. Bu tam olarak renderer'ın satın
     // aldığı şey; sprite'ta taklidi yok.
     this.scene.add(new AmbientLight(0xffe6ff, 0.42));
-    const key = new DirectionalLight(0xfff4e2, 1.85);
+    const key = new DirectionalLight(0xfff4e2, 2.05);
     key.position.set(-2.2, 3.4, 2.6);
     this.scene.add(key);
     const fill = new DirectionalLight(0xB98CFF, 0.55);
@@ -221,6 +221,29 @@ export class View3D {
       2 + Math.min(3, (chain || 1) - 1), TINT[kind] || '#ffffff');
   }
 
+  /**
+   * Roket ve bomba efekti.
+   *
+   * Satır roketi enine bir ışın, sütun roketi boyuna; bomba ise merkezde
+   * geniş bir patlama. Üçü de sarsıntı veriyor, çünkü bu birimde tek
+   * ödüllendirici an bu.
+   */
+  blastAt(b: Blast): void {
+    const L = this.L;
+    const col = b.at % M.cols;
+    const row = (b.at / M.cols) | 0;
+    const [x, y] = L.center(col, row);
+    if (b.kind === 'row') {
+      this.fx.beam(L.board.x + L.board.w / 2, y, L.board.w, L.cell * 0.62, LOOK.beam);
+    } else if (b.kind === 'col') {
+      this.fx.beam(x, L.board.y + L.board.h / 2, L.cell * 0.62, L.board.h, LOOK.beam);
+    } else {
+      this.fx.burst(x, y, L.cell * 1.15, 6, LOOK.beam);
+    }
+    this.fx.burst(x, y, L.cell * 0.8, 4, LOOK.spark);
+    this.fx.shake = Math.max(this.fx.shake, L.h * 0.012);
+  }
+
   /** Füzyon anı: taşların birleştiği noktada beyaz bir şimşek. */
   flashAt(col: number, row: number, chain: number): void {
     const [x, y] = this.L.center(col, row);
@@ -254,7 +277,7 @@ export class View3D {
       // artıyor, dünyada +Z; 2D ile aynı yönü koruyor.
       const g = slot.g;
       g.position.set(v.col + 0.5, 0.4 * v.scale, v.row + 0.5);
-      g.scale.setScalar(0.92 * v.scale);
+      g.scale.setScalar(1.02 * v.scale);
       // Yavaş dönüş: modelin hacmi ancak dönerken okunuyor.
       g.rotation.y = this.t * 0.55 + i * 0.9;
       g.visible = v.alpha > 0.05;

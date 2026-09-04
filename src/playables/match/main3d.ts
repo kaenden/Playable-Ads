@@ -1,4 +1,4 @@
-import { M } from './config';
+import { M, COPY } from './config';
 import { ad } from '../../core/ad';
 import { createState, tick, drainEvents, hintSwap, trySwap } from './state';
 import { UiState } from './layout';
@@ -107,6 +107,9 @@ function loop(now: number): void {
       // çekildiği için patlama da orada olmalı; hücre hücre patlatmak
       // "üçü birden yok oldu" diyor, merkezdeki tek şimşek "üçü BİRLEŞTİ".
       for (const [cc, cr] of clearCenters(state)) view.flashAt(cc, cr, chain);
+      // Özel füzyonlar: roket ışını ve bomba. Zincir sözünden ÖNCE
+      // tetikleniyor ki ekranda önce patlama, sonra söz olsun.
+      if (ev.blasts) for (const b of ev.blasts) view.blastAt(b);
       const word = chainWord(chain);
       if (word) view.hud.combo(word);
       // Zincir derinleştikçe perde yükseliyor: cascade kulakla da duyuluyor.
@@ -118,6 +121,14 @@ function loop(now: number): void {
       }
       ui.hint = null;
       idle = 0;
+    } else if (ev.type === 'stage') {
+      // Sipariş tamam, yenisi geldi. Kazanma sesi ve büyük bir duyuru:
+      // oyuncu bitirdiğini ve devam ettiğini aynı anda anlamalı.
+      view.hud.combo(COPY.nextOrder, 1.5);
+      view.fx.burst(view.L.w / 2, view.L.board.y + view.L.board.h * 0.4,
+        view.L.cell * 1.3, 6, '#FFE45F');
+      view.fx.shake = Math.max(view.fx.shake, view.L.h * 0.012);
+      sfx.clear(4);
     } else if (ev.type === 'swap') {
       sfx.swap();
     } else if (ev.type === 'reject') {

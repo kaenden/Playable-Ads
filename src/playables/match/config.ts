@@ -12,19 +12,6 @@ export const M = {
   kinds: 5,
 
   /**
-   * Hedef: bu türden bu kadar topla.
-   *
-   * 10 ile başladım, ölçünce fazla çıktı: beş tür var, yani rastgele bir
-   * eşleşmenin hedef türden olma olasılığı 1/5 ve hamle başına ortalama
-   * ~0.6 hedef taşı geliyor. 12 hamlede beklenen ~7 — yani hedefe ancak
-   * kusursuz oynayan varır ve reklam çoğu izleyicide kaybediliyor.
-   * Reklam KAZANILABİLİR olmalı; 6, niyetli oynayanın rahat, rastgele
-   * oynayanın kıl payı geçtiği yer.
-   */
-  target: 0,
-  goal: 6,
-
-  /**
    * FAIL-HOOK: HAMLE. Merge ile aynı, ve bu doğru — kural "sayaç hatanın
    * yaşadığı yeri ölçer". Match-3'te boşa giden takas bir KARAR: oyuncu
    * tahtaya bakıp seçiyor. Escape'teki tıkalı araca dokunmak gibi bilgi
@@ -32,8 +19,11 @@ export const M = {
    *
    * Eşleşme üretmeyen takas hamle YAKMIYOR (taşlar geri dönüyor) — o bir
    * karar değil, el kayması ya da yanlış okuma.
+   *
+   * Sayı artık AŞAMADAN geliyor (bkz. STAGES); burada sadece başlangıç
+   * değeri duruyor.
    */
-  moves: 12,
+  moves: 10,
 
   /** Faz süreleri (saniye). Playable'da her şey kısa olmalı. */
   swapFor: 0.16,
@@ -59,9 +49,56 @@ export const KINDS = ['donut', 'cupcake', 'cherries', 'banana', 'burger'];
  */
 export const TINT = ['#FFC271', '#FF74E2', '#FF4756', '#FFE23B', '#FF9E42'];
 
+/**
+ * İKİ AŞAMA — sipariş bitince yenisi geliyor.
+ *
+ * Tek hedefli sürümde reklam ilk siparişte bitiyordu ve oyuncu tam ritmi
+ * bulduğunda ekran kapanıyordu. İkinci sipariş, oynanışı uzatmadan
+ * DEVAM hissi veriyor: "bitirdim" ile "kazandım" arasına bir eşik daha
+ * koyuyor, ve mağazaya giden kişi oyunun devam ettiğini bilerek gidiyor.
+ *
+ * İkinci aşama başka bir türü istiyor ve daha yüksek: ilkinde öğrenilen
+ * şey ikincisinde sınanıyor. Hamle bütçesi de sıfırlanıyor — kalan hamleyi
+ * devretmek, ilk aşamayı iyi oynayanı ikinci aşamada cezalandırmıyor ama
+ * kötü oynayanı da baştan bitirmiyor.
+ */
+export interface Stage {
+  /** Toplanacak tür (KINDS indeksi). */
+  target: number;
+  goal: number;
+  moves: number;
+}
+
+export const STAGES: Stage[] = [
+  { target: 0, goal: 6, moves: 10 },
+  // Ölçüldü: ipucunu takip eden kusursuz oyuncu 9 hedefi 12 hamlenin
+  // 10'unda bitiriyordu, yani gerçek oyuncuya pay kalmıyordu. 8, aynı
+  // oynayışta dört hamlelik boşluk bırakıyor — reklam KAZANILABİLİR
+  // olmalı, zor değil.
+  { target: 2, goal: 8, moves: 12 },
+];
+
+/**
+ * ÖZEL FÜZYONLAR — üçten fazla taş birleşince.
+ *
+ * Match-3'ün bütün derinliği burada: üç taş sadece kayboluyor, dört taş
+ * bir ROKET doğuruyor, beş taş ya da L/T kesişimi BOMBA. Bu birimde
+ * roket anında patlıyor, tahtada beklemiyor — yirmi saniyelik bir reklamda
+ * "özel taşı sakla, sonra kullan" katmanı öğrenilmiyor; gösterilmesi
+ * gereken şey ödülün kendisi.
+ */
+export type BlastKind = 'row' | 'col' | 'area';
+export interface Blast {
+  kind: BlastKind;
+  /** Patlamanın merkezi (hücre indeksi). */
+  at: number;
+}
+
 export const COPY = {
   title: 'Sweet Match — Playable',
   goal: 'COLLECT',
+  order: 'ORDER',
+  nextOrder: 'NEW ORDER!',
   tutorial: 'SWAP TO MATCH 3',
   cta: 'PLAY NOW',
   win: 'ORDER COMPLETE!',

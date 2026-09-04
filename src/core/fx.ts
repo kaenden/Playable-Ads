@@ -17,6 +17,17 @@ interface Particle {
   color: string;
 }
 
+/** Roket ışını — açılıp sönen bir şerit. */
+interface Beam {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  life: number;
+  dur: number;
+  color: string;
+}
+
 interface Ring {
   x: number;
   y: number;
@@ -30,6 +41,7 @@ interface Ring {
 export class Fx {
   private parts: Particle[] = [];
   private rings: Ring[] = [];
+  private beams: Beam[] = [];
   shake = 0;
 
   /**
@@ -84,6 +96,17 @@ export class Fx {
     }
   }
 
+  /**
+   * Işın — bir satırı ya da sütunu süpüren roketin izi.
+   *
+   * Enine doğru açılıp boyuna sönüyor: önce ince bir çizgi, sonra geniş
+   * bir şerit, sonra yok. Partikülle yapılmıyor çünkü anlatması gereken
+   * şey bir yön, bir bulut değil.
+   */
+  beam(x: number, y: number, w: number, h: number, color: string): void {
+    this.beams.push({ x, y, w, h, life: 0, dur: 0.34, color });
+  }
+
   /** Sarsıntı ofseti; renderer kendi transformunda uyguluyor. */
   shakeOffset(dt: number): [number, number] {
     if (this.shake <= 0.2) {
@@ -96,6 +119,23 @@ export class Fx {
   }
 
   draw(g: CanvasRenderingContext2D, dt: number): void {
+    for (let i = this.beams.length - 1; i >= 0; i--) {
+      const b = this.beams[i];
+      b.life += dt;
+      const p = b.life / b.dur;
+      if (p >= 1) {
+        this.beams.splice(i, 1);
+        continue;
+      }
+      const grow = 1 - Math.pow(1 - p, 2);
+      const bw = b.w > b.h ? b.w : b.w * (0.25 + grow * 1.1);
+      const bh = b.h > b.w ? b.h : b.h * (0.25 + grow * 1.1);
+      g.globalAlpha = (1 - p) * 0.85;
+      g.fillStyle = b.color;
+      g.fillRect(b.x - bw / 2, b.y - bh / 2, bw, bh);
+    }
+    g.globalAlpha = 1;
+
     for (let i = this.rings.length - 1; i >= 0; i--) {
       const r = this.rings[i];
       r.life += dt;
