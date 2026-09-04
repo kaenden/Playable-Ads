@@ -102,6 +102,14 @@ export interface SquadOpts {
   dust?: boolean;
   /** Elde silah taşıyabilsin mi. Sadece oyuncu takımı taşıyor. */
   held?: boolean;
+  /**
+   * Hangi karakter modeli. Boş bırakılırsa oyuncunun korsanı.
+   *
+   * Düşmanlar önce aynı modeldi ve sadece kırmızıya boyanıyordu; ekranda
+   * "aynı adam, başka renk" okunuyordu. Paket 18 karakter taşıyor, ikincisini
+   * almak bedava: düşmanlar artık zombi.
+   */
+  model?: string;
 }
 
 /**
@@ -115,18 +123,22 @@ export interface SquadOpts {
  * durunca çift ağızlı balta karakter kadar oluyor ve gövdeye giriyor.
  */
 /**
- * OMUZDAN İNDİR, YANA AÇ. İlk ayarda silah neredeyse dik duruyordu ve
- * karakterin omzuna saplanmış gibi görünüyordu: namlusu gövdenin önünden
- * geçiyor, kavrayan bir el okunmuyordu. Üç değişiklik birlikte çözdü —
- * el daha DIŞA (HAND_OUT), daha AŞAĞI (HAND_DROP), ve silah gövdeden
- * belirgin biçimde YANA DEVRİK (GRIP_ROLL). Artık siluetin dışında,
- * elin ucunda, aşağı bakan bir silah var.
+ * KAVRAMA: SAP ELDE, UÇ DIŞARIDA.
+ *
+ * İki tur sürdü. Önce silah neredeyse dikti ve omza saplanmış gibi
+ * duruyordu. Sonra yana devirdim ama YANLIŞ YÖNE: dönüş açısı negatifti,
+ * yani silahın ucu gövdenin üstüne, SAPI dışarı düşüyordu — elde tutulan
+ * değil, koltuk altına sıkıştırılmış bir şey gibi.
+ *
+ * `GRIP_ROLL` artık pozitif ve dik açının biraz ötesinde: silahın +Y ekseni
+ * (namlusu) dışarı ve hafif aşağı bakıyor, sap ise elin içinde kalıyor.
+ * Kamera arkadan baktığı için bu, silahın tam boyunun okunduğu duruş.
  */
-const HAND_OUT = -0.24;
-const HAND_DROP = 0.32;
+const HAND_OUT = -0.12;
+const HAND_DROP = 0.2;
 const HAND_FWD = 0.02;
 const GRIP_TILT = -0.12;
-const GRIP_ROLL = -0.72;
+const GRIP_ROLL = 1.75;
 const HELD_SCALE = 0.85;
 /**
  * Kolun dönüşü ne kadar geçiyor. 0 = silah kolun her savruluşunu izliyor,
@@ -172,7 +184,7 @@ export class Squad {
     this.wantHeld = !!o.held;
     const clip = clipNamed(o.clip);
     for (let p = 0; p < STRIKE.phases; p++) {
-      const g = charClone(o.h);
+      const g = charClone(o.h, o.model);
       if (!g || !clip) break;
       g.rotation.y = o.facing ?? 0;
       const mixer = new AnimationMixer(g);

@@ -10,6 +10,18 @@
  * çam ve çiçek taşıyor, bu palmiye ve harabe. Paket ortak, SEÇİM ayrı —
  * gerçek işte de bir stüdyodan gelen kit tek, ondan çıkarılan kreatif çok.
  *
+ * KİTİN KENDİ RENKLERİ SANAT YÖNÜ DEĞİL, VARSAYILAN.
+ *
+ * Paketin malzeme renklerini ölçtüğümde sahnenin neden tek ton göründüğü
+ * çıktı: `leafsGreen` #6fe5d5, `grass` #73ecdc — ikisi de NANE/TURKUAZ, yani
+ * denizin rengiyle aynı aile. `stone` ise #dcf1f4, soluk mavi. Ekranda yeşil
+ * sandığım her şey aslında maviydi; hiçbir yerde ton ayrımı yoktu.
+ *
+ * Kit düz renkli malzemeler taşıyor ve bu bir HEDİYE: rengi kreatif seçiyor.
+ * Aşağıdaki tablo yükleme anında her malzemeyi kendi rengine oturtuyor —
+ * yapraklar gerçek yeşil, otlar sarı-yeşil, kaya ve gövde kahverengi. Yeni
+ * asset yok, doku yok, çizim çağrısı yok; sadece renk.
+ *
  * İKİ AYRI MALZEME DÜNYASI aynı sahnede:
  *
  *  - Karakter UNLIT geliyor (KHR_materials_unlit). Işık almıyor, ekranda hep
@@ -60,17 +72,40 @@ interface MaybeColored extends Material {
  * PBR malzemeleri Lambert'e indir. Dokulu (işaretli) malzemeye dokunma —
  * o karakterin unlit malzemesi, palet oraya bağlanacak.
  */
+/**
+ * Ada sanat yönü — kitin malzeme adına göre renk.
+ *
+ * Anahtarlar paketin kendi malzeme adları; değerler bu kreatifin paleti.
+ * Adı burada geçmeyen malzeme kendi rengiyle kalıyor.
+ */
+const TINT: Record<string, number> = {
+  leafsGreen: 0x3f8f33,
+  leafsFall: 0xc8892c,
+  grass: 0x9cb53a,
+  stone: 0x8a6236,
+  stoneDark: 0x664728,
+  wood: 0xb5763f,
+  woodBark: 0x8a5a32,
+  woodBarkDark: 0x5f3d22,
+  woodInner: 0xd8b27a,
+};
+
 function toLambert(root: Object3D): void {
   const cache: Record<string, MeshLambertMaterial> = {};
   root.traverse((o) => {
     const m = o as Mesh;
     if (!m.isMesh || !m.material || Array.isArray(m.material)) return;
     const src = m.material as MaybeColored;
-    // MeshBasicMaterial = unlit karakter. Adında `palette:` işareti var.
-    if ((src.name || '').indexOf('palette:') === 0) return;
+    // MeshBasicMaterial = unlit karakter. Adında `palette` işareti var.
+    if ((src.name || '').indexOf('palette') === 0) return;
     const key = src.uuid;
     if (!cache[key]) {
-      const lam = new MeshLambertMaterial({ color: src.color ? src.color.clone() : new Color(0xffffff) });
+      const tint = TINT[src.name || ''];
+      const lam = new MeshLambertMaterial({
+        color: tint !== undefined
+          ? new Color(tint)
+          : src.color ? src.color.clone() : new Color(0xffffff),
+      });
       lam.name = src.name;
       cache[key] = lam;
     }
@@ -100,11 +135,15 @@ export function loadModels(): Promise<void> {
             models[name] = { node: child, size };
           }
           for (const c of gltf.animations) clips[c.name] = c;
-          // Doku GLB'nin dışında geliyor (sebebi core/palette.ts'te).
-          // Karakter dokusu gerçek bir yüzey haritası, kartela değil:
-          // mipmap AÇIK, yoksa kalabalık uzaklaştıkça titriyor.
-          loadPalette(true).then((tex) => {
-            applyPalette(gltf.scene, tex);
+          // İKİ DOKU. Sahnede iki ayrı karakter var — oyuncunun korsanı ve
+          // zombi düşmanlar — ve dokuları farklı. Hat ikisini de ayrı dosyaya
+          // çıkardı (sebebi core/palette.ts'te) ve malzemeleri hangi dokuya
+          // ait olduklarıyla işaretledi. Karakter dokusu gerçek bir yüzey
+          // haritası, kartela değil: mipmap AÇIK, yoksa kalabalık
+          // uzaklaştıkça titriyor.
+          Promise.all([loadPalette(true, 1), loadPalette(true, 2)]).then(([a, b]) => {
+            applyPalette(gltf.scene, a, 'palette:');
+            applyPalette(gltf.scene, b, 'palette2:');
             res();
           });
         },
@@ -130,8 +169,8 @@ export function clipNamed(name: string): AnimationClip | null {
  * Ölçek DIŞ gruba veriliyor: animasyon iç düğümlerin yerel dönüşümlerini
  * yazıyor, oraya ölçek koymak animasyonun ilk karesinde siliniyordu.
  */
-export function charClone(h: number): Group | null {
-  const e = models['character-p'];
+export function charClone(h: number, name?: string): Group | null {
+  const e = models[name || 'character-p'];
   if (!e) return null;
   const g = new Group();
   const inner = e.node.clone(true);

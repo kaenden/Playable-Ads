@@ -53,7 +53,14 @@ interface WithMap extends Material {
   needsUpdate: boolean;
 }
 
-/** Hat, dokusunu söktüğü malzemenin adına bu öneki koyuyor. */
+/**
+ * Hat, dokusunu söktüğü malzemenin adına bu öneki koyuyor.
+ *
+ * İKİ DOKULU SAHNE. Blade Rush'ta iki ayrı karakter var (korsan oyuncu,
+ * zombi düşman) ve ikisinin dokusu farklı. Hat her dokuyu ayrı dosyaya
+ * çıkarıyor ve malzemeleri `palette:` / `palette2:` diye işaretliyor;
+ * burada hangi dokunun hangi işarete bağlanacağı çağıranda belirtiliyor.
+ */
 const MARK = 'palette:';
 
 /** base64'ün ilk baytları formatı söylüyor; uzantı bilgisi bundle'a gelmiyor. */
@@ -69,8 +76,9 @@ function mimeOf(b64: string): string {
  *
  * `smooth`: gerçek yüzey haritası (mipmap açık). Varsayılan kartela.
  */
-export function loadPalette(smooth?: boolean): Promise<Texture | null> {
-  if (!__PALETTE_B64__) return Promise.resolve(null);
+export function loadPalette(smooth?: boolean, which?: number): Promise<Texture | null> {
+  const b64 = which === 2 ? __PALETTE2_B64__ : __PALETTE_B64__;
+  if (!b64) return Promise.resolve(null);
   return new Promise<Texture | null>((res) => {
     const im = new Image();
     im.onload = () => {
@@ -92,19 +100,20 @@ export function loadPalette(smooth?: boolean): Promise<Texture | null> {
       res(t);
     };
     im.onerror = () => res(null);
-    im.src = 'data:' + mimeOf(__PALETTE_B64__) + ';base64,' + __PALETTE_B64__;
+    im.src = 'data:' + mimeOf(b64) + ';base64,' + b64;
   });
 }
 
 /** Dokuyu SADECE hattın işaretlediği malzemelere bağlar. */
-export function applyPalette(root: Object3D, tex: Texture | null): void {
+export function applyPalette(root: Object3D, tex: Texture | null, mark?: string): void {
   if (!tex) return;
+  const want = mark || MARK;
   root.traverse((o) => {
     const m = o as Mesh;
     if (!m.isMesh || !m.material) return;
     const mats = Array.isArray(m.material) ? m.material : [m.material];
     for (const mat of mats) {
-      if ((mat.name || '').indexOf(MARK) !== 0) continue;
+      if ((mat.name || '').indexOf(want) !== 0) continue;
       const w = mat as WithMap;
       w.map = tex;
       w.needsUpdate = true;

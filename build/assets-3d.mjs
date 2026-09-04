@@ -327,26 +327,31 @@ if (MERGE) {
   // "dokuyu küçültme" anlamına geliyor.
   {
     const texs = merged.getRoot().listTextures();
-    if (texs.length > 1) {
-      console.log('  UYARI: ' + texs.length + ' doku var; ayirma yolu tek doku varsayiyor.');
-    }
-    if (texs.length === 1) {
-      const t = texs[0];
+    // BİRDEN FAZLA DOKU DESTEKLENİYOR.
+    //
+    // İlk sürüm tek doku varsayıyordu ve ikinci bir karakter (zombi düşmanlar)
+    // eklendiğinde ayırma tamamen atlanıyordu — yani iki doku da GLB'nin
+    // içinde gömülü kalıyor, reklam kutusunda ikisi de yüklenmiyordu.
+    // Şimdi her doku ayrı dosyaya çıkıyor ve malzemeler HANGİ dokuya ait
+    // olduklarıyla işaretleniyor: `palette:` birinci, `palette2:` ikinci.
+    for (let i = 0; i < texs.length; i++) {
+      const t = texs[i];
       const ext = (t.getMimeType() || 'image/png').split('/')[1];
-      const file = join(OUT, 'palette.' + ext);
+      const file = join(OUT, (i === 0 ? 'palette' : 'palette' + (i + 1)) + '.' + ext);
       writeFileSync(file, Buffer.from(t.getImage()));
       // Dokuyu ÇALIŞMA ANINDA hangi malzemeye bağlayacağımızı işaretle.
       //
-      // Runner sahnesinde iki tür malzeme yan yana: karakterin dokulu
-      // malzemesi ve Nature Kit'in düz renkli ağaç/kaya malzemeleri. Paleti
-      // ayrım yapmadan hepsine bağlayınca ağaçlar da karakter dokusunu
-      // giyiyor. İşareti burada, dokuyu SÖKERKEN koymak tek doğru yer —
-      // çalışma anında "bu malzemenin dokusu var mıydı" bilgisi kalmıyor.
+      // Sahnede iki tür malzeme yan yana: karakterlerin dokulu malzemesi ve
+      // Nature Kit'in düz renkli ağaç/kaya malzemeleri. Paleti ayrım yapmadan
+      // hepsine bağlayınca ağaçlar da karakter dokusunu giyiyor. İşareti
+      // burada, dokuyu SÖKERKEN koymak tek doğru yer — çalışma anında "bu
+      // malzemenin dokusu var mıydı" bilgisi kalmıyor.
+      const mark = i === 0 ? 'palette:' : 'palette' + (i + 1) + ':';
       let marked = 0;
       for (const mat of merged.getRoot().listMaterials()) {
-        if (!mat.getBaseColorTexture()) continue;
+        if (mat.getBaseColorTexture() !== t) continue;
         mat.setBaseColorTexture(null);
-        mat.setName('palette:' + (mat.getName() || 'mat'));
+        mat.setName(mark + (mat.getName() || 'mat'));
         marked++;
       }
       t.dispose();

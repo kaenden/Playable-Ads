@@ -354,7 +354,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         <div class="info">
           <h3>Blade Rush</h3>
           <p class="genre">3D action runner &middot; Three.js</p>
-          <p class="num">834.2 KB</p>
+          <p class="num">859.3 KB</p>
         </div>
       </article>
       <article class="work">
@@ -558,7 +558,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
     <details>
       <summary>
         <span class="sig"></span>
-        <span class="t">Two games, 33.2 KB apart</span>
+        <span class="t">Two games, 58.3 KB apart</span>
         <span class="s">Crowd Rush &middot; Blade Rush</span>
       </summary>
       <div class="body">
@@ -567,13 +567,13 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
           kits. What differs is the mechanic and the <em>pick</em> from those kits. One
           grows a crowd through a green meadow of pines and flowers, and pays for
           mistakes in runners. The other raids a pirate island &mdash; palms, reef
-          stones, a beached canoe, and the one character in the pack with an eye patch
-          &mdash; running two counters at once: gates change how many men you have,
+          stones, a beached canoe, the one character in the pack with an eye patch and
+          the green one for the enemies &mdash; running two counters at once: gates change how many men you have,
           breakable targets change what each thrown blade is worth. Finished packages:
-          801.0 KB and 834.2 KB.
+          801.0 KB and 859.3 KB.
         </p>
         <div class="ledger">
-          <div><div class="n good">33.2 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 0.6% of the 5&nbsp;MB budget</div></div>
+          <div><div class="n good">58.3 KB</div><div class="c">The whole size difference between two different games &mdash; a second mechanic, a second art direction and a different pick of meshes, for 1.1% of the 5&nbsp;MB budget</div></div>
           <div><div class="n">0</div><div class="c">Models authored. Every mesh is a different pick from the same two CC0 kits; the enemies are the player's own character, tinted, and the weapons are geometry drawn in code</div></div>
           <div><div class="n">6</div><div class="c">Draw calls for a crowd or a mob, at any size &mdash; the same instanced rig serves both</div></div>
         </div>
@@ -628,13 +628,41 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             by what is on screen. The fix was not to buy art. Kenney's nature kit has
             two hundred models and the character pack has eighteen, and the first
             build used the same fifteen as its sibling. So this one draws a different
-            fifteen: palm trees instead of pines, a stone obelisk and clay jars
-            instead of flowers and mushrooms, a beached canoe, and the pirate with the
-            eye patch instead of the plain runner. On top of that, a beach palette and
-            one extra plane for the sea &mdash; two triangles and a gradient, and that
-            alone is what says <em>island</em>. Re-picking from a kit you already have
+            sixteen: palm trees instead of pines, a stone obelisk and clay jars
+            instead of flowers and mushrooms, a beached canoe, the pirate with the eye
+            patch instead of the plain runner, and a second character &mdash; the green
+            one &mdash; so the enemies are a different species rather than the player
+            tinted red. On top of that, a beach palette and one extra plane for the
+            sea: two triangles and a gradient, and that alone is what says
+            <em>island</em>. Re-picking from a kit you already have
             is most of what a re-skin actually is, and it is the request a studio with
             one art pack and six creatives to ship will keep making.</p>
+          </article>
+          <article>
+            <p class="t">Colour</p><h3>The kit's own colours were the problem</h3>
+            <p>Even after the re-pick the scene read as one flat tone, and measuring
+            the materials said why: the kit ships its leaf green at #6fe5d5 and its
+            grass at #73ecdc &mdash; both mint, both the same family as the sea &mdash;
+            and its stone at #dcf1f4, a pale blue. What I had been reading as green was
+            cyan, so nothing separated from anything. Flat-colour materials are a gift,
+            though: the colour is the creative's to choose. A nine-entry table applied
+            at load puts leaves at a real green, grass at yellow-green, rock and bark at
+            brown, against golden sand and a proper blue sky. Then a sampled screenshot
+            said the sand was still only 29% saturated &mdash; the pale sky hemisphere
+            light was washing it, since everything added toward white costs saturation.
+            Turning that light down took it to 71%. No new assets, no textures, no draw
+            calls; the whole fix is nine hex values and one light intensity.</p>
+          </article>
+          <article>
+            <p class="t">Pipeline</p><h3>Two characters meant two textures</h3>
+            <p>The asset step strips textures out of the merged GLB and ships them
+            beside it, because an embedded texture is fetched through a blob URL that
+            ad containers refuse. That step assumed exactly one texture, and adding the
+            second character fell straight past the check &mdash; both textures would
+            have stayed embedded and neither would have loaded inside the box. It now
+            writes one file per texture and marks each material with which one it
+            belongs to, so the runtime binds them separately. Worth the twenty lines: a
+            two-character scene is the normal case, not the exception.</p>
           </article>
           <article>
             <p class="t">Feedback</p><h3>The upgrade has to be visible in the air</h3>
@@ -1130,7 +1158,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
       <thead><tr><th>Unit</th><th>Size</th><th>Download</th></tr></thead>
       <tbody>
       <tr><td>Crowd Rush</td><td class="num">801.0 KB</td><td class="dl"><a href="dl/crowd-rush-google.zip" download>google</a> <a href="dl/crowd-rush-ironsource.zip" download>ironsource</a> <a href="dl/crowd-rush-mintegral.zip" download>mintegral</a> <a href="dl/crowd-rush-tiktok.zip" download>tiktok</a></td></tr>
-      <tr><td>Blade Rush</td><td class="num">834.2 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
+      <tr><td>Blade Rush</td><td class="num">859.3 KB</td><td class="dl"><a href="dl/blade-rush-google.zip" download>google</a> <a href="dl/blade-rush-ironsource.zip" download>ironsource</a> <a href="dl/blade-rush-mintegral.zip" download>mintegral</a> <a href="dl/blade-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Traffic Escape</td><td class="num">951.3 KB</td><td class="dl"><a href="dl/traffic-escape-google.zip" download>google</a> <a href="dl/traffic-escape-ironsource.zip" download>ironsource</a> <a href="dl/traffic-escape-mintegral.zip" download>mintegral</a> <a href="dl/traffic-escape-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Tower Rush</td><td class="num">87.0 KB</td><td class="dl"><a href="dl/tower-rush-google.zip" download>google</a> <a href="dl/tower-rush-ironsource.zip" download>ironsource</a> <a href="dl/tower-rush-mintegral.zip" download>mintegral</a> <a href="dl/tower-rush-tiktok.zip" download>tiktok</a></td></tr>
       <tr><td>Sweet Match 3D</td><td class="num">687.4 KB</td><td class="dl"><a href="dl/sweet-match-3d-google.zip" download>google</a> <a href="dl/sweet-match-3d-ironsource.zip" download>ironsource</a> <a href="dl/sweet-match-3d-mintegral.zip" download>mintegral</a> <a href="dl/sweet-match-3d-tiktok.zip" download>tiktok</a></td></tr>
@@ -1160,7 +1188,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 </section>
 <footer>
   <div class="wrap">
-    <p class="stamp mono">build 2026-09-04 08:13 UTC</p>
+    <p class="stamp mono">build 2026-09-04 08:55 UTC</p>
     <p>
       Built from scratch: game logic, both renderers, the single-file build pipeline, the
       asset pipeline and the per-network packaging. The core — state, layout, HUD, effects,
@@ -1193,7 +1221,7 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 (function(){
   var UNITS = {
     'run': ['Crowd Rush',       '3D runner · Three.js · 801.0 KB'],
-    'str': ['Blade Rush',       '3D action runner · Three.js · 834.2 KB'],
+    'str': ['Blade Rush',       '3D action runner · Three.js · 859.3 KB'],
     'esc': ['Traffic Escape',   'Block puzzle · Three.js · 951.3 KB'],
     'td':  ['Tower Rush',       'Tower defense · Canvas 2D · 87.0 KB'],
     'm3':  ['Sweet Match 3D',   'Match-3 · Three.js · 687.4 KB'],

@@ -68,7 +68,7 @@ import { propClone, propSize } from './models';
 import { RunView } from './view';
 import { Grade } from './grade';
 
-const SKY = '#C2E7F0';
+const SKY = '#AEDCF2';
 // KUMSAL, İZ VE DENİZ — üç ayrı değer, üçü de bilerek ayrık.
 //
 // Zeminin kendi rengi ışıktan SONRA istenen sonuca göre seçiliyor: zemin
@@ -77,11 +77,11 @@ const SKY = '#C2E7F0';
 //
 // İZ KUMSALDAN AÇIK, tersi değil. Bir koşu oyununda okunması gereken ilk şey
 // nerede koşulacağı; iki yüzey aynı değere düşerse koridorun kenarı kayboluyor.
-const GROUND = '#D9BE86';
-const GRASS_DARK = '#B08F55';
+const GROUND = '#E09A16';
+const GRASS_DARK = '#A9741B';
 /** İzin kenarındaki ıslak kum şeridi — koridorun sınırını çizen çizgi. */
-const TRAIL_RIM = '#A87F41';
-const SAND = '#F2E2B8';
+const TRAIL_RIM = '#9A6B22';
+const SAND = '#F0C13C';
 /** Deniz: kıyıya yakın sığ turkuaz, açıkta koyu mavi. */
 const SEA_SHALLOW = '#4FCBC6';
 const SEA_DEEP = '#0E6389';
@@ -143,7 +143,9 @@ function grassTexture(): CanvasTexture {
     const grd = g.createRadialGradient(x, y, 0, x, y, r);
     // SADECE KOYULTAN leke. Açık leke eklemek yeşili griye çekiyordu:
     // beyaza doğru her katkı doygunluğu düşürür, koyuya doğru katkı düşürmez.
-    grd.addColorStop(0, rnd() < 0.45 ? 'rgba(150,118,58,.22)' : 'rgba(120,92,40,.14)');
+    // Lekelerin yarısı SARI-YEŞİL ot, yarısı koyu kum. Tek renk bir zeminde
+    // hiçbir yerde ton yoktu; iki farklı aile aynı düzlemde derinlik veriyor.
+    grd.addColorStop(0, rnd() < 0.5 ? 'rgba(112,140,28,.24)' : 'rgba(140,86,14,.18)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grd;
     g.beginPath();
@@ -170,10 +172,13 @@ function pathTexture(): CanvasTexture {
   // patikayı zemine gömüyor; ortayı açmak da çiğnene çiğnene parlamış bir iz
   // izlenimi veriyor. Düz tek renk bir şeritte ikisi de yoktu.
   const cross = g.createLinearGradient(0, 0, 128, 0);
-  cross.addColorStop(0, 'rgba(112,80,30,.4)');
-  cross.addColorStop(0.08, 'rgba(168,132,66,.18)');
-  cross.addColorStop(0.36, 'rgba(255,248,224,.22)');
-  cross.addColorStop(0.64, 'rgba(255,248,224,.22)');
+  cross.addColorStop(0, 'rgba(112,74,18,.44)');
+  cross.addColorStop(0.08, 'rgba(176,132,44,.2)');
+  // İzin ortasındaki açık şerit ALTIN, beyaz değil. Beyaza çalan bir vurgu
+  // izi aydınlatıyor ama doygunluğunu düşürüyor: ölçtüm, %43'e iniyordu ve
+  // kumsalın yanında hardal grisi kalıyordu.
+  cross.addColorStop(0.36, 'rgba(255,206,96,.22)');
+  cross.addColorStop(0.64, 'rgba(255,206,96,.22)');
   cross.addColorStop(0.92, 'rgba(168,132,66,.18)');
   cross.addColorStop(1, 'rgba(112,80,30,.4)');
   g.fillStyle = cross;
@@ -344,11 +349,14 @@ export class View3D implements RunView {
       // Gökyüzü ufuk çizgisine gelmeden sis rengine oturuyor. Kameranın
       // eğimi ekran oranına göre değiştiği için ufuk yukarı aşağı kayıyor;
       // gradyan geç bitseydi bazı telefonlarda ufukta bant görünürdü.
-      'linear-gradient(180deg,#1478B0 0%,#3F9ECE 8%,#84C8E0 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
+      'linear-gradient(180deg,#0E5CAE 0%,#2A83D2 8%,#68B2E6 14%,' + SKY + ' 19%,' + SKY + ' 100%)';
 
     this.renderer = new WebGLRenderer({ canvas: gl, antialias: true, alpha: true });
     // Sis SADECE ufukta. Yakın başlayan sis orta planı da soldurüyordu.
-    this.scene.fog = new Fog(new Color(SKY).getHex(), 76, 150);
+    // Sis daha ERKEN başlıyor (76 -> 58). Ada paleti dört ayrı tona ayrılınca
+    // uzak plan da yakın plan kadar canlı çıktı ve derinlik kayboldu; sisin
+    // erken devreye girmesi uzağı gökyüzüne bağlıyor ve katmanları ayırıyor.
+    this.scene.fog = new Fog(new Color(SKY).getHex(), 58, 146);
 
     // ÜÇ IŞIK, ÜÇ AYRI İŞ. İlk kurulumda tek yönlü ışık + ortam vardı ve
     // sahne öğle vakti gibi düz duruyordu: her yüzey aynı parlaklıkta,
@@ -374,7 +382,12 @@ export class View3D implements RunView {
     const fill = new DirectionalLight(0x6FE0E8, 0.34);
     fill.position.set(5.5, 2.5, 4);
     this.scene.add(fill);
-    this.scene.add(new HemisphereLight(0xcdeeff, new Color(GROUND).getHex(), 0.42));
+    // Yarım küre ışığı KISILDI (0.42 -> 0.26). Ölçtüm: zemin ekranda
+    // %29 doygunlukta, yani hardal grisi çıkıyordu. Sebep gökten gelen soluk
+    // mavi ortam ışığının yatay zemine tam çarpması — her yüzeye eklenen
+    // beyaz doygunluğu düşürür. Kısılınca sıcak anahtar ışık baskın kalıyor
+    // ve kum altın sarısına oturuyor.
+    this.scene.add(new HemisphereLight(0xcdeeff, new Color(GROUND).getHex(), 0.26));
 
     this.buildGround();
     this.buildScenery();
@@ -387,17 +400,23 @@ export class View3D implements RunView {
     });
     this.scene.add(this.player.root);
 
-    // DÜŞMANLAR OYUNCUNUN KENDİ KARAKTERİ. Konsept bu, ve bedeli sıfır:
-    // aynı GLB, aynı instancing, tek fark dönüş açısı ve renk çarpanı.
+    // DÜŞMANLAR ZOMBİ. Önce oyuncunun kendi karakteriydi, sadece kırmızıya
+    // boyanıyordu; ekranda "aynı adam, başka renk" okunuyordu ve düşman
+    // olduğu ancak yön farkından anlaşılıyordu. Paket 18 karakter taşıyor —
+    // ikincisini almanın maliyeti tek bir doku (4.9 KB) ve o kadar.
+    // Renk çarpanı yine var ama artık ince: yeşil teni bozmadan biraz
+    // soğutuyor, kimliği modelin kendisi taşıyor.
     this.foeSquad = new Squad({
-      h: CHAR_H, clip: 'idle', cap: STRIKE.foeCap, facing: Math.PI, tint: 0xffa898,
+      h: CHAR_H, clip: 'idle', cap: STRIKE.foeCap, facing: Math.PI,
+      model: 'character-l', tint: 0xd8ffd0,
     });
     this.scene.add(this.foeSquad.root);
 
     // Patron aynı karakterin 2.9 katı. Dev bir model üretmek yerine ölçek:
     // blok karakterde bu kayıpsız çalışıyor, silüet zaten kutulardan oluşuyor.
     this.boss = new Squad({
-      h: CHAR_H * 2.9, clip: 'idle', cap: 1, facing: Math.PI, tint: 0xff8f7a,
+      h: CHAR_H * 2.9, clip: 'idle', cap: 1, facing: Math.PI,
+      model: 'character-l', tint: 0xffc8b4,
     });
     this.scene.add(this.boss.root);
     this.buildShots();

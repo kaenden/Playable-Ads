@@ -132,11 +132,16 @@ function glbFrom(parts) {
   return readFileSync(p).toString('base64');
 }
 
-/** GLB'nin yanindaki palet dokusu (varsa). Ayri tasinmasinin sebebi globals.d.ts'te. */
-function paletteFrom(parts) {
+/**
+ * GLB'nin yanindaki palet dokusu (varsa). Ayri tasinmasinin sebebi
+ * globals.d.ts'te. `n` kacinci palet: sahnede iki dokulu model varsa
+ * (Blade Rush: korsan + zombi) hat palette.webp ve palette2.webp uretiyor.
+ */
+function paletteFrom(parts, n) {
   const dir = join(ROOT, 'assets-lab', parts[0]);
+  const base = !n || n === 1 ? 'palette' : 'palette' + n;
   for (const ext of ['webp', 'png', 'avif']) {
-    const p = join(dir, 'palette.' + ext);
+    const p = join(dir, base + '.' + ext);
     if (existsSync(p)) return readFileSync(p).toString('base64');
   }
   return '';
@@ -149,17 +154,26 @@ function atlasData(playable) {
     return {
       ...(P.atlas ? atlasFrom(P.atlas) : { b64: '', frames: '{}' }),
       glb: P.glb ? glbFrom(P.glb) : '',
-      palette: P.glb ? paletteFrom(P.glb) : '',
+      palette: P.glb ? paletteFrom(P.glb, 1) : '',
+      palette2: P.glb ? paletteFrom(P.glb, 2) : '',
     };
   }
-  if (ART !== 'atlas') return { b64: '', frames: '{}', glb: '', palette: '' };
+  if (ART !== 'atlas') return { b64: '', frames: '{}', glb: '', palette: '', palette2: '' };
   // Sadece 3D asset kullanan birim 2D atlası da gömmemeli.
-  if (P.glbVariant) return { b64: '', frames: '{}', glb: glbFrom(P.glbVariant), palette: paletteFrom(P.glbVariant) };
+  if (P.glbVariant) {
+    return {
+      b64: '', frames: '{}',
+      glb: glbFrom(P.glbVariant),
+      palette: paletteFrom(P.glbVariant, 1),
+      palette2: paletteFrom(P.glbVariant, 2),
+    };
+  }
   const glb = join(ROOT, 'assets-lab', 'out-3d', 'creatures.opt.glb');
   return {
     ...atlasFrom('out-2d'),
     glb: existsSync(glb) ? readFileSync(glb).toString('base64') : '',
     palette: '',
+    palette2: '',
   };
 }
 
@@ -182,6 +196,7 @@ async function bundle(playable, network, minify) {
       __ATLAS_FRAMES__: JSON.stringify(ATLAS.frames),
       __GLB_B64__: JSON.stringify(ATLAS.glb),
       __PALETTE_B64__: JSON.stringify(ATLAS.palette || ''),
+      __PALETTE2_B64__: JSON.stringify(ATLAS.palette2 || ''),
     },
     loader: { '.png': 'dataurl', '.webp': 'dataurl', '.mp3': 'dataurl', '.svg': 'dataurl' },
   });

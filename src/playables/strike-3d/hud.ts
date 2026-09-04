@@ -205,13 +205,22 @@ export class Hud {
       }
       const k = p.life / 1.05;
       const grow = 1 - Math.pow(1 - Math.min(1, k * 4), 2);
+      // Yazı EKRANA SIĞDIRILIYOR. Bu balonlar önce sadece "+8" gibi kısa
+      // sayılar taşıyordu ve sabit punto yetiyordu; silah adları gelince
+      // "GREAT AXE" ekranın iki yanından taştı.
       const size = Math.min(this.L.w * 0.11, 52) * (1 + grow * 0.25);
       g.save();
       g.globalAlpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.font = '900 ' + Math.round(size) + 'px ' + FONT;
-      outlinedText(g, p.text, p.x, p.y - k * this.L.h * 0.11, size, '#ffffff', p.color, 'rgba(20,26,34,.85)');
+      fitFont(g, p.text, this.L.w * 0.82, '900', size, FONT);
+      // `fitFont` yazı tipini kurdu ama küçültülmüş puntoyu döndürmüyor;
+      // gölge ve kontur kalınlığı ona göre ölçekleneceği için font
+      // dizisinden okunuyor. parseInt doğrudan çalışmıyor — dizi ağırlıkla
+      // başlıyor ("900 42px ...") ve 900 döndürüyordu.
+      const fitted = +(/(\d+)px/.exec(g.font) || [0, size])[1] || size;
+      outlinedText(g, p.text, Math.max(fitted, Math.min(this.L.w - fitted, p.x)),
+        p.y - k * this.L.h * 0.11, fitted, '#ffffff', p.color, 'rgba(20,26,34,.85)');
       g.restore();
     }
   }

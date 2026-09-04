@@ -16,3 +16,5 @@ declare const __GLB_B64__: string;
  * yükleniyor; o yol kutuda çalışıyor.
  */
 declare const __PALETTE_B64__: string;
+/** İkinci palet dokusu — sahnede iki ayrı dokulu model varsa (bkz. core/palette.ts). */
+declare const __PALETTE2_B64__: string;
