@@ -91,6 +91,12 @@ p{margin:0}
 .intro{display:flex;flex-direction:column;gap:clamp(14px,2vw,20px);
   align-items:center;text-align:center;margin-bottom:clamp(38px,6vw,64px)}
 .intro p{font-size:clamp(16px,2.1vw,19px);line-height:1.55;color:var(--ink-2);max-width:44ch}
+/* Girişteki ikinci satır bir AÇIKLAMA değil bir ETİKET. Önce ne olduğunu
+   anlatan iki cümle vardı; vitrinde o işi kapakların kendisi yapıyor,
+   buradaki satırın tek görevi sayfanın ne olduğunu söylemek. */
+.intro .kicker{font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:clamp(12.5px,1.5vw,14px);font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);max-width:none}
 
 /* ---------- works grid: kapak, sonra oyun ----------
    Önceki düzende yedi oyun birden açılıyordu. Yan yana koşan yedi canlı
