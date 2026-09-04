@@ -57,6 +57,21 @@ async function poster(name) {
   return { uri: 'data:image/webp;base64,' + buf.toString('base64'), bytes: buf.length };
 }
 
+/**
+ * Birim logosu — saydam WebP, kapağın üstüne biniyor.
+ *
+ * Kapaktan DAHA GENİŞ ölçekleniyor (420 px): logo kapağın içinde yaklaşık
+ * yüzde seksen yer kaplıyor ve ekran görüntüsünün üstünde net durması
+ * gerekiyor. Saydamlık korunuyor, yoksa macenta zemin geri geliyor.
+ */
+async function logo(name) {
+  const src = join(OUT_DIR, 'logos', name + '.webp');
+  if (!existsSync(src)) return null;
+  const buf = await sharp(src).resize({ width: 420, withoutEnlargement: true })
+    .webp({ quality: 82, alphaQuality: 92 }).toBuffer();
+  return { uri: 'data:image/webp;base64,' + buf.toString('base64'), bytes: buf.length };
+}
+
 /** Bir klasördeki .glb dosyalarının toplam boyutu — "geldiği hâli" ölçüsü. */
 function dirBytes(dir) {
   return readdirSync(dir)
@@ -95,6 +110,13 @@ const posters = {
   '2D': await poster('merge-2d'),
 };
 
+// Şimdilik sadece iki kardeş birimin logosu var; deneme onlarda yapılıyor,
+// tutarsa kalanlara da aynı hattan üretilecek.
+const logos = {
+  RUN: await logo('crowd-rush'),
+  STR: await logo('blade-rush'),
+};
+
 // Kunye tek kaynaktan: showcase/identity.json. Artifact calisma kopyasi
 // oldugu icin isim eksikse durmuyoruz — sayfanin tepesinde rozet cikiyor.
 const ident = loadIdentity(ROOT);
@@ -128,6 +150,8 @@ const vars = {
   '%%RUN_RAW%%': kb(dirBytes(join(ROOT, 'assets-lab', 'in-3d-run'))),
   '%%RUN_GLB%%': kb(statSync(join(ROOT, 'assets-lab', 'out-3d-run', 'run.glb')).size),
   '%%RUN_CALLS%%': '81',
+  '%%LOGO_RUN%%': logos.RUN ? logos.RUN.uri : '',
+  '%%LOGO_STR%%': logos.STR ? logos.STR.uri : '',
   '%%POSTER_RUN%%': posters.RUN.uri,
   '%%POSTER_STR%%': posters.STR.uri,
   '%%POSTER_ESC%%': posters.ESC.uri,

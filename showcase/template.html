@@ -105,6 +105,25 @@ p{margin:0}
   font:600 13px/1 "IBM Plex Sans",sans-serif;letter-spacing:.02em;
 }
 .tile:hover .hover,.tile:focus-visible .hover{opacity:1}
+/* MARKALI KAPAK — kapalıyken logo, üstüne gelince oyunun kendisi.
+   Ekran görüntüsü kapağın altında duruyor ve kısılmış hâlde; logo onun
+   üstünde. Fare değince görüntü açılıyor, logo çekiliyor ve "click to play"
+   geliyor. İki bilgi de aynı karede: NE olduğu ve NASIL göründüğü. */
+.branded > img{
+  /* Ekran görüntüsü BULANIK ve kısık: keskin bırakıldığında kapılar, sayılar
+     ve kalabalık logoyla yarışıyor ve ikisi de okunmuyor. Hafif bir ölçek,
+     bulanıklığın kenardan içeri çektiği saydam pikselleri kapatıyor. */
+  filter:brightness(.52) saturate(.85) blur(3px);transform:scale(1.05);
+  transition:filter .24s ease, transform .24s ease;
+}
+.branded:hover > img,.branded:focus-visible > img{filter:none;transform:none}
+.brand{
+  position:absolute;inset:0;display:grid;place-items:center;padding:9% 8%;
+  pointer-events:none;transition:opacity .22s ease, transform .22s ease;
+}
+.brand img{width:100%;height:auto;object-fit:contain;
+  filter:drop-shadow(0 10px 22px rgba(6,10,22,.55))}
+.branded:hover .brand,.branded:focus-visible .brand{opacity:0;transform:scale(.93)}
 .hover .disc{
   width:46px;height:46px;border-radius:50%;background:#fff;color:#0E1424;
   display:grid;place-items:center;font-size:16px;
@@ -309,8 +328,9 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
 
     <div class="works">
       <article class="work">
-        <a class="tile" href="%%HREF_RUN%%" data-play="run" aria-label="Play Crowd Rush">
+        <a class="tile branded" href="%%HREF_RUN%%" data-play="run" aria-label="Play Crowd Rush">
           <img src="%%POSTER_RUN%%" alt="Crowd Rush playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="brand"><img src="%%LOGO_RUN%%" alt="" loading="lazy"></span>
           <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
         </a>
         <div class="info">
@@ -320,8 +340,9 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
         </div>
       </article>
       <article class="work">
-        <a class="tile" href="%%HREF_STR%%" data-play="str" aria-label="Play Blade Rush">
+        <a class="tile branded" href="%%HREF_STR%%" data-play="str" aria-label="Play Blade Rush">
           <img src="%%POSTER_STR%%" alt="Blade Rush playable, opening screen" loading="lazy" width="500" height="828">
+          <span class="brand"><img src="%%LOGO_STR%%" alt="" loading="lazy"></span>
           <span class="hover"><span class="disc">&#9654;</span>Click to play</span>
         </a>
         <div class="info">
@@ -610,6 +631,21 @@ footer{padding:34px 0 56px;color:var(--muted);font-size:13px;line-height:1.7}
             <em>island</em>. Re-picking from a kit you already have
             is most of what a re-skin actually is, and it is the request a studio with
             one art pack and six creatives to ship will keep making.</p>
+          </article>
+          <article>
+            <p class="t">Branding</p><h3>A logo the build can regenerate</h3>
+            <p>Both runners now have a wordmark, and the tile shows it instead of a
+            screenshot until you point at it &mdash; then the shot comes into focus
+            behind it and the play prompt appears. What matters is where the logo comes
+            from: a local FLUX.2 Klein through Invoke's API, driven by a build script
+            like everything else here, with the seeds written down. The same command
+            returns the same four candidates, so "which one did we pick" is answered by
+            a file rather than by memory. Flux cannot output transparency, so the
+            prompt asks for a magenta backdrop and a second step keys it out &mdash; not
+            by distance to one colour, since the model gives a gradient rather than a
+            flat field, but by how magenta a pixel is: red and blue high, green low.
+            Gold, turquoise, navy and white all sit far from that, which is exactly why
+            the backdrop is magenta and not the usual green.</p>
           </article>
           <article>
             <p class="t">Reward</p><h3>Rarity is a language players already speak</h3>

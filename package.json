@@ -27,6 +27,7 @@
     "build:assets": "node build/build.mjs --art atlas",
     "assets:3d": "node build/assets-3d.mjs",
     "assets:creatures": "node build/export-creatures.mjs",
+    "logos": "node build/logo-gen.mjs && node build/logo-key.mjs",
     "preflight": "node build/preflight.mjs"
   },
   "devDependencies": {

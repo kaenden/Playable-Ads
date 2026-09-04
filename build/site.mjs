@@ -37,6 +37,7 @@ const DIST = join(ROOT, 'dist');
 const OUT = join(DIST, 'site');
 const TEMPLATE = join(ROOT, 'showcase', 'template.html');
 const POSTERS = join(ROOT, 'showcase', 'posters');
+const LOGOS = join(ROOT, 'showcase', 'logos');
 
 const argv = process.argv.slice(2);
 const BASE = (argv.indexOf('--base') >= 0 ? argv[argv.indexOf('--base') + 1] : '').replace(/\/$/, '');
@@ -76,7 +77,7 @@ function esc(t) {
 const IDENT = identityVars(loadIdentity(ROOT), true);
 
 rmSync(OUT, { recursive: true, force: true });
-for (const d of ['u', 'covers', 'og', 'dl']) mkdirSync(join(OUT, d), { recursive: true });
+for (const d of ['u', 'covers', 'og', 'dl', 'logos']) mkdirSync(join(OUT, d), { recursive: true });
 
 // ---------------------------------------------------------------- birimler
 const vars = {};
@@ -98,6 +99,18 @@ for (const u of UNITS) {
     .toBuffer();
   writeFileSync(join(OUT, 'covers', u.slug + '.webp'), cover);
   coverBytes += cover.length;
+
+  // Logo — varsa. Şimdilik iki birimde var; kapakla aynı mantık, dosya
+  // olarak duruyor ve saydamlığı korunuyor.
+  const logoSrc = join(LOGOS, u.slug + '.webp');
+  if (existsSync(logoSrc)) {
+    const lg = await sharp(logoSrc)
+      .resize({ width: 420, withoutEnlargement: true })
+      .webp({ quality: 82, alphaQuality: 92 })
+      .toBuffer();
+    writeFileSync(join(OUT, 'logos', u.slug + '.webp'), lg);
+    coverBytes += lg.length;
+  }
 
   // Önizleme kartı: 1200x630, kapağın kendisi koyu zemine oturtulmuş.
   const og = await sharp({
@@ -137,6 +150,9 @@ for (const u of UNITS) {
   const K = u.key.toUpperCase();
   vars['%%HREF_' + K + '%%'] = 'u/' + u.slug + '/';
   vars['%%POSTER_' + K + '%%'] = 'covers/' + u.slug + '.webp';
+  vars['%%LOGO_' + K + '%%'] = existsSync(join(LOGOS, u.slug + '.webp'))
+    ? 'logos/' + u.slug + '.webp'
+    : '';
   vars['%%B64_' + K + '%%'] = '';
   vars['%%SIZE_' + K + '%%'] = kb(statSync(src).size);
   vars['%%PCT_' + K + '%%'] = pctStr(statSync(src).size);
