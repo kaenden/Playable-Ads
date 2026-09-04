@@ -90,10 +90,7 @@ const pctStr = (n, lim) => {
 // gelmediğinde ya da bütçe kritik olduğunda başvurulan yedek. Sayfa da
 // teslim edilecek olanı göstermeli; prosedürel karşılaştırma katlanmış
 // bölümde ölçüm olarak duruyor.
-const u2d = unit('merge-2d-atlas');
-const u3d = unit('merge-3d-atlas');
 const uesc = unit('escape-3d-atlas');
-const utd = unit('defense-2d');
 const um2 = unit('match-2d');
 const um3 = unit('match-3d');
 const urun = unit('run-3d');
@@ -103,11 +100,8 @@ const posters = {
   RUN: await poster('run-3d'),
   STR: await poster('strike-3d'),
   ESC: await poster('escape-3d'),
-  TD: await poster('defense-2d'),
   M3: await poster('match-3d'),
   M2: await poster('match-2d'),
-  '3D': await poster('merge-3d'),
-  '2D': await poster('merge-2d'),
 };
 
 // Şimdilik sadece iki kardeş birimin logosu var; deneme onlarda yapılıyor,
@@ -126,26 +120,17 @@ const logos = {
 const ident = loadIdentity(ROOT);
 
 const vars = {
-  '%%B64_2D%%': u2d.b64,
-  '%%B64_3D%%': u3d.b64,
   '%%B64_ESC%%': uesc.b64,
-  '%%B64_TD%%': utd.b64,
   '%%B64_M2%%': um2.b64,
   '%%B64_M3%%': um3.b64,
   '%%B64_RUN%%': urun.b64,
   '%%B64_STR%%': ustr.b64,
-  '%%SIZE_2D%%': kb(u2d.bytes),
-  '%%SIZE_3D%%': kb(u3d.bytes),
   '%%SIZE_ESC%%': kb(uesc.bytes),
-  '%%SIZE_TD%%': kb(utd.bytes),
   '%%SIZE_M2%%': kb(um2.bytes),
   '%%SIZE_M3%%': kb(um3.bytes),
   '%%SIZE_RUN%%': kb(urun.bytes),
   '%%SIZE_STR%%': kb(ustr.bytes),
-  '%%PCT_2D%%': pctStr(u2d.bytes, LIMIT),
-  '%%PCT_3D%%': pctStr(u3d.bytes, LIMIT),
   '%%PCT_ESC%%': pctStr(uesc.bytes, LIMIT),
-  '%%PCT_TD%%': pctStr(utd.bytes, LIMIT),
   '%%PCT_M2%%': pctStr(um2.bytes, LIMIT),
   '%%PCT_M3%%': pctStr(um3.bytes, LIMIT),
   '%%PCT_RUN%%': pctStr(urun.bytes, LIMIT),
@@ -162,26 +147,19 @@ const vars = {
   '%%POSTER_RUN%%': posters.RUN.uri,
   '%%POSTER_STR%%': posters.STR.uri,
   '%%POSTER_ESC%%': posters.ESC.uri,
-  '%%POSTER_TD%%': posters.TD.uri,
   '%%POSTER_M3%%': posters.M3.uri,
   '%%POSTER_M2%%': posters.M2.uri,
-  '%%POSTER_3D%%': posters['3D'].uri,
-  '%%POSTER_2D%%': posters['2D'].uri,
   // Artifact sürümü TEK DOSYA: birimlerin kendi adresi yok, hepsi gömülü.
   // Kart yine de bir bağlantı, sadece gidecek yeri olmadığı için '#'.
   '%%HREF_RUN%%': '#',
   '%%HREF_STR%%': '#',
   '%%HREF_ESC%%': '#',
-  '%%HREF_TD%%': '#',
   '%%HREF_M3%%': '#',
   '%%HREF_M2%%': '#',
-  '%%HREF_3D%%': '#',
-  '%%HREF_2D%%': '#',
   '%%DOWNLOADS%%': '',
   '%%DELTA_RS%%': kb(Math.abs(ustr.bytes - urun.bytes)),
   '%%RATIO_M%%': (um3.bytes / um2.bytes).toFixed(1) + '×',
-  '%%RATIO_3D%%': (u3d.bytes / u2d.bytes).toFixed(1) + '×',
-  '%%PCT_META_3D%%': pctStr(u3d.bytes, META_LIMIT),
+  '%%PCT_META_M3%%': pctStr(um3.bytes, META_LIMIT),
   // Sayfada görünen sürüm damgası: bir sorun bildirildiğinde hangi kopyanın
   // görüldüğü tahmin edilmek zorunda kalmıyor.
   '%%BUILD%%': 'build ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
@@ -208,12 +186,11 @@ const size = Buffer.byteLength(page);
 console.log('\n  vitrin uretildi');
 console.log('    showcase/index.html       ' + kb(size) + '  (artifact formati)');
 console.log('    dist/showcase/index.html  ' + kb(Buffer.byteLength(standalone)) + '  (standalone)');
-console.log('\n  gomulu: defense-2d ' + kb(utd.bytes) + '  |  escape-3d ' + kb(uesc.bytes));
-console.log('          merge-2d ' + kb(u2d.bytes) + '  |  merge-3d-atlas ' + kb(u3d.bytes));
+console.log('\n  gomulu: escape-3d ' + kb(uesc.bytes));
 console.log('          match-2d ' + kb(um2.bytes) + '  |  match-3d ' + kb(um3.bytes));
 console.log('          run-3d ' + kb(urun.bytes) + '  |  strike-3d ' + kb(ustr.bytes));
 console.log('  kapaklar: ' + kb(Object.values(posters).reduce((a, p) => a + p.bytes, 0)) +
-  ' (7 WebP, 360px)');
+  ' (' + Object.keys(posters).length + ' WebP, 360px)');
 console.log('  base64 toplami: ' +
-  kb(u2d.b64.length + u3d.b64.length + uesc.b64.length + utd.b64.length +
-    um2.b64.length + um3.b64.length + urun.b64.length + ustr.b64.length) + '\n');
+  kb(uesc.b64.length + um2.b64.length + um3.b64.length +
+    urun.b64.length + ustr.b64.length) + '\n');

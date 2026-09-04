@@ -31,8 +31,6 @@ const TEMPLATE = join(SRC, 'index.html');
 
 /** Playable'lar: aynı core, farklı renderer. */
 const PLAYABLES = {
-  'merge-2d': { entry: 'playables/merge-2d/main.ts', title: 'Merge Dragons — Playable' },
-  'merge-3d': { entry: 'playables/merge-3d/main.ts', title: 'Merge Dragons 3D — Playable' },
   'escape-3d': {
     entry: 'playables/escape-3d/main.ts',
     title: 'Valet Panic — Playable',
@@ -44,11 +42,6 @@ const PLAYABLES = {
   // Bu birimde atlas SEÇENEK değil, sanatın kendisi: müşteri asset'iyle
   // çalışan gerçek akış bu. `atlas` alanı hangi hat çıktısının gömüleceğini
   // söylüyor, `--art` bayrağından bağımsız.
-  'defense-2d': {
-    entry: 'playables/defense-2d/main.ts',
-    title: 'Tower Rush — Playable',
-    atlas: 'out-2d-td',
-  },
   // Aynı match-3, iki renderer. İkisi de AYNI sanatı kullanıyor: 3D sürüm
   // modelleri, 2D sürüm o modellerin offline render'ı olan sprite'ları.
   'match-2d': {
@@ -325,7 +318,7 @@ async function buildAll() {
 }
 
 async function dev() {
-  const playable = plArg || 'merge-2d';
+  const playable = plArg || 'run-3d';
   const dir = join(DIST, playable + (PLAYABLES[playable].atlas || PLAYABLES[playable].glb ? '' : ART === 'atlas' ? '-atlas' : ''), 'preview');
   mkdirSync(dir, { recursive: true });
   let building = false;

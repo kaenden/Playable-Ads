@@ -58,11 +58,8 @@ const UNITS = [
   { key: 'run', slug: 'gate-crashers', was: ['crowd-rush'], dist: 'run-3d', poster: 'run-3d', name: 'Gate Crashers', genre: '3D runner', engine: 'Three.js' },
   { key: 'str', slug: 'blade-rush', dist: 'strike-3d', poster: 'strike-3d', name: 'Blade Rush', genre: '3D action runner', engine: 'Three.js' },
   { key: 'esc', slug: 'valet-panic', was: ['traffic-escape'], dist: 'escape-3d-atlas', poster: 'escape-3d', name: 'Valet Panic', genre: 'Block puzzle', engine: 'Three.js' },
-  { key: 'td', slug: 'tower-rush', dist: 'defense-2d', poster: 'defense-2d', name: 'Tower Rush', genre: 'Tower defense', engine: 'Canvas 2D' },
   { key: 'm3', slug: 'order-up-3d', was: ['sweet-match-3d'], logo: 'order-up', dist: 'match-3d', poster: 'match-3d', name: 'Order Up 3D', genre: 'Match-3', engine: 'Three.js' },
   { key: 'm2', slug: 'order-up', was: ['sweet-match'], dist: 'match-2d', poster: 'match-2d', name: 'Order Up', genre: 'Match-3', engine: 'Canvas 2D' },
-  { key: '3d', slug: 'merge-dragons-3d', dist: 'merge-3d-atlas', poster: 'merge-3d', name: 'Merge Dragons 3D', genre: 'Merge', engine: 'Three.js' },
-  { key: '2d', slug: 'merge-dragons', dist: 'merge-2d-atlas', poster: 'merge-2d', name: 'Merge Dragons', genre: 'Merge', engine: 'Canvas 2D' },
 ];
 
 /** Ağ paketleri: indirilebilir olanlar. Kreatifin teslim biçimi budur. */
@@ -78,6 +75,28 @@ const IDENT = identityVars(loadIdentity(ROOT), true);
 
 rmSync(OUT, { recursive: true, force: true });
 for (const d of ['u', 'covers', 'og', 'dl', 'logos']) mkdirSync(join(OUT, d), { recursive: true });
+
+/**
+ * Vitrinden ÇIKARILAN birimlerin eski adresleri.
+ *
+ * Bir birim portfolyodan kalktığında adresi de ölüyor ve paylaşılmış her
+ * link 404 veriyor. Yeniden adlandırmada olduğu gibi burada da eski yol
+ * yerinde kalıyor — tek fark, gidecek bir birim olmadığı için ana sayfaya
+ * yönlendirmesi.
+ */
+const RETIRED = ['merge-dragons', 'merge-dragons-3d', 'tower-rush'];
+for (const slug of RETIRED) {
+  mkdirSync(join(OUT, 'u', slug), { recursive: true });
+  writeFileSync(
+    join(OUT, 'u', slug, 'index.html'),
+    '<!doctype html><meta charset="utf-8"><title>Playable Ads Lab</title>' +
+      '<link rel="canonical" href="../../">' +
+      '<meta http-equiv="refresh" content="0; url=../../">' +
+      '<meta name="robots" content="noindex">' +
+      '<p>This unit is no longer part of the portfolio. ' +
+      '<a href="../../">See the current work</a>.</p>'
+  );
+}
 
 // ---------------------------------------------------------------- birimler
 const vars = {};
@@ -233,9 +252,8 @@ const shared = {
     statSync(join(DIST, 'run-3d', 'showcase', 'index.html')).size)),
   '%%RATIO_M%%': (statSync(join(DIST, 'match-3d', 'showcase', 'index.html')).size /
     statSync(join(DIST, 'match-2d', 'showcase', 'index.html')).size).toFixed(1) + '×',
-  '%%RATIO_3D%%': (statSync(join(DIST, 'merge-3d-atlas', 'showcase', 'index.html')).size /
-    statSync(join(DIST, 'merge-2d-atlas', 'showcase', 'index.html')).size).toFixed(1) + '×',
-  '%%PCT_META_3D%%': ((statSync(join(DIST, 'merge-3d-atlas', 'showcase', 'index.html')).size /
+  // Meta'nin 2 MB index siniri: 3D birimin ona gore yeri.
+  '%%PCT_META_M3%%': ((statSync(join(DIST, 'match-3d', 'showcase', 'index.html')).size /
     (2 * 1024 * 1024)) * 100).toFixed(1) + '%',
   '%%BUILD%%': 'build ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
 };
@@ -253,10 +271,10 @@ const ogUrl = (BASE ? BASE : '.') + '/og/site.jpg';
 const html =
   '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
-  '<title>Playable Ads Lab — eight units, one pipeline</title>\n' +
+  '<title>Playable Ads Lab — five units, one pipeline</title>\n' +
   '<meta name="description" content="Eight playable ad units built from supplied art: two 3D runners, a block puzzle, tower defense, match-3 and merge. Each one a single HTML file with no network requests.">\n' +
   '<meta property="og:type" content="website">\n' +
-  '<meta property="og:title" content="Playable Ads Lab — eight units, one pipeline">\n' +
+  '<meta property="og:title" content="Playable Ads Lab — five units, one pipeline">\n' +
   '<meta property="og:description" content="Six mechanics, eight ad networks. Every unit is a single HTML file that makes no network requests. Tap a cover to play it.">\n' +
   '<meta property="og:image" content="' + ogUrl + '">\n' +
   (BASE ? '<meta property="og:url" content="' + BASE + '/">\n' : '') +
